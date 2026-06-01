@@ -127,9 +127,13 @@
         <!-- Resend / Back -->
         <div class="text-center mt-4 pt-3 gf-border-top" style="border-top: 2px solid #e5e5e5;">
           <p class="small text-secondary gf-muted mb-2">Chưa nhận được mã?</p>
-          <a href="${pageContext.request.contextPath}/register" class="btn btn-sm gf-border gf-shadow-sm gf-press fw-bold" style="background: var(--gf-yellow); border-radius: 8px; font-size: 12px;">
-            <i data-lucide="refresh-cw" width="14" height="14"></i> Gửi lại mã OTP
-          </a>
+          <button id="resendBtn"
+                  type="button"
+                  onclick="resendOtp()"
+                  class="btn btn-sm gf-border gf-shadow-sm gf-press fw-bold"
+                  style="background: var(--gf-yellow); border-radius: 8px; font-size: 12px; min-width: 130px;">
+            <i data-lucide="refresh-cw" width="14" height="14"></i> <span id="resendText">Gửi lại mã OTP</span>
+          </button>
         </div>
 
         <div class="text-center mt-3">
@@ -147,6 +151,74 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     lucide.createIcons();
+
+    function resendOtp() {
+      var btn = document.getElementById('resendBtn');
+      var text = document.getElementById('resendText');
+      if (btn.disabled) return;
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', window.GAMEFORGE_CONTEXT_PATH + '/resend-otp', true);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      xhr.setRequestHeader(GAMEFORGE_CSRF_HEADER, GAMEFORGE_CSRF_TOKEN);
+
+      xhr.onload = function () {
+        if (xhr.status === 200) {
+          startCountdown(60);
+        } else {
+          var parser = new DOMParser();
+          var doc = parser.parseFromString(xhr.responseText, 'text/html');
+          var errorEl = doc.querySelector('.alert-danger');
+          if (errorEl) {
+            showInlineError(errorEl.textContent.trim());
+          }
+          // Nếu là cooldown, hiển thị countdown
+          var errorText = xhr.responseText;
+          var m = errorText.match(/đợi (\d+)s/);
+          if (m) startCountdown(parseInt(m[1]));
+        }
+      };
+
+      xhr.onerror = function () {
+        showInlineError('Không thể gửi yêu cầu. Vui lòng thử lại.');
+      };
+
+      xhr.send();
+    }
+
+    function startCountdown(seconds) {
+      var btn = document.getElementById('resendBtn');
+      var text = document.getElementById('resendText');
+      var remaining = seconds;
+      btn.disabled = true;
+      btn.style.cursor = 'not-allowed';
+      btn.style.opacity = '0.6';
+
+      var timer = setInterval(function () {
+        remaining--;
+        text.textContent = 'Đợi ' + remaining + 's';
+        if (remaining <= 0) {
+          clearInterval(timer);
+          btn.disabled = false;
+          btn.style.cursor = 'pointer';
+          btn.style.opacity = '1';
+          text.textContent = 'Gửi lại mã OTP';
+        }
+      }, 1000);
+
+      text.textContent = 'Đợi ' + remaining + 's';
+    }
+
+    function showInlineError(msg) {
+      var existing = document.querySelector('.otp-inline-error');
+      if (existing) existing.remove();
+      var div = document.createElement('div');
+      div.className = 'alert alert-danger gf-border border-2 border-dark fw-semibold mt-3 otp-inline-error';
+      div.style.borderRadius = '12px';
+      div.textContent = msg;
+      var form = document.querySelector('form');
+      form.parentNode.insertBefore(div, form.nextSibling);
+    }
   </script>
 </body>
 </html>

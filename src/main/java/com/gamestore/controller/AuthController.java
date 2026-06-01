@@ -243,7 +243,40 @@ public class AuthController {
         return "login";
     }
 
-    // 6. XỬ LÝ ĐĂNG XUẤT
+    // 6. GỬI LẠI OTP
+    @PostMapping("/resend-otp")
+    @Transactional
+    public String resendOtp(HttpSession session, Model model) {
+        PendingRegisterDTO pendingRegister =
+                (PendingRegisterDTO) session.getAttribute("pendingRegister");
+
+        if (pendingRegister == null) {
+            return "redirect:/register";
+        }
+
+        // Giới hạn 60 giây giữa 2 lần gửi
+        Long lastSent = (Long) session.getAttribute("otpLastSentAt");
+        if (lastSent != null && (System.currentTimeMillis() - lastSent) < 60_000) {
+            long remaining = 60 - (System.currentTimeMillis() - lastSent) / 1000;
+            model.addAttribute("error", "Vui lòng đợi " + remaining + "s trước khi gửi lại.");
+            model.addAttribute("email", pendingRegister.getEmail());
+            return "verify-otp";
+        }
+
+        String newOtp = generateOtp();
+        pendingRegister.setOtp(newOtp);
+        pendingRegister.setExpiredAt(LocalDateTime.now().plusMinutes(5));
+        session.setAttribute("pendingRegister", pendingRegister);
+        session.setAttribute("otpLastSentAt", System.currentTimeMillis());
+
+        emailService.sendOtpEmail(pendingRegister.getEmail(), newOtp);
+
+        model.addAttribute("email", pendingRegister.getEmail());
+        model.addAttribute("success", "Mã OTP mới đã được gửi đến email của bạn.");
+        return "verify-otp";
+    }
+
+    // 7. XỬ LÝ ĐĂNG XUẤT
     @GetMapping("/logout")
     public String processLogout(HttpSession session) {
         session.removeAttribute("currentUser");
