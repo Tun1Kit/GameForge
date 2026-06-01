@@ -53,12 +53,5 @@ GGGG.sql
 *.swo
 *~
 
-# Templates — ignore everything except the 5 tracked files
+# Templates — ignore everything (5 harness files tracked at root level)
 templates/
-# NEGATE: track only these specific files
-!templates/
-!templates/feature_list.json
-!templates/clean-state-checklist.md
-!templates/claude-progress.md
-!templates/AGENTS.md
-!templates/quality-document.md

@@ -1,3 +1,0 @@
-# Ignore everything in this folder
-# (The 5 specific files are tracked via negated patterns in the root .gitignore)
-*
