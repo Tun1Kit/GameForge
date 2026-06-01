@@ -53,9 +53,5 @@ GGGG.sql
 *.swo
 *~
 
-# Harness documentation files (lived in templates/)
-feature_list.json
-clean-state-checklist.md
-claude-progress.md
-AGENTS.md
-quality-document.md
+# Harness documentation (lived in templates/ — directory is gitignored)
+templates/
