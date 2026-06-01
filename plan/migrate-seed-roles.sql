@@ -1,27 +1,45 @@
+-- ============================================================
+-- MERGE-05b: Role Seed Data
+-- Chạy SAU migrate-create-new-tables.sql
+-- ============================================================
+
 USE [GameStore]
 GO
 
--- Xoa data cu (neu co) de dam bao sach
-DELETE FROM user_roles;
-DELETE FROM roles WHERE id > 0;
+-- Seed 3 roles
+IF NOT EXISTS (SELECT 1 FROM roles WHERE code = 'ROLE_USER')
+BEGIN
+    SET IDENTITY_INSERT [dbo].[roles] ON
+    INSERT [dbo].[roles] ([id], [code], [description]) VALUES (1, 'ROLE_USER', N'Người dùng thông thường')
+    SET IDENTITY_INSERT [dbo].[roles] OFF
+    PRINT 'Seeded ROLE_USER'
+END
 
--- Seed 3 roles co ban
-SET IDENTITY_INSERT [dbo].[roles] ON
+IF NOT EXISTS (SELECT 1 FROM roles WHERE code = 'ROLE_ADMIN')
+BEGIN
+    SET IDENTITY_INSERT [dbo].[roles] ON
+    INSERT [dbo].[roles] ([id], [code], [description]) VALUES (2, 'ROLE_ADMIN', N'Quản trị viên')
+    SET IDENTITY_INSERT [dbo].[roles] OFF
+    PRINT 'Seeded ROLE_ADMIN'
+END
 
-INSERT [dbo].[roles] ([id], [code], [description])
-VALUES (1, 'ROLE_USER', N'Nguoi dung thong thuong')
+IF NOT EXISTS (SELECT 1 FROM roles WHERE code = 'ROLE_PUBLISHER')
+BEGIN
+    SET IDENTITY_INSERT [dbo].[roles] ON
+    INSERT [dbo].[roles] ([id], [code], [description]) VALUES (3, 'ROLE_PUBLISHER', N'Nhà phát hành game')
+    SET IDENTITY_INSERT [dbo].[roles] OFF
+    PRINT 'Seeded ROLE_PUBLISHER'
+END
 
-INSERT [dbo].[roles] ([id], [code], [description])
-VALUES (2, 'ROLE_ADMIN', N'Quan tri vien')
+-- Seed platform commission rate
+IF NOT EXISTS (SELECT 1 FROM system_settings WHERE setting_key = 'PLATFORM_COMMISSION_RATE')
+BEGIN
+    INSERT [dbo].[system_settings] ([setting_key], [setting_value])
+    VALUES ('PLATFORM_COMMISSION_RATE', '10.00')
+    PRINT 'Seeded PLATFORM_COMMISSION_RATE = 10.00'
+END
 
-INSERT [dbo].[roles] ([id], [code], [description])
-VALUES (3, 'ROLE_PUBLISHER', N'Nha phat hanh game')
-
-SET IDENTITY_INSERT [dbo].[roles] OFF
-
-PRINT 'Seeded 3 roles: ROLE_USER, ROLE_ADMIN, ROLE_PUBLISHER'
-
--- Gan ROLE_USER mac dinh cho tat ca user chua co role
+-- Gán ROLE_USER cho tất cả user chưa có role
 DECLARE @userCount INT = (SELECT COUNT(*) FROM users)
 IF @userCount > 0
 BEGIN
@@ -31,10 +49,10 @@ BEGIN
     WHERE u.id NOT IN (SELECT user_id FROM user_roles)
 
     DECLARE @assigned INT = @@ROWCOUNT
-    PRINT CONCAT('Assigned ROLE_USER to ', @assigned, ' users')
+    PRINT CONCAT('Assigned ROLE_USER to ', @assigned, ' existing users')
 END
 
--- Gan ROLE_ADMIN cho admin (thay doi email theo account thuc te)
+-- Gán ROLE_ADMIN cho admin
 IF EXISTS (SELECT 1 FROM users WHERE email LIKE '%admin%')
 BEGIN
     INSERT INTO user_roles (user_id, role_id)
@@ -49,6 +67,8 @@ END
 SELECT 'roles' AS tbl, COUNT(*) AS cnt FROM roles
 UNION ALL
 SELECT 'user_roles', COUNT(*) FROM user_roles
+UNION ALL
+SELECT 'system_settings', COUNT(*) FROM system_settings
 
-PRINT 'Role seed completed'
+PRINT 'Role seed completed!'
 GO

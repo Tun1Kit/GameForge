@@ -2,7 +2,7 @@
   "project": "GameForge — GameStore Digital Marketplace",
   "harness_version": "1.0.0",
   "last_updated": "2026-06-01",
-  "total_features": 10,
+  "total_features": 16,
   "modules": [
     "Module 1: Authentication & User Management",
     "Module 2: Game Catalog & Discovery",
@@ -13,10 +13,10 @@
     "Module 7: Wallet & Recharge",
     "Module 8: User Profile & Dashboard",
     "Module 9: Transaction History",
-    "Module 10: Email Notification",
-    "--- UPCOMING ---",
-    "[MODULE_11_PLACEHOLDER]: TBD — Reserved for next feature",
-    "[MODULE_12_PLACEHOLDER]: TBD — Reserved for future feature"
+    "Module 10: Email Notification (Order + OTP)",
+    "Module 11: Admin Dashboard & User Management",
+    "Module 12: Publisher Dashboard & Payout System",
+    "Module 13: KYC Verification & Publisher Upgrade"
   ],
 
   "features": [
@@ -25,7 +25,7 @@
       "name": "User Registration",
       "category": "Authentication & User Management",
       "status": "active",
-      "description": "Đăng ký tài khoản mới với username, email, password (BCrypt hashed). Tự động tạo Wallet cho user mới với balance = 0.",
+      "description": "Đăng ký tài khoản với username, email, password (BCrypt hashed). Xác thực OTP email trước khi tạo tài khoản. Tự động tạo Wallet cho user mới với balance = 0. Gán ROLE_USER mặc định.",
       "routes_impacted": [
         "POST /register"
       ],
@@ -343,10 +343,11 @@
       "id": "F012",
       "name": "Email Order Confirmation",
       "category": "Email Notification",
-      "status": "active_disabled",
-      "description": "Gửi email xác nhận đơn hàng sau khi checkout thành công. Hiện tại DISABLED (email.enabled=false). Mock printing trong console.",
+      "status": "active",
+      "description": "Gửi email xác nhận đơn hàng sau khi checkout thành công. Bổ sung OTP email cho registration (email.enabled=false by default).",
       "routes_impacted": [
-        "POST /api/checkout/process (triggers after success)"
+        "POST /api/checkout/process (triggers after success)",
+        "POST /register (triggers OTP email)"
       ],
       "db_tables_used": [],
       "entities_involved": ["Order", "OrderItem", "LicenseKey", "User"],
@@ -364,44 +365,148 @@
     },
 
     "MODULE_11_PLACEHOLDER": {
-      "name": "[RESERVED — TBD]",
-      "description": "Block trống cho module tiếp theo. Gợi ý: Admin Dashboard, Game Review/Rating, Wishlist, Order Refund, Payment Gateway Integration (VNPay/MoMo/ZaloPay), Pagination, Rate Limiting, 2FA.",
-      "suggested_routes": [],
-      "suggested_db_tables": [],
-      "status": "reserved"
+      "id": "F013",
+      "name": "OTP Email Verification (Registration)",
+      "category": "Authentication & User Management",
+      "status": "active",
+      "description": "Xác thực OTP qua email trước khi tạo tài khoản. Tạo PendingRegisterDTO lưu tạm OTP, gửi mail, verify trước khi insert user. Gán ROLE_USER mac dinh.",
+      "routes_impacted": [
+        "POST /register",
+        "GET /verify-otp",
+        "POST /verify-otp"
+      ],
+      "db_tables_used": ["Users", "Wallet", "user_roles", "roles"],
+      "entities_involved": ["User", "Role", "Wallet", "PendingRegisterDTO"],
+      "controllers": ["AuthController"],
+      "daos": ["UserDAO", "RoleDAO"],
+      "services": ["EmailService"],
+      "jsp_views": ["verify-otp.jsp"],
+      "js_files": [],
+      "css_files": [],
+      "risks": [
+        "OTP stored in session — không bền vững nếu session fail",
+        "Email disabled by default — OTP print ra console trong dev",
+        "Không có rate limiting trên OTP resend"
+      ],
+      "dependencies": ["F001"]
     },
 
     "MODULE_12_PLACEHOLDER": {
-      "name": "[RESERVED — TBD]",
-      "description": "Block trống cho module tiếp theo. Gợi ý: Social Login (Google/Facebook), Game Search & Filter, Recommendation Engine, Loyalty Points, Gift Card, Multi-currency Support.",
-      "suggested_routes": [],
-      "suggested_db_tables": [],
-      "status": "reserved"
+      "id": "F014",
+      "name": "Admin Dashboard & User Management",
+      "category": "Admin & Publisher Management",
+      "status": "active",
+      "description": "Admin dashboard với stats (users, wallets, pending KYC/payouts). Lock/unlock users. Manage KYC requests (approve/reject Publisher). Manage payout requests. Update platform commission rate.",
+      "routes_impacted": [
+        "GET /admin/dashboard",
+        "GET /admin/users",
+        "POST /admin/users/lock",
+        "POST /admin/users/unlock",
+        "GET /admin/kyc",
+        "POST /admin/kyc/approve",
+        "POST /admin/kyc/reject",
+        "GET /admin/settings",
+        "POST /admin/settings/commission",
+        "GET /admin/payouts",
+        "POST /admin/payouts/approve",
+        "POST /admin/payouts/reject"
+      ],
+      "db_tables_used": ["Users", "Wallet", "WalletTransaction", "KycRequest", "PayoutRequest", "PublisherProfile", "roles", "system_settings"],
+      "entities_involved": ["User", "KycRequest", "PayoutRequest", "PublisherProfile", "AdminStatsDTO"],
+      "controllers": ["AdminController"],
+      "services": ["AdminDashboardService", "KycService", "PayoutService", "SystemSettingService"],
+      "daos": ["UserDAO", "KycRequestDAO", "PayoutRequestDAO", "PublisherProfileDAO", "SystemSettingDAO"],
+      "jsp_views": ["admin/dashboard.jsp", "admin/users.jsp", "admin/kyc.jsp", "admin/settings.jsp", "admin/payouts.jsp"],
+      "js_files": [],
+      "css_files": [],
+      "risks": [
+        "Admin interceptor chỉ kiểm tra hasRole('ROLE_ADMIN') — không dùng @PreAuthorize",
+        "KYC file upload không validate type/size nghiêm ngặt"
+      ],
+      "dependencies": ["F013"]
+    },
+
+    "MODULE_13_PLACEHOLDER": {
+      "id": "F015",
+      "name": "Publisher Dashboard & Payout System",
+      "category": "Admin & Publisher Management",
+      "status": "active",
+      "description": "Publisher dashboard. Tạo payout request (rút tiền từ wallet). Admin approve/reject payout. Tự động trừ wallet khi payout approved. Publisher revenue từ mỗi game bán được (sau commission).",
+      "routes_impacted": [
+        "GET /publisher/dashboard",
+        "GET /publisher/payouts",
+        "POST /publisher/payouts/request"
+      ],
+      "db_tables_used": ["PublisherProfile", "PayoutRequest", "Wallet", "WalletTransaction", "Users"],
+      "entities_involved": ["PublisherProfile", "PayoutRequest", "User", "Wallet", "WalletTransaction"],
+      "controllers": ["PublisherController"],
+      "services": ["PayoutService", "WalletService"],
+      "daos": ["PublisherProfileDAO", "PayoutRequestDAO", "WalletDAO", "WalletTransactionDAO"],
+      "jsp_views": ["publisher/dashboard.jsp", "publisher/payouts.jsp"],
+      "js_files": [],
+      "css_files": [],
+      "risks": [
+        "Payout không có idempotency — double request có thể tạo 2 payout",
+        "Wallet debit không có optimistic lock"
+      ],
+      "dependencies": ["F007", "F014"]
+    },
+
+    "MODULE_14_PLACEHOLDER": {
+      "id": "F016",
+      "name": "KYC Verification & Publisher Upgrade",
+      "category": "Admin & Publisher Management",
+      "status": "active",
+      "description": "User submit KYC request (tax ID + document upload). Admin approve → auto upgrade to ROLE_PUBLISHER + create PublisherProfile. Reject → giữ nguyên ROLE_USER.",
+      "routes_impacted": [
+        "GET /kyc",
+        "POST /kyc/submit"
+      ],
+      "db_tables_used": ["KycRequest", "Users", "PublisherProfile", "roles", "user_roles"],
+      "entities_involved": ["KycRequest", "User", "PublisherProfile", "Role"],
+      "controllers": ["KycController"],
+      "services": ["KycService"],
+      "daos": ["KycRequestDAO", "UserDAO", "RoleDAO", "PublisherProfileDAO"],
+      "jsp_views": ["kyc/index.jsp"],
+      "js_files": [],
+      "css_files": [],
+      "risks": [
+        "KYC document không scan virus — potential security risk",
+        "Tax ID không validate format"
+      ],
+      "dependencies": ["F013"]
     }
   ],
 
   "db_schema_summary": {
-    "total_tables": 12,
+    "total_tables": 18,
     "tables": [
-      { "name": "Users", "columns": "userId(PK), username, email, passwordHash, fullName, avatar, createdAt, isAdmin", "notes": "BCrypt hashed password" },
-      { "name": "Wallet", "columns": "walletId(PK), userId(FK-U), balance", "notes": "1-to-1 với Users, balance DECIMAL(18,2)" },
-      { "name": "WalletTransaction", "columns": "transactionId(PK), walletId(FK), amount, type, description, transactionDate", "notes": "type: DEPOSIT | ORDER" },
-      { "name": "Game", "columns": "gameId(PK), name, description, price, imageUrl, developer, genre, releaseDate, stock, isActive", "notes": "EAGER fetch mediaList + categories" },
-      { "name": "GameMedia", "columns": "mediaId(PK), gameId(FK), mediaType, mediaUrl", "notes": "" },
+      { "name": "Users", "columns": "userId(PK), username(U), email(U), passwordHash, fullName, avatar, status, createdAt", "notes": "BCrypt hashed, roles via @ManyToMany" },
+      { "name": "Wallet", "columns": "walletId(PK), userId(FK-U), balance DECIMAL(18,2)", "notes": "1-to-1 với Users" },
+      { "name": "WalletTransaction", "columns": "transactionId(PK), walletId(FK), amount, type, status, referenceId, createdAt", "notes": "DEPOSIT/WITHDRAW/PURCHASE/REFUND/PAYOUT/ADJUSTMENT" },
+      { "name": "Game", "columns": "gameId(PK), title, slug, description, price, originalPrice, status, publisher_id(FK)", "notes": "EAGER fetch mediaList + categories, publisher optional" },
+      { "name": "GameMedia", "columns": "mediaId(PK), gameId(FK), mediaType, mediaUrl", "notes": "1-to-N với Game" },
       { "name": "Category", "columns": "categoryId(PK), name, description", "notes": "" },
-      { "name": "CartItem", "columns": "cartItemId(PK), userId(FK), gameId(FK), quantity, addedAt", "notes": "Unique constraint (userId, gameId) khuyến nghị" },
-      { "name": "Order", "columns": "orderId(PK), userId(FK), totalAmount, status, orderDate, shippingFullName, shippingPhone, shippingEmail, shippingAddress, shippingCity, shippingDistrict, shippingWard, notes", "notes": "8 shipping fields" },
-      { "name": "OrderItem", "columns": "orderItemId(PK), orderId(FK), gameId(FK), quantity, priceAtPurchase, licenseKeyId(FK)", "notes": "" },
-      { "name": "LicenseKey", "columns": "keyId(PK), gameId(FK), keyString, isUsed, usedAt, usedByUserId", "notes": "keyString format: gameId-XXXXXXXX" },
-      { "name": "LibraryItem", "columns": "libraryItemId(PK), userId(FK), gameId(FK), licenseKeyId(FK), purchaseDate", "notes": "" },
-      { "name": "PromoCode", "columns": "promoId(PK), code, discountType, discountValue, maxUsage, usageCount, expiryDate, applicableGameIds", "notes": "applicableGameIds: null = global" }
+      { "name": "CartItem", "columns": "cartItemId(PK), userId(FK), gameId(FK), quantity, addedAt", "notes": "Unique constraint (userId, gameId) recommended" },
+      { "name": "Order", "columns": "orderId(PK), userId(FK), subtotalAmount, discountAmount, totalAmount, status, paymentMethod, fullName, phone, address, province, district, ward, notes, promoCodeId, createdAt, paidAt", "notes": "8 shipping fields" },
+      { "name": "OrderItem", "columns": "orderItemId(PK), orderId(FK), gameId(FK), unitPrice, discountAmount, paidAmount, quantity, status", "notes": "" },
+      { "name": "LicenseKey", "columns": "keyId(PK), gameId(FK), keyString, orderItemId, order_item_entity_id, owner_id(FK), status, createdAt, assignedAt", "notes": "AVAILABLE/SOLD status" },
+      { "name": "LibraryItem", "columns": "libraryItemId(PK), userId(FK), gameId(FK), license_key_id(FK), order_item_entity_id, status, acquiredAt", "notes": "1-to-1 với LicenseKey" },
+      { "name": "PromoCode", "columns": "promoId(PK), code, discountType, discountValue, maxUsage, usageCount, expiryDate, applicableGameIds", "notes": "applicableGameIds: null = global" },
+      { "name": "roles", "columns": "id(PK), code(U), description", "notes": "ROLE_USER, ROLE_ADMIN, ROLE_PUBLISHER" },
+      { "name": "user_roles", "columns": "user_id(PK), role_id(PK)", "notes": "@ManyToMany junction table" },
+      { "name": "publisher_profiles", "columns": "id(PK), user_id(FK-U), companyName, website, supportEmail", "notes": "1-to-1 với Users" },
+      { "name": "kyc_requests", "columns": "id(PK), user_id(FK), documentUrl, taxId, status, submittedAt, processedAt", "notes": "PENDING/APPROVED/REJECTED" },
+      { "name": "payout_requests", "columns": "id(PK), publisher_id(FK), amount, bankAccountInfo, status, requestedAt, processedAt", "notes": "PENDING/PAID/REJECTED" },
+      { "name": "system_settings", "columns": "setting_key(PK), setting_value", "notes": "PLATFORM_COMMISSION_RATE" }
     ]
   },
 
   "api_inventory": {
     "auth_apis": [
-      { "endpoint": "/api/auth/login", "method": "POST", "params": ["username", "password"], "returns": "User JSON or error" },
-      { "endpoint": "/api/auth/register", "method": "POST", "params": ["username", "email", "password", "fullName"], "returns": "success/error" }
+      { "endpoint": "/api/auth/login", "method": "POST", "params": ["emailOrUsername", "password"], "returns": "User JSON or redirect" },
+      { "endpoint": "/api/auth/register", "method": "POST", "params": ["username", "email", "password", "fullName"], "returns": "redirect to /verify-otp" },
+      { "endpoint": "/verify-otp", "method": "POST", "params": ["otp"], "returns": "success/error + redirect" }
     ],
     "cart_apis": [
       { "endpoint": "/api/cart/add", "method": "POST", "params": ["gameId", "quantity"], "returns": "success/error" },
@@ -422,7 +527,20 @@
       { "endpoint": "/api/recharge/process", "method": "POST", "params": ["amount", "paymentMethod", "transactionId"], "returns": "WalletTransaction or error" }
     ],
     "admin_apis": [
-      { "endpoint": "/api/admin/generate-keys", "method": "POST", "params": ["gameId", "count"], "returns": "LicenseKey[]" }
+      { "endpoint": "/api/admin/generate-keys", "method": "POST", "params": ["gameId", "count"], "returns": "LicenseKey[]" },
+      { "endpoint": "/admin/users/lock", "method": "POST", "params": ["userId"], "returns": "redirect" },
+      { "endpoint": "/admin/users/unlock", "method": "POST", "params": ["userId"], "returns": "redirect" },
+      { "endpoint": "/admin/kyc/approve", "method": "POST", "params": ["requestId"], "returns": "redirect" },
+      { "endpoint": "/admin/kyc/reject", "method": "POST", "params": ["requestId"], "returns": "redirect" },
+      { "endpoint": "/admin/settings/commission", "method": "POST", "params": ["commissionRate"], "returns": "redirect" },
+      { "endpoint": "/admin/payouts/approve", "method": "POST", "params": ["requestId"], "returns": "redirect" },
+      { "endpoint": "/admin/payouts/reject", "method": "POST", "params": ["requestId"], "returns": "redirect" }
+    ],
+    "publisher_apis": [
+      { "endpoint": "/publisher/payouts/request", "method": "POST", "params": ["amount", "bankAccountInfo"], "returns": "redirect" }
+    ],
+    "kyc_apis": [
+      { "endpoint": "/kyc/submit", "method": "POST", "params": ["taxId", "documentFile"], "returns": "redirect" }
     ]
   }
 }

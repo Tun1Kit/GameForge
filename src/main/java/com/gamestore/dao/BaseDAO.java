@@ -28,5 +28,12 @@ public abstract class BaseDAO<T> {
     public void save(T entity) {
         sessionFactory.getCurrentSession().save(entity);
     }
-    // Thêm các hàm save, update, delete dùng chung ở đây
+
+    public void update(T entity) {
+        sessionFactory.getCurrentSession().update(entity);
+    }
+
+    public void saveOrUpdate(T entity) {
+        sessionFactory.getCurrentSession().saveOrUpdate(entity);
+    }
 }

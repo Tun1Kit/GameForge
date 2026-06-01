@@ -7,12 +7,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 @Transactional
 public class CartItemDAO extends BaseDAO<CartItem> {
-    
+
     public CartItemDAO() {
         setClazz(CartItem.class);
     }
 
-    // Hàm kiểm tra xem 1 User đã có 1 Game cụ thể trong giỏ hàng chưa
     public CartItem findByUserAndGame(Long userId, Long gameId) {
         try {
             return sessionFactory.getCurrentSession()

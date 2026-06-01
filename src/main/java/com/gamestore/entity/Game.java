@@ -26,6 +26,10 @@ public class Game {
 
     private String status;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "publisher_id")
+    private PublisherProfile publisher;
+
     // Sửa lại: Dùng List<GameMedia> và thêm FetchType.EAGER để load ảnh nhanh
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<GameMedia> mediaList;
@@ -59,4 +63,7 @@ public class Game {
     public void setMediaList(List<GameMedia> mediaList) { this.mediaList = mediaList; }
     public Set<Category> getCategories() { return categories; }
     public void setCategories(Set<Category> categories) { this.categories = categories; }
+
+    public PublisherProfile getPublisher() { return publisher; }
+    public void setPublisher(PublisherProfile publisher) { this.publisher = publisher; }
 }

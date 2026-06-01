@@ -25,6 +25,57 @@ public class EmailService {
     @Value("${email.enabled:false}")
     private boolean emailEnabled;
 
+    // ===== OTP EMAIL =====
+
+    public void sendOtpEmail(String toEmail, String otp) {
+        String html = buildOtpEmailHTML(otp);
+
+        if (!emailEnabled || mailSender == null) {
+            System.out.println("==================================================");
+            System.out.println("=== OTP EMAIL MOCK TO: " + toEmail + " ===");
+            System.out.println("Mã OTP của bạn: " + otp);
+            System.out.println("==================================================");
+            return;
+        }
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(toEmail);
+            helper.setSubject("GameForge - Mã xác thực OTP");
+            helper.setText(html, true);
+            helper.setFrom("noreply@gamestore.com");
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("Gửi email OTP thất bại: " + e.getMessage());
+            throw new RuntimeException("Không gửi được email OTP", e);
+        }
+    }
+
+    private String buildOtpEmailHTML(String otp) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<div style='font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; border: 3px solid #000000; padding: 30px; box-shadow: 6px 6px 0px #000000; background-color: #FFFDF8;'>");
+        sb.append("<div style='background-color: #2ECC71; border-bottom: 3px solid #000000; padding: 15px; text-align: center;'>");
+        sb.append("<h1 style='margin: 0; font-size: 24px; color: #000000; font-weight: 900;'>GAMEFORGE</h1>");
+        sb.append("</div>");
+        sb.append("<div style='padding: 20px 0; text-align: center;'>");
+        sb.append("<p style='font-size: 16px;'>Xin chào,</p>");
+        sb.append("<p style='font-size: 14px; color: #71717A;'>Mã xác thực OTP của bạn là:</p>");
+        sb.append("<div style='background: #FDE047; border: 3px solid #000; padding: 15px 30px; display: inline-block; margin: 15px 0; box-shadow: 3px 3px 0 #000;'>");
+        sb.append("<span style='font-size: 32px; font-weight: 900; letter-spacing: 8px; color: #000;'>").append(otp).append("</span>");
+        sb.append("</div>");
+        sb.append("<p style='font-size: 12px; color: #71717A;'>Mã này có hiệu lực trong <strong>5 phút</strong>.</p>");
+        sb.append("<p style='font-size: 12px; color: #71717A;'>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>");
+        sb.append("</div>");
+        sb.append("<div style='border-top: 2px solid #000; padding-top: 15px; font-size: 11px; color: #71717A; text-align: center;'>");
+        sb.append("© 2026 GameForge. Không chia sẻ mã OTP với bất kỳ ai.");
+        sb.append("</div>");
+        sb.append("</div>");
+        return sb.toString();
+    }
+
+    // ===== ORDER CONFIRMATION EMAIL =====
+
     public void sendOrderConfirmation(User user, Order order, List<Map<String, Object>> keys) {
         String html = buildOrderEmailHTML(user, order, keys);
         

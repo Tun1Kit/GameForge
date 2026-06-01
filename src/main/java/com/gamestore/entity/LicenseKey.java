@@ -18,8 +18,13 @@ public class LicenseKey {
     @Column(name = "keyString", nullable = false)
     private String keyString;
 
-    @Column(name = "order_item_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_item_id")
     private Long orderItemId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_item_entity_id")
+    private OrderItem orderItem;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
@@ -61,4 +66,14 @@ public class LicenseKey {
 
     public LocalDateTime getAssignedAt() { return assignedAt; }
     public void setAssignedAt(LocalDateTime assignedAt) { this.assignedAt = assignedAt; }
+
+    public OrderItem getOrderItem() { return orderItem; }
+    public void setOrderItem(OrderItem orderItem) { this.orderItem = orderItem; }
+
+    public void assignTo(User owner, OrderItem orderItem) {
+        this.owner = owner;
+        this.orderItem = orderItem;
+        this.status = "SOLD";
+        this.assignedAt = LocalDateTime.now();
+    }
 }

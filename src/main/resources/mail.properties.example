@@ -1,0 +1,17 @@
+# GameForge Mail Configuration
+# Rename to mail.properties và điền thông tin SMTP của bạn
+
+# Disable email by default (OTP will print to console in dev)
+email.enabled=false
+
+# SMTP Configuration (Gmail example)
+mail.host=smtp.gmail.com
+mail.port=587
+mail.username=your-email@gmail.com
+mail.password=your-app-password
+
+# For other SMTP providers, adjust properties accordingly
+# mail.host=smtp.mail.yahoo.com
+# mail.port=587
+# mail.username=your-email@yahoo.com
+# mail.password=your-app-password

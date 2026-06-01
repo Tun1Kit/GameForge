@@ -23,6 +23,10 @@ public class LibraryItem {
     @JoinColumn(name = "license_key_id", unique = true)
     private LicenseKey licenseKey;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_item_entity_id")
+    private OrderItem orderItem;
+
     @Column(nullable = false, length = 50)
     private String status = "ACTIVE";
 
@@ -51,4 +55,7 @@ public class LibraryItem {
 
     public LocalDateTime getAcquiredAt() { return acquiredAt; }
     public void setAcquiredAt(LocalDateTime acquiredAt) { this.acquiredAt = acquiredAt; }
+
+    public OrderItem getOrderItem() { return orderItem; }
+    public void setOrderItem(OrderItem orderItem) { this.orderItem = orderItem; }
 }

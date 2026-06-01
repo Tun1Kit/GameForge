@@ -25,7 +25,8 @@
 		<property name="suffix" value=".jsp" />
 	</bean>
 
-	<context:property-placeholder location="classpath:database.properties" />
+	<!-- Database + Mail properties -->
+	<context:property-placeholder location="classpath:database.properties,classpath:mail.properties" />
 
 	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
 		<property name="driverClassName" value="${jdbc.driverClassName}" />
@@ -50,6 +51,48 @@
 		<property name="sessionFactory" ref="sessionFactory" />
 	</bean>
 
-	<tx:annotation-driven transaction-manager="transactionManager" />
+	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />
+
+	<!-- RBAC Interceptor -->
+	<bean id="authInterceptor" class="com.gamestore.interceptor.AuthInterceptor" />
+
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/admin/**" />
+			<mvc:mapping path="/publisher/**" />
+			<mvc:mapping path="/wallet/**" />
+			<mvc:mapping path="/wallet" />
+			<mvc:mapping path="/kyc/**" />
+			<mvc:mapping path="/kyc" />
+			<mvc:mapping path="/cart/**" />
+			<mvc:mapping path="/checkout/**" />
+			<mvc:mapping path="/library/**" />
+			<mvc:mapping path="/orders" />
+			<mvc:mapping path="/orders/**" />
+			<ref bean="authInterceptor" />
+		</mvc:interceptor>
+	</mvc:interceptors>
+
+	<!-- File upload cho KYC -->
+	<bean id="multipartResolver"
+	      class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize" value="10485760" />
+		<property name="defaultEncoding" value="UTF-8" />
+	</bean>
+
+	<!-- Email (disabled by default) -->
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="${mail.host}" />
+		<property name="port" value="${mail.port}" />
+		<property name="username" value="${mail.username}" />
+		<property name="password" value="${mail.password}" />
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.smtp.auth">true</prop>
+				<prop key="mail.smtp.starttls.enable">true</prop>
+				<prop key="mail.smtp.ssl.trust">smtp.gmail.com</prop>
+			</props>
+		</property>
+	</bean>
 
 </beans>
