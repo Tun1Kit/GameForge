@@ -18,8 +18,7 @@ public class LicenseKey {
     @Column(name = "keyString", nullable = false)
     private String keyString;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_item_id")
+    @Column(name = "order_item_id")
     private Long orderItemId;
 
     @ManyToOne(fetch = FetchType.LAZY)
