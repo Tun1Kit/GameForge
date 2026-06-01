@@ -1,0 +1,77 @@
+.gf-decor-pill {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 3px solid #000;
+  border-radius: 8px;
+  box-shadow: 2px 2px 0 #000;
+  z-index: 1;
+}
+.amount-card {
+  cursor: pointer;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.amount-card.active {
+  background: #FFFDF8 !important;
+  border: 3px solid var(--gf-green) !important;
+  box-shadow: 4px 4px 0 #000 !important;
+}
+.amount-card.active::after {
+  content: "✓";
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 24px;
+  height: 24px;
+  background: var(--gf-green);
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: bold;
+  font-size: 12px;
+}
+.payment-card {
+  cursor: pointer;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.payment-card.active {
+  background: #FFFDF8 !important;
+  border: 3px solid var(--gf-green) !important;
+  box-shadow: 4px 4px 0 #000 !important;
+}
+.payment-card.active::after {
+  content: "✓";
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 24px;
+  height: 24px;
+  background: var(--gf-green);
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: bold;
+  font-size: 12px;
+}
+.pulsate-dot {
+  width: 10px;
+  height: 10px;
+  background-color: var(--gf-pink);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+  animation: pulse-dot 1.2s infinite ease-in-out;
+}
+@keyframes pulse-dot {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.8); opacity: 0.5; }
+}

@@ -1,0 +1,271 @@
+/* Transactions CSS - Neo Brutalism Style */
+
+.gf-stat-card {
+  transition: transform 0.2s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.2s ease;
+}
+
+.gf-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 8px 8px 0 #000 !important;
+}
+
+/* Custom spacing and boxes for rows to look like modern Neo-brutal cards */
+.gf-txn-table tbody tr {
+  background-color: #ffffff;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+/* Row-by-row card layout */
+.gf-txn-table tbody tr.txn-row-item {
+  border: 3px solid #000000 !important;
+  box-shadow: 4px 4px 0 #000000;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  display: table-row;
+}
+
+.gf-txn-table tbody tr.txn-row-item:hover {
+  transform: scale(1.006) translateY(-1px);
+  box-shadow: 6px 6px 0 #000000;
+  background-color: #fafaf9;
+}
+
+.gf-txn-table th {
+  border-bottom: 3px solid #000000 !important;
+  color: #78716c;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 12px 16px !important;
+}
+
+.gf-txn-table td {
+  padding: 16px !important;
+  border-bottom: none !important;
+  border-top: none !important;
+}
+
+/* Tool group buttons */
+#txnFilterBtnGroup .btn {
+  box-shadow: 3px 3px 0 #000000;
+  border: 2px solid #000000;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+#txnFilterBtnGroup .btn:hover:not(.active) {
+  background-color: #f5f5f4 !important;
+  transform: translateY(-1px);
+  box-shadow: 4px 4px 0 #000000;
+}
+
+#txnFilterBtnGroup .btn.active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #000000;
+}
+
+/* Dark mode overrides */
+html.gf-dark-mode .gf-txn-table tbody tr.txn-row-item {
+  background-color: #1c1917;
+  border-color: #ffffff !important;
+  box-shadow: 4px 4px 0 #ffffff;
+}
+
+html.gf-dark-mode .gf-txn-table tbody tr.txn-row-item:hover {
+  background-color: #292524;
+  box-shadow: 6px 6px 0 #ffffff;
+}
+
+html.gf-dark-mode .gf-txn-table th {
+  border-bottom-color: #ffffff !important;
+  color: #a8a29e;
+}
+
+html.gf-dark-mode .gf-txn-table td {
+  color: #e7e5e4;
+}
+
+html.gf-dark-mode .gf-txn-table td strong {
+  color: #ffffff !important;
+}
+
+html.gf-dark-mode #txnFilterBtnGroup .btn {
+  border-color: #ffffff;
+  box-shadow: 3px 3px 0 #ffffff;
+}
+
+html.gf-dark-mode #txnFilterBtnGroup .btn.active {
+  box-shadow: 1px 1px 0 #ffffff;
+}
+
+html.gf-dark-mode #txnFilterBtnGroup .btn:hover:not(.active) {
+  background-color: #292524 !important;
+  box-shadow: 4px 4px 0 #ffffff;
+}
+
+html.gf-dark-mode .gf-border-2 {
+  border-color: #ffffff !important;
+}
+
+/* Hide horizontal scrollbar but keep swipe capability on mobile */
+.table-responsive {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
+}
+.table-responsive::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari and Opera */
+}
+
+/* Pagination Style - Neo Brutalism */
+#txnPageNumbers .page-num-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  border: 3.5px solid #000000;
+  box-shadow: 3px 3px 0 #000000;
+  font-weight: 900;
+  font-size: 14px;
+  color: #000000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease;
+}
+
+#txnPageNumbers .page-num-btn:hover:not(.active) {
+  background-color: #f5f5f4 !important;
+  transform: translateY(-2px);
+  box-shadow: 4px 4px 0 #000000;
+}
+
+#txnPageNumbers .page-num-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #000000;
+}
+
+#txnPageNumbers .page-num-btn.active {
+  background-color: var(--gf-green) !important;
+  color: #000000 !important;
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #000000;
+}
+
+/* Dark mode pagination overrides */
+html.gf-dark-mode #txnPageNumbers .page-num-btn {
+  background-color: #1c1917;
+  border-color: #ffffff;
+  color: #ffffff;
+  box-shadow: 3px 3px 0 #ffffff;
+}
+
+html.gf-dark-mode #txnPageNumbers .page-num-btn.active {
+  background-color: var(--gf-green) !important;
+  color: #000000 !important;
+  box-shadow: 1px 1px 0 #ffffff;
+}
+
+html.gf-dark-mode #txnPageNumbers .page-num-btn:hover:not(.active) {
+  background-color: #292524 !important;
+  box-shadow: 4px 4px 0 #ffffff;
+}
+
+/* Table pagination side navigation buttons */
+.gf-table-slider-shell {
+  position: relative;
+}
+
+/* Base side buttons override for transactions */
+.gf-table-slider-shell .gf-side-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 3.5px solid #000000;
+  border-radius: 14px;
+  background: var(--gf-yellow);
+  color: #000000;
+  box-shadow: 4px 4px 0 0 #000000;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  padding: 0;
+}
+
+.gf-table-slider-shell #txnPrevPageBtn {
+  left: -48px;
+}
+
+.gf-table-slider-shell #txnNextPageBtn {
+  right: -48px;
+  background: var(--gf-green);
+}
+
+.gf-table-slider-shell .gf-side-nav-btn:hover {
+  transform: translateY(-50%) translate(-2px, -2px) rotate(-3deg);
+  box-shadow: 6px 6px 0 0 #000000;
+}
+
+.gf-table-slider-shell .gf-side-nav-btn:active {
+  transform: translateY(-50%) translate(2px, 2px);
+  box-shadow: 0 0 0 0 #000000;
+}
+
+/* Disabled state */
+.gf-table-slider-shell .gf-side-nav-btn:disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  transform: translateY(-50%) !important;
+  box-shadow: 2px 2px 0 0 #000000 !important;
+}
+
+/* Dark mode side buttons */
+html.gf-dark-mode .gf-table-slider-shell .gf-side-nav-btn {
+  border-color: #ffffff;
+  color: #ffffff;
+  box-shadow: 4px 4px 0 0 #ffffff;
+}
+html.gf-dark-mode .gf-table-slider-shell #txnPrevPageBtn {
+  background: #27272a;
+}
+html.gf-dark-mode .gf-table-slider-shell #txnNextPageBtn {
+  background: var(--gf-green);
+  color: #000000;
+}
+html.gf-dark-mode .gf-table-slider-shell .gf-side-nav-btn:hover {
+  box-shadow: 6px 6px 0 0 #ffffff;
+}
+html.gf-dark-mode .gf-table-slider-shell .gf-side-nav-btn:active {
+  box-shadow: 0 0 0 0 #ffffff;
+}
+html.gf-dark-mode .gf-table-slider-shell .gf-side-nav-btn:disabled {
+  box-shadow: 2px 2px 0 0 #ffffff !important;
+}
+
+/* Responsive adjustments for side buttons */
+@media (max-width: 768px) {
+  .gf-table-slider-shell {
+    padding-bottom: 60px;
+  }
+  .gf-table-slider-shell .gf-side-nav-btn {
+    top: auto;
+    bottom: 0px;
+    transform: none;
+  }
+  .gf-table-slider-shell #txnPrevPageBtn {
+    left: calc(50% - 60px);
+  }
+  .gf-table-slider-shell #txnNextPageBtn {
+    right: calc(50% - 60px);
+  }
+  .gf-table-slider-shell .gf-side-nav-btn:hover {
+    transform: translate(-2px, -2px) rotate(-3deg);
+  }
+  .gf-table-slider-shell .gf-side-nav-btn:active {
+    transform: translate(2px, 2px);
+  }
+  .gf-table-slider-shell .gf-side-nav-btn:disabled {
+    transform: none !important;
+  }
+}
+

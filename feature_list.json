@@ -1,0 +1,428 @@
+{
+  "project": "GameForge — GameStore Digital Marketplace",
+  "harness_version": "1.0.0",
+  "last_updated": "2026-06-01",
+  "total_features": 10,
+  "modules": [
+    "Module 1: Authentication & User Management",
+    "Module 2: Game Catalog & Discovery",
+    "Module 3: Shopping Cart",
+    "Module 4: Checkout & Payment (Wallet)",
+    "Module 5: Library & License Management",
+    "Module 6: Promo Code System",
+    "Module 7: Wallet & Recharge",
+    "Module 8: User Profile & Dashboard",
+    "Module 9: Transaction History",
+    "Module 10: Email Notification",
+    "--- UPCOMING ---",
+    "[MODULE_11_PLACEHOLDER]: TBD — Reserved for next feature",
+    "[MODULE_12_PLACEHOLDER]: TBD — Reserved for future feature"
+  ],
+
+  "features": [
+    {
+      "id": "F001",
+      "name": "User Registration",
+      "category": "Authentication & User Management",
+      "status": "active",
+      "description": "Đăng ký tài khoản mới với username, email, password (BCrypt hashed). Tự động tạo Wallet cho user mới với balance = 0.",
+      "routes_impacted": [
+        "POST /register"
+      ],
+      "db_tables_used": [
+        "Users",
+        "Wallet"
+      ],
+      "entities_involved": ["User", "Wallet"],
+      "controllers": ["AuthController"],
+      "daos": ["UserDAO"],
+      "jsp_views": ["login.jsp"],
+      "js_files": ["login.js"],
+      "css_files": ["login.css"],
+      "risks": [
+        "SQL injection qua username/email — Named Parameter check bắt buộc",
+        "Duplicate username/email — validate trước khi insert",
+        "BCrypt salt rounds — hiện dùng default (10)"
+      ],
+      "dependencies": ["F002", "F007"]
+    },
+    {
+      "id": "F002",
+      "name": "User Login",
+      "category": "Authentication & User Management",
+      "status": "active",
+      "description": "Đăng nhập bằng username/password. Dùng BCrypt.matches() để verify. Lưu User object vào HttpSession. Auto-create Wallet nếu chưa có.",
+      "routes_impacted": [
+        "GET /login",
+        "POST /login"
+      ],
+      "db_tables_used": [
+        "Users",
+        "Wallet"
+      ],
+      "entities_involved": ["User", "Wallet"],
+      "controllers": ["AuthController"],
+      "daos": ["UserDAO"],
+      "jsp_views": ["login.jsp"],
+      "js_files": ["login.js"],
+      "css_files": ["login.css"],
+      "risks": [
+        "Timing attack — dùng BCrypt.matches() (constant-time)",
+        "Brute force login — KHÔNG có rate limiting hiện tại",
+        "Session fixation — dùng request.getSession(true) sau login thay vì invalidate cũ"
+      ],
+      "dependencies": ["F001"]
+    },
+    {
+      "id": "F003",
+      "name": "Game Browsing & Search",
+      "category": "Game Catalog & Discovery",
+      "status": "active",
+      "description": "Trang chủ hiển thị danh sách game với thumbnail, tên, mô tả, giá. Tích hợp favorites (localStorage). Dark/light theme toggle. Hiển thị owned game badges.",
+      "routes_impacted": [
+        "GET /",
+        "GET /home",
+        "POST /api/admin/generate-keys"
+      ],
+      "db_tables_used": [
+        "Game",
+        "GameMedia",
+        "Category",
+        "LibraryItem"
+      ],
+      "entities_involved": ["Game", "GameMedia", "Category", "LibraryItem"],
+      "controllers": ["GameController"],
+      "daos": ["BaseDAO"],
+      "jsp_views": ["index.jsp"],
+      "js_files": ["index.js"],
+      "css_files": ["index.css"],
+      "risks": [
+        "N+1 query — Game entity dùng EAGER fetch mediaList + categories",
+        "Large game list → load chậm — không có pagination",
+        "LocalStorage favorites không sync khi user đổi thiết bị"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F004",
+      "name": "Add to Cart",
+      "category": "Shopping Cart",
+      "status": "active",
+      "description": "Thêm game vào giỏ hàng. Cart lưu trong DB (CartItem table) với userId + gameId + quantity. API: /api/cart/add, /api/cart/items, /api/cart/count, /api/cart/remove.",
+      "routes_impacted": [
+        "POST /api/cart/add",
+        "GET /api/cart/count",
+        "GET /api/cart/items",
+        "POST /api/cart/remove",
+        "POST /api/cart/remove-by-game"
+      ],
+      "db_tables_used": [
+        "CartItem",
+        "Game",
+        "LibraryItem"
+      ],
+      "entities_involved": ["CartItem", "Game", "LibraryItem"],
+      "controllers": ["CartApiController"],
+      "daos": ["BaseDAO", "CartItemDAO"],
+      "jsp_views": ["index.jsp", "checkout.jsp"],
+      "js_files": ["index.js", "checkout.js"],
+      "css_files": ["index.css", "checkout.css"],
+      "risks": [
+        "Double add cùng game → tạo 2 CartItem — cần unique constraint userId+gameId",
+        "Add game đã sở hữu → nên block ở client-side (check LibraryItem)",
+        "Cart không expire — KHÔNG có TTL trên CartItem"
+      ],
+      "dependencies": ["F003", "F005"]
+    },
+    {
+      "id": "F005",
+      "name": "Checkout with Wallet Deduction",
+      "category": "Checkout & Payment (Wallet)",
+      "status": "active",
+      "description": "Thanh toán giỏ hàng bằng số dư Wallet. Tạo Order → OrderItem → LicenseKey → LibraryItem → xóa CartItem. Validate số dư server-side. Hỗ trợ Promo Code.",
+      "routes_impacted": [
+        "GET /checkout",
+        "POST /checkout/process",
+        "GET /checkout/success",
+        "POST /api/checkout/process",
+        "POST /api/promo/validate"
+      ],
+      "db_tables_used": [
+        "CartItem",
+        "Wallet",
+        "WalletTransaction",
+        "Order",
+        "OrderItem",
+        "LicenseKey",
+        "LibraryItem",
+        "Game",
+        "PromoCode",
+        "Users"
+      ],
+      "entities_involved": ["Order", "OrderItem", "LicenseKey", "LibraryItem", "Wallet", "WalletTransaction", "Game", "PromoCode", "User", "CartItem"],
+      "controllers": ["CheckoutController"],
+      "daos": ["BaseDAO"],
+      "jsp_views": ["checkout.jsp", "order-success.jsp"],
+      "js_files": ["checkout.js"],
+      "css_files": ["checkout.css"],
+      "risks": [
+        "Race condition khi 2 checkout cùng lúc — cần pessimistic lock hoặc optimistic lock",
+        "Wallet balance bị âm nếu race — CHECK trong transaction",
+        "Promo code reuse — kiểm tra usageCount vs maxUsage",
+        "Partial failure (Order tạo nhưng LibraryItem fail) — cần full rollback",
+        "Không có idempotency key — refresh trang có thể tạo duplicate order"
+      ],
+      "dependencies": ["F004", "F007", "F006", "F009"]
+    },
+    {
+      "id": "F006",
+      "name": "Promo Code Validation & Application",
+      "category": "Promo Code System",
+      "status": "active",
+      "description": "Validate mã khuyến mãi theo: expiry date, usage limit, applicable games. Áp dụng giảm giá trên tổng checkout.",
+      "routes_impacted": [
+        "POST /api/promo/validate",
+        "POST /api/promo/by-games"
+      ],
+      "db_tables_used": [
+        "PromoCode",
+        "Game"
+      ],
+      "entities_involved": ["PromoCode", "Game"],
+      "controllers": ["PromoApiController"],
+      "daos": ["BaseDAO"],
+      "jsp_views": ["checkout.jsp"],
+      "js_files": ["checkout.js"],
+      "css_files": ["checkout.css"],
+      "risks": [
+        "Client-side total bị manipulate — luôn verify server-side",
+        "Promo hết hạn nhưng vẫn apply nếu check race — dùng DB-level lock",
+        "Global promo (áp dụng tất cả game) — kiểm tra gameIds null/empty"
+      ],
+      "dependencies": ["F005"]
+    },
+    {
+      "id": "F007",
+      "name": "Wallet Balance Management",
+      "category": "Wallet & Recharge",
+      "status": "active",
+      "description": "Mỗi User có 1 Wallet. Balance DECIMAL(18,2). Thao tác: nạp tiền (+), thanh toán (-). Tất cả giao dịch được ghi vào WalletTransaction.",
+      "routes_impacted": [
+        "GET /dashboard",
+        "GET /recharge",
+        "POST /api/recharge/process"
+      ],
+      "db_tables_used": [
+        "Wallet",
+        "WalletTransaction",
+        "Users"
+      ],
+      "entities_involved": ["Wallet", "WalletTransaction", "User"],
+      "controllers": ["RechargeController", "DashboardController", "CheckoutController"],
+      "daos": ["BaseDAO"],
+      "jsp_views": ["dashboard.jsp", "recharge.jsp"],
+      "js_files": ["dashboard.js", "recharge.js"],
+      "css_files": ["dashboard.css", "recharge.css"],
+      "risks": [
+        "Simulated payment — KHÔNG có xác minh payment thật",
+        "Race condition trên balance — cần @Transactional + optimistic lock",
+        "Recharge amount validation — phải > 0"
+      ],
+      "dependencies": ["F008"]
+    },
+    {
+      "id": "F008",
+      "name": "Recharge with Bonus Rates",
+      "category": "Wallet & Recharge",
+      "status": "active",
+      "description": "Nạp tiền với 3 mức bonus: 500k(+6%), 1M(+8%), 2M(+11%). QR code MBBank mô phỏng. Transaction ID do client gửi.",
+      "routes_impacted": [
+        "GET /recharge",
+        "POST /api/recharge/process"
+      ],
+      "db_tables_used": [
+        "Wallet",
+        "WalletTransaction"
+      ],
+      "entities_involved": ["Wallet", "WalletTransaction"],
+      "controllers": ["RechargeController"],
+      "daos": ["BaseDAO"],
+      "jsp_views": ["recharge.jsp"],
+      "js_files": ["recharge.js"],
+      "css_files": ["recharge.css"],
+      "risks": [
+        "Client gửi fake transactionId — payment không verify",
+        "Bonus calculation bị round lỗi — dùng BigDecimal cho balance",
+        "Double recharge (same transactionId) — cần unique constraint"
+      ],
+      "dependencies": ["F007"]
+    },
+    {
+      "id": "F009",
+      "name": "Game Library & Ownership",
+      "category": "Library & License Management",
+      "status": "active",
+      "description": "Thư viện game đã sở hữu. Mỗi game có LicenseKey được assign khi mua. Library hiển thị games owned kèm license key, purchase date.",
+      "routes_impacted": [
+        "GET /library"
+      ],
+      "db_tables_used": [
+        "LibraryItem",
+        "LicenseKey",
+        "Game",
+        "Order"
+      ],
+      "entities_involved": ["LibraryItem", "LicenseKey", "Game", "Order"],
+      "controllers": ["LibraryController"],
+      "daos": ["BaseDAO"],
+      "jsp_views": ["library.jsp"],
+      "js_files": ["library.js"],
+      "css_files": ["library.css"],
+      "risks": [
+        "Không có revoke license khi refund",
+        "License key không mã hóa — plain text trong DB",
+        "Game bị xóa khỏi store nhưng vẫn hiện trong library"
+      ],
+      "dependencies": ["F005"]
+    },
+    {
+      "id": "F010",
+      "name": "Transaction History",
+      "category": "Transaction History",
+      "status": "active",
+      "description": "Xem lịch sử giao dịch gộp từ Order và WalletTransaction. Tính running balance. Hiển thị đầy đủ: mã giao dịch, số tiền, thời gian, loại.",
+      "routes_impacted": [
+        "GET /transactions",
+        "GET /dashboard"
+      ],
+      "db_tables_used": [
+        "Order",
+        "WalletTransaction",
+        "Wallet",
+        "OrderItem",
+        "Game"
+      ],
+      "entities_involved": ["Order", "WalletTransaction", "OrderItem", "Game"],
+      "controllers": ["LibraryController", "DashboardController"],
+      "daos": ["BaseDAO"],
+      "jsp_views": ["transactions.jsp", "dashboard.jsp"],
+      "js_files": ["transactions.js"],
+      "css_files": ["transactions.css"],
+      "risks": [
+        "Running balance tính sai nếu có failed transaction — cần filter status",
+        "Large transaction history → no pagination"
+      ],
+      "dependencies": ["F005", "F007", "F008"]
+    },
+    {
+      "id": "F011",
+      "name": "User Profile Management",
+      "category": "User Management",
+      "status": "active",
+      "description": "Cập nhật fullName, password, avatar. Avatar là URL string (lưu trong User.avatar field).",
+      "routes_impacted": [
+        "POST /api/profile/update"
+      ],
+      "db_tables_used": [
+        "Users"
+      ],
+      "entities_involved": ["User"],
+      "controllers": ["ProfileApiController"],
+      "daos": ["BaseDAO"],
+      "jsp_views": ["dashboard.jsp"],
+      "js_files": ["dashboard.js"],
+      "css_files": ["dashboard.css"],
+      "risks": [
+        "Avatar URL không validate — có thể là malicious link",
+        "Password update không yêu cầu current password",
+        "XSS qua avatar display"
+      ],
+      "dependencies": ["F001", "F002"]
+    },
+    {
+      "id": "F012",
+      "name": "Email Order Confirmation",
+      "category": "Email Notification",
+      "status": "active_disabled",
+      "description": "Gửi email xác nhận đơn hàng sau khi checkout thành công. Hiện tại DISABLED (email.enabled=false). Mock printing trong console.",
+      "routes_impacted": [
+        "POST /api/checkout/process (triggers after success)"
+      ],
+      "db_tables_used": [],
+      "entities_involved": ["Order", "OrderItem", "LicenseKey", "User"],
+      "controllers": ["CheckoutController (gọi EmailService)"],
+      "services": ["EmailService"],
+      "jsp_views": [],
+      "js_files": [],
+      "css_files": [],
+      "risks": [
+        "Email disabled by default — cần enable + configure SMTP",
+        "No retry mechanism khi email fail",
+        "HTML template không sanitize — potential XSS"
+      ],
+      "dependencies": ["F005"]
+    },
+
+    "MODULE_11_PLACEHOLDER": {
+      "name": "[RESERVED — TBD]",
+      "description": "Block trống cho module tiếp theo. Gợi ý: Admin Dashboard, Game Review/Rating, Wishlist, Order Refund, Payment Gateway Integration (VNPay/MoMo/ZaloPay), Pagination, Rate Limiting, 2FA.",
+      "suggested_routes": [],
+      "suggested_db_tables": [],
+      "status": "reserved"
+    },
+
+    "MODULE_12_PLACEHOLDER": {
+      "name": "[RESERVED — TBD]",
+      "description": "Block trống cho module tiếp theo. Gợi ý: Social Login (Google/Facebook), Game Search & Filter, Recommendation Engine, Loyalty Points, Gift Card, Multi-currency Support.",
+      "suggested_routes": [],
+      "suggested_db_tables": [],
+      "status": "reserved"
+    }
+  ],
+
+  "db_schema_summary": {
+    "total_tables": 12,
+    "tables": [
+      { "name": "Users", "columns": "userId(PK), username, email, passwordHash, fullName, avatar, createdAt, isAdmin", "notes": "BCrypt hashed password" },
+      { "name": "Wallet", "columns": "walletId(PK), userId(FK-U), balance", "notes": "1-to-1 với Users, balance DECIMAL(18,2)" },
+      { "name": "WalletTransaction", "columns": "transactionId(PK), walletId(FK), amount, type, description, transactionDate", "notes": "type: DEPOSIT | ORDER" },
+      { "name": "Game", "columns": "gameId(PK), name, description, price, imageUrl, developer, genre, releaseDate, stock, isActive", "notes": "EAGER fetch mediaList + categories" },
+      { "name": "GameMedia", "columns": "mediaId(PK), gameId(FK), mediaType, mediaUrl", "notes": "" },
+      { "name": "Category", "columns": "categoryId(PK), name, description", "notes": "" },
+      { "name": "CartItem", "columns": "cartItemId(PK), userId(FK), gameId(FK), quantity, addedAt", "notes": "Unique constraint (userId, gameId) khuyến nghị" },
+      { "name": "Order", "columns": "orderId(PK), userId(FK), totalAmount, status, orderDate, shippingFullName, shippingPhone, shippingEmail, shippingAddress, shippingCity, shippingDistrict, shippingWard, notes", "notes": "8 shipping fields" },
+      { "name": "OrderItem", "columns": "orderItemId(PK), orderId(FK), gameId(FK), quantity, priceAtPurchase, licenseKeyId(FK)", "notes": "" },
+      { "name": "LicenseKey", "columns": "keyId(PK), gameId(FK), keyString, isUsed, usedAt, usedByUserId", "notes": "keyString format: gameId-XXXXXXXX" },
+      { "name": "LibraryItem", "columns": "libraryItemId(PK), userId(FK), gameId(FK), licenseKeyId(FK), purchaseDate", "notes": "" },
+      { "name": "PromoCode", "columns": "promoId(PK), code, discountType, discountValue, maxUsage, usageCount, expiryDate, applicableGameIds", "notes": "applicableGameIds: null = global" }
+    ]
+  },
+
+  "api_inventory": {
+    "auth_apis": [
+      { "endpoint": "/api/auth/login", "method": "POST", "params": ["username", "password"], "returns": "User JSON or error" },
+      { "endpoint": "/api/auth/register", "method": "POST", "params": ["username", "email", "password", "fullName"], "returns": "success/error" }
+    ],
+    "cart_apis": [
+      { "endpoint": "/api/cart/add", "method": "POST", "params": ["gameId", "quantity"], "returns": "success/error" },
+      { "endpoint": "/api/cart/count", "method": "GET", "params": [], "returns": "count number" },
+      { "endpoint": "/api/cart/items", "method": "GET", "params": [], "returns": "CartItem[] JSON" },
+      { "endpoint": "/api/cart/remove", "method": "POST", "params": ["cartItemId"], "returns": "success/error" },
+      { "endpoint": "/api/cart/remove-by-game", "method": "POST", "params": ["gameId"], "returns": "success/error" }
+    ],
+    "checkout_apis": [
+      { "endpoint": "/api/checkout/process", "method": "POST", "params": ["total", "promoCode?"], "returns": "Order JSON or error" },
+      { "endpoint": "/api/promo/validate", "method": "POST", "params": ["code", "gameIds"], "returns": "discount info or error" },
+      { "endpoint": "/api/promo/by-games", "method": "POST", "params": ["gameIds"], "returns": "PromoCode[]" }
+    ],
+    "profile_apis": [
+      { "endpoint": "/api/profile/update", "method": "POST", "params": ["fullName", "password", "avatar?"], "returns": "updated User or error" }
+    ],
+    "recharge_apis": [
+      { "endpoint": "/api/recharge/process", "method": "POST", "params": ["amount", "paymentMethod", "transactionId"], "returns": "WalletTransaction or error" }
+    ],
+    "admin_apis": [
+      { "endpoint": "/api/admin/generate-keys", "method": "POST", "params": ["gameId", "count"], "returns": "LicenseKey[]" }
+    ]
+  }
+}
