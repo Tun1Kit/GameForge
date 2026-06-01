@@ -8,18 +8,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GameForge - Xác thực OTP</title>
 
-  <!-- CSRF Meta Tags (Spring Security) -->
-  <meta name="_csrf" content="${_csrf.token}" />
-  <meta name="_csrf_header" content="${_csrf.headerName}" />
+  <!-- CSRF: not used by this project -->
   <script>
-    window.GAMEFORGE_CSRF_TOKEN = (function() {
-      var m = document.querySelector('meta[name="_csrf"]');
-      return m ? m.content : '';
-    })();
-    window.GAMEFORGE_CSRF_HEADER = (function() {
-      var m = document.querySelector('meta[name="_csrf_header"]');
-      return m ? m.content : '_csrf';
-    })();
+    window.GAMEFORGE_CONTEXT_PATH = '${pageContext.request.contextPath}';
   </script>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -160,7 +151,6 @@
       var xhr = new XMLHttpRequest();
       xhr.open('POST', window.GAMEFORGE_CONTEXT_PATH + '/resend-otp', true);
       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-      xhr.setRequestHeader(GAMEFORGE_CSRF_HEADER, GAMEFORGE_CSRF_TOKEN);
 
       xhr.onload = function () {
         if (xhr.status === 200) {

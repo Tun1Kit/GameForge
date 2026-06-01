@@ -35,6 +35,7 @@ public class EmailService {
             System.out.println("=== OTP EMAIL MOCK TO: " + toEmail + " ===");
             System.out.println("Mã OTP của bạn: " + otp);
             System.out.println("==================================================");
+            System.out.println("[DEV] Email disabled - OTP printed to console.");
             return;
         }
 
@@ -46,8 +47,9 @@ public class EmailService {
             helper.setText(html, true);
             helper.setFrom("noreply@gamestore.com");
             mailSender.send(message);
+            System.out.println("[EmailService] OTP sent successfully to: " + toEmail);
         } catch (Exception e) {
-            System.err.println("Gửi email OTP thất bại: " + e.getMessage());
+            System.err.println("[EmailService] Gửi email OTP thất bại: " + e.getMessage());
             throw new RuntimeException("Không gửi được email OTP", e);
         }
     }
