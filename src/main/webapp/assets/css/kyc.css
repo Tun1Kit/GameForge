@@ -1,0 +1,88 @@
+/* ============================================================
+   KYC PAGE — Neo-Brutalism Extension
+   Extends index.css design system
+   ============================================================ */
+
+/* ---- KYC TYPE CARD ---- */
+.kyc-type-card {
+  display: block;
+  cursor: pointer;
+}
+
+.kyc-type-card input[type="radio"] {
+  display: none;
+}
+
+.kyc-type-inner {
+  transition: all 180ms ease;
+  background: #fff;
+}
+
+.kyc-type-card:hover .kyc-type-inner {
+  transform: translateY(-2px);
+  box-shadow: 4px 4px 0 0 #000;
+}
+
+.kyc-type-card input[type="radio"]:checked + .kyc-type-inner {
+  background: var(--gf-yellow);
+  box-shadow: 4px 4px 0 0 #000;
+  transform: translateY(-2px);
+}
+
+/* ---- UPLOAD BOX ---- */
+.kyc-upload-box {
+  display: block;
+  cursor: pointer;
+  background: #fff;
+  transition: all 180ms ease;
+  border: 2px solid #000;
+}
+
+.kyc-upload-box:hover {
+  background: var(--gf-lavender);
+  transform: translateY(-2px);
+  box-shadow: 4px 4px 0 0 #000;
+}
+
+.kyc-upload-box img {
+  max-width: 100%;
+  max-height: 160px;
+  object-fit: contain;
+  border-radius: 8px;
+  margin: 0 auto;
+  display: block;
+}
+
+/* ---- INPUT OVERRIDES ---- */
+.gf-input {
+  border: 2px solid #000 !important;
+  border-radius: 10px !important;
+  box-shadow: 3px 3px 0 0 #000 !important;
+  background: #fff !important;
+  font-weight: 600;
+  transition: all 180ms ease;
+}
+
+.gf-input:focus {
+  border-color: var(--gf-green) !important;
+  box-shadow: 3px 3px 0 0 var(--gf-green) !important;
+  outline: none !important;
+  background: #fff !important;
+}
+
+html.gf-dark-mode .gf-input {
+  background: #27272a !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}
+
+/* ---- PROGRESS STEP ---- */
+.kyc-step-active {
+  background: var(--gf-yellow) !important;
+  box-shadow: 3px 3px 0 0 #000;
+}
+
+.kyc-step-done {
+  background: #94FFB4 !important;
+  box-shadow: 3px 3px 0 0 #000;
+}

@@ -1,0 +1,197 @@
+/* ============================================================
+   ADMIN PAGES — Shared Neo-Brutalism Styles
+   Extends index.css design system
+   ============================================================ */
+
+/* ---- ADMIN TABLE ---- */
+.gf-admin-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.gf-admin-table thead tr {
+  background: var(--gf-lavender);
+  border-bottom: 3px solid #000;
+}
+
+.gf-admin-table thead th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #000;
+  border-bottom: none !important;
+  background: transparent;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.gf-admin-table tbody tr {
+  border-bottom: 1.5px solid #e5e5e5;
+  transition: background-color 180ms ease;
+}
+
+.gf-admin-table tbody tr:hover {
+  background-color: rgba(245, 245, 245, 0.8);
+}
+
+html.gf-dark-mode .gf-admin-table tbody tr {
+  border-bottom-color: #333;
+}
+
+html.gf-dark-mode .gf-admin-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ---- PAGINATION ---- */
+.gf-page-link {
+  border: 2px solid #000 !important;
+  border-radius: 8px !important;
+  color: #000 !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  transition: all 180ms ease;
+  padding: 4px 10px !important;
+  background: #fff !important;
+}
+
+.gf-page-link:hover {
+  background: var(--gf-yellow) !important;
+  transform: translateY(-1px);
+}
+
+.gf-page-link.active {
+  background: var(--gf-green) !important;
+  color: #fff !important;
+  box-shadow: 2px 2px 0 0 #000;
+}
+
+html.gf-dark-mode .gf-page-link {
+  background: #27272a !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}
+
+html.gf-dark-mode .gf-page-link:hover {
+  background: var(--gf-yellow) !important;
+  color: #000 !important;
+}
+
+/* ---- INPUT / SELECT OVERRIDES ---- */
+.gf-input {
+  border: 2px solid #000 !important;
+  border-radius: 10px !important;
+  box-shadow: 3px 3px 0 0 #000 !important;
+  background: #fff !important;
+  font-weight: 600;
+  transition: all 180ms ease;
+}
+
+.gf-input:focus {
+  border-color: var(--gf-green) !important;
+  box-shadow: 3px 3px 0 0 var(--gf-green) !important;
+  outline: none !important;
+  background: #fff !important;
+}
+
+html.gf-dark-mode .gf-input {
+  background: #27272a !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}
+
+/* ---- ADMIN BUTTON STATES ---- */
+.lock-btn:active,
+.unlock-btn:active,
+.approve-kyc-btn:active,
+.reject-kyc-btn:active,
+.approve-payout-btn:active,
+.reject-payout-btn:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 1px 1px 0 0 #000 !important;
+}
+
+/* ---- TOAST NOTIFICATION ---- */
+.gf-toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.gf-toast {
+  min-width: 280px;
+  max-width: 400px;
+  padding: 12px 18px;
+  border: 3px solid #000;
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 0 #000;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+  animation: gfToastIn 300ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+.gf-toast.success {
+  background: #94FFB4;
+  color: #000;
+}
+
+.gf-toast.error {
+  background: var(--gf-pink);
+  color: #000;
+}
+
+.gf-toast.info {
+  background: var(--gf-yellow);
+  color: #000;
+}
+
+.gf-toast.fade-out {
+  animation: gfToastOut 300ms ease forwards;
+}
+
+@keyframes gfToastIn {
+  from { opacity: 0; transform: translateX(40px) scale(0.95); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes gfToastOut {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to   { opacity: 0; transform: translateX(40px) scale(0.95); }
+}
+
+/* ---- LOADING OVERLAY ---- */
+.gf-loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 9998;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.gf-loading-overlay.active {
+  display: flex;
+}
+
+.gf-spinner {
+  width: 48px;
+  height: 48px;
+  border: 5px solid #fff;
+  border-top-color: var(--gf-green);
+  border-radius: 50%;
+  animation: gfSpin 600ms linear infinite;
+  box-shadow: 4px 4px 0 0 #000;
+}
+
+@keyframes gfSpin {
+  to { transform: rotate(360deg); }
+}
