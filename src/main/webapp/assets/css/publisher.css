@@ -1,0 +1,93 @@
+/* ============================================================
+   PUBLISHER PAGES — Neo-Brutalism Extension
+   Extends index.css design system
+   ============================================================ */
+
+/* ---- PUBLISHER TABLE ---- */
+.gf-pub-table thead tr {
+  background: var(--gf-lavender);
+  border-bottom: 3px solid #000;
+}
+
+.gf-pub-table thead th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #000;
+  border-bottom: none !important;
+  background: transparent;
+  vertical-align: middle;
+}
+
+.gf-pub-table tbody tr {
+  border-bottom: 1.5px solid #e5e5e5;
+  transition: background-color 180ms ease;
+}
+
+.gf-pub-table tbody tr:hover {
+  background-color: rgba(245, 245, 245, 0.8);
+}
+
+html.gf-dark-mode .gf-pub-table tbody tr {
+  border-bottom-color: #333;
+}
+
+html.gf-dark-mode .gf-pub-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ---- PAGINATION ---- */
+.gf-page-link {
+  border: 2px solid #000 !important;
+  border-radius: 8px !important;
+  color: #000 !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  transition: all 180ms ease;
+  padding: 4px 10px !important;
+  background: #fff !important;
+}
+
+.gf-page-link:hover {
+  background: var(--gf-yellow) !important;
+  transform: translateY(-1px);
+}
+
+.gf-page-link.active {
+  background: var(--gf-green) !important;
+  color: #fff !important;
+  box-shadow: 2px 2px 0 0 #000;
+}
+
+html.gf-dark-mode .gf-page-link {
+  background: #27272a !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}
+
+html.gf-dark-mode .gf-page-link:hover {
+  background: var(--gf-yellow) !important;
+  color: #000 !important;
+}
+
+/* ---- INPUT OVERRIDES ---- */
+.gf-input {
+  border: 2px solid #000 !important;
+  border-radius: 10px !important;
+  box-shadow: 3px 3px 0 0 #000 !important;
+  background: #fff !important;
+  font-weight: 600;
+  transition: all 180ms ease;
+}
+
+.gf-input:focus {
+  border-color: var(--gf-green) !important;
+  box-shadow: 3px 3px 0 0 var(--gf-green) !important;
+  outline: none !important;
+}
+
+html.gf-dark-mode .gf-input {
+  background: #27272a !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}

@@ -1,0 +1,338 @@
+/* ==========================================================================
+   CHECKOUT & CART NEO-BRUTALISM SPECIFIC STYLES
+   ========================================================================== */
+
+.gf-checkout-container {
+  padding-top: 100px;
+  padding-bottom: 80px;
+}
+
+/* Panel Hộp chứa chính */
+.gf-checkout-card {
+  background: var(--gf-card-bg);
+  border: 3px solid var(--gf-ink) !important;
+  box-shadow: 6px 6px 0 0 var(--gf-ink);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  transition: background-color 0.3s ease;
+}
+
+/* Thẻ sản phẩm trong giỏ hàng */
+.gf-cart-item {
+  background: var(--gf-card-bg);
+  border: 3px solid var(--gf-ink) !important;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 4px 4px 0 0 var(--gf-ink);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+}
+
+.gf-cart-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 0 0 var(--gf-ink);
+}
+
+.gf-cart-img-wrapper {
+  width: 90px;
+  height: 90px;
+  border: 3px solid var(--gf-ink);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: #eaeaea;
+}
+
+.gf-cart-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Huy hiệu thể loại, trạng thái */
+.gf-item-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 0.2rem 0.6rem;
+  border: 2px solid var(--gf-ink);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  box-shadow: 1px 1px 0 0 var(--gf-ink);
+}
+
+.gf-badge-rpg { background: var(--gf-blue); color: #000; }
+.gf-badge-promo { background: var(--gf-pink); color: #000; }
+.gf-badge-auto { background: #E5E7EB; color: #374151; }
+
+html.gf-dark-mode .gf-badge-auto {
+  background: #374151;
+  color: #F3F4F6;
+}
+
+/* Bộ chọn số lượng kiểu Neo-Brutalism */
+.gf-qty-box {
+  display: inline-flex;
+  align-items: center;
+  border: 3px solid var(--gf-ink);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 2px 2px 0 0 var(--gf-ink);
+  background: var(--gf-card-bg);
+}
+
+.gf-qty-btn {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: none;
+  font-weight: 900;
+  font-size: 16px;
+  color: var(--gf-ink);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.gf-qty-btn:hover {
+  background: var(--gf-yellow);
+}
+
+.gf-qty-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+.gf-qty-input {
+  width: 36px;
+  height: 32px;
+  text-align: center;
+  border: none;
+  border-left: 3px solid var(--gf-ink);
+  border-right: 3px solid var(--gf-ink);
+  background: var(--gf-card-bg);
+  font-weight: 800;
+  color: var(--gf-ink);
+}
+
+/* Nút xóa sản phẩm */
+.gf-delete-btn {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  font-weight: 800;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.gf-delete-btn:hover {
+  background: #fef2f2;
+}
+
+html.gf-dark-mode .gf-delete-btn:hover {
+  background: #450a0a;
+}
+
+/* Các bước tiến trình */
+.gf-alert-success-brutal {
+  background: #E8FDF0;
+  border: 3px solid var(--gf-ink);
+  border-radius: 0.75rem;
+  box-shadow: 3px 3px 0 0 var(--gf-ink);
+  color: #15803d;
+}
+
+html.gf-dark-mode .gf-alert-success-brutal {
+  background: #064e3b;
+  color: #34d399;
+}
+
+/* Payment Selector Cards */
+.gf-payment-option {
+  border: 3px solid var(--gf-ink);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  background: var(--gf-card-bg);
+  box-shadow: 3px 3px 0 0 var(--gf-ink);
+  transition: all 0.2s ease;
+}
+
+.gf-payment-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 5px 5px 0 0 var(--gf-ink);
+}
+
+.gf-payment-option.active {
+  background: #F0FDF4 !important;
+  border-color: var(--gf-green) !important;
+  box-shadow: 4px 4px 0 0 var(--gf-green) !important;
+}
+
+html.gf-dark-mode .gf-payment-option.active {
+  background: #022c22 !important;
+  border-color: var(--gf-green) !important;
+  box-shadow: 4px 4px 0 0 var(--gf-green) !important;
+}
+
+/* Ô nhập liệu tinh gọn */
+.gf-checkout-input, .gf-checkout-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--gf-input-bg);
+  color: var(--gf-ink);
+  border: 3px solid var(--gf-ink) !important;
+  border-radius: 0.75rem;
+  box-shadow: 3px 3px 0 0 var(--gf-ink);
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.gf-checkout-input:focus, .gf-checkout-select:focus {
+  outline: none;
+  filter: brightness(0.95);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 0 var(--gf-ink);
+}
+
+/* Khóa bảo mật footer card */
+.gf-security-alert {
+  background: var(--gf-paper);
+  border: 2px dashed var(--gf-ink);
+  border-radius: 0.75rem;
+}
+
+/* Nút thanh toán nổi bật */
+.gf-pay-btn {
+  width: 100%;
+  background: var(--gf-green);
+  color: #000;
+  border: 3px solid var(--gf-ink) !important;
+  box-shadow: 4px 4px 0 0 var(--gf-ink);
+  border-radius: 0.75rem;
+  font-weight: 900;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* ===== DARK MODE CHO CHECKOUT ===== */
+
+/* Tiêu đề giỏ hàng */
+html.gf-dark-mode .gf-checkout-card h1,
+html.gf-dark-mode .gf-checkout-card h2,
+html.gf-dark-mode .gf-checkout-card h3 {
+  color: var(--gf-text-main) !important;
+}
+
+/* Badge tiến trình */
+html.gf-dark-mode .bg-warning {
+  background-color: #ca8a04 !important;
+}
+
+/* Liên kết text */
+html.gf-dark-mode .gf-checkout-card a {
+  color: var(--gf-text-main);
+}
+
+/* Giá gạch ngang */
+html.gf-dark-mode .text-secondary[style*="text-decoration: line-through"] {
+  color: var(--gf-muted) !important;
+}
+
+/* Icon trong payment option */
+html.gf-dark-mode .gf-payment-option i {
+  color: var(--gf-text-main);
+}
+
+/* Bước số 1, 2 */
+html.gf-dark-mode .gf-checkout-card [style*="bg-warning"] {
+  background-color: #ca8a04 !important;
+  color: #000 !important;
+}
+
+/* Alert border */
+html.gf-dark-mode .alert-danger {
+  background-color: #450a0a !important;
+  border-color: #f87171 !important;
+  color: #fca5a5 !important;
+}
+
+/* Select dropdown - dark mode: background tối để chữ sáng nhìn được */
+html.gf-dark-mode .gf-checkout-select {
+  background-color: var(--gf-input-bg) !important;
+  color: var(--gf-text-main) !important;
+  border-color: var(--gf-ink) !important;
+}
+
+html.gf-dark-mode .gf-checkout-select option {
+  background-color: #27272a !important;
+  color: var(--gf-text-main) !important;
+}
+
+/* Cart image placeholder */
+html.gf-dark-mode .gf-cart-img-wrapper {
+  background-color: #3f3f46 !important;
+}
+
+/* Input fields dark mode */
+html.gf-dark-mode .gf-checkout-input {
+  background-color: var(--gf-input-bg) !important;
+  color: var(--gf-text-main) !important;
+}
+
+/* Payment step numbers dark mode */
+html.gf-dark-mode .gf-checkout-card [style*="bg-warning"] {
+  background-color: #ca8a04 !important;
+  color: #000 !important;
+}
+
+/* Payment step icons */
+html.gf-dark-mode .gf-payment-option i {
+  color: var(--gf-text-main);
+}
+
+/* Step card wrapper */
+.gf-checkout-step-card {
+  background: var(--gf-card-bg);
+  transition: background-color 0.3s ease;
+}
+
+html.gf-dark-mode .gf-checkout-step-card {
+  background: var(--gf-card-bg);
+}
+
+/* Pulsate dot for checkout */
+.pulsate-dot {
+  width: 10px;
+  height: 10px;
+  background-color: var(--gf-pink);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+  animation: pulse-dot 1.2s infinite ease-in-out;
+}
+@keyframes pulse-dot {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.8); opacity: 0.5; }
+}
+
+/* Success overlay */
+#checkoutSuccessOverlay {
+  animation: fadeInOverlay 0.4s ease-out;
+}
+@keyframes fadeInOverlay {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}

@@ -1,0 +1,242 @@
+
+/* 1. ÉP FONT CHỮ SIÊU ĐẬM (NEO-BRUTALISM) VÀ KHOẢNG CÁCH CHỮ */
+.fw-black {
+  font-weight: 900 !important;
+}
+.tracking-tight {
+  letter-spacing: -0.04em !important;
+}
+
+/* 2. STYLE CHO LINK ĐIỀU KHOẢN & BẢO MẬT (Xanh lá, gạch chân dày) */
+.gf-link-green {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--gf-green);
+  text-underline-offset: 4px;
+  transition: color 0.2s ease;
+}
+
+
+.gf-link-green {
+  color: #2ECC71;
+}
+
+.gf-link-green:hover {
+  color: var(--gf-green);
+}
+
+/* 3. LÀM MƯỢT HIỆU ỨNG CHUYỂN DARK MODE CỦA BOX ĐĂNG NHẬP VÀ INPUT */
+.gf-login-container, 
+.gf-login-banner, 
+.gf-form-panel {
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+body.gf-dark-mode .gf-login-container {
+  background-color: var(--gf-dark);
+  color: #fff;
+}
+
+/* Khung chứa form đăng nhập */
+.gf-login-container {
+  max-width: 1140px;
+  min-height: 640px;
+  background: var(--gf-card-bg); /* Ăn theo nền card: Trắng ở Light, Tối ở Dark */
+  border-radius: 1.5rem;
+  overflow: hidden;
+  z-index: 10;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.gf-form-panel {
+  max-height: calc(100vh - 235px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
+}
+
+.gf-form-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gf-form-panel::-webkit-scrollbar-thumb {
+  background: var(--gf-green);
+  border: 2px solid #000;
+  border-radius: 999px;
+}
+
+/* Banner bên trái */
+.gf-login-banner {
+  width: 450px;
+  background: linear-gradient(150deg, #35D17A 0%, #9EEBD9 100%);
+  border-right: 3px solid #000;
+}
+
+/* Khung trượt (Track) chuyển đổi Login / Register */
+.gf-form-window {
+  overflow: hidden;
+  width: 100%;
+}
+
+.gf-form-track {
+  display: flex;
+  width: 200%;
+  transition: transform 500ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.gf-form-panel {
+  width: 50%;
+  padding: 0 0.25rem;
+}
+
+/* Tùy chỉnh thẻ Input Neo-Brutalism và FIX LỖI ICON BỊ CHE */
+.gf-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.gf-input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #71717a;
+  z-index: 10; /* Nổi lên trên input */
+  pointer-events: none; /* Không cản trở cú click chuột */
+}
+
+.gf-input {
+  width: 100%;
+  height: 48px;
+  padding-left: 40px;
+  padding-right: 40px;
+  background: var(--gf-input-bg);
+  color: var(--gf-ink); /* Chữ đen ở Light, chữ trắng ở Dark */
+  border: 3px solid var(--gf-ink);
+  border-radius: 0.75rem;
+  box-shadow: 3px 3px 0 0 var(--gf-ink);
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.gf-input:focus {
+  outline: none;
+  background: #fefce8;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 0 #000;
+}
+
+/* Tùy chỉnh input cho chế độ Dark Mode */
+body.gf-dark-mode .gf-input {
+  background: #18181b;
+  color: #fff;
+}
+body.gf-dark-mode .gf-input:focus {
+  background: #27272a;
+}
+
+/* Nút hiện/ẩn mật khẩu */
+.gf-eye-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  background: transparent;
+  border: none;
+  color: #71717a;
+  padding: 0;
+  display: flex;
+}
+.gf-eye-btn:hover { color: #000; }
+body.gf-dark-mode .gf-eye-btn:hover { color: #fff; }
+
+/* Các hình khối lơ lửng trang trí nền */
+.gf-floating-shape {
+  position: absolute;
+  border: 3px solid #000;
+  box-shadow: 6px 6px 0 0 #000;
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
+  50% { transform: translateY(-12px) rotate(var(--rot, 0deg)); }
+}
+
+/* Ẩn thanh cuộn dọc */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+
+
+
+
+
+
+
+html.gf-dark-mode body {
+  background: #18181b;
+  color: #fff;
+}
+
+html.gf-dark-mode .gf-navbar {
+  background: rgba(24, 24, 27, .92);
+}
+
+html.gf-dark-mode .gf-login-container,
+html.gf-dark-mode .gf-form-panel {
+  background-color: #18181b;
+  color: #fff;
+}
+
+html.gf-dark-mode .gf-input {
+  background: #18181b;
+  color: #fff;
+}
+
+html.gf-dark-mode .gf-input:focus {
+  background: #27272a;
+}
+
+html.gf-dark-mode .gf-icon-btn {
+  background: #27272a;
+  color: #fff;
+}
+
+html.gf-dark-mode .gf-login-container,
+html.gf-dark-mode .gf-form-panel,
+html.gf-dark-mode .gf-form-window,
+html.gf-dark-mode .gf-navbar {
+  background-color: #18181b;
+  color: #fff;
+}
+
+.gf-login-container,
+.gf-form-panel,
+.gf-form-window,
+.gf-input,
+.gf-navbar,
+#themeButton {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+#password-rules {
+  border: 3px solid #000 !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 3px 3px 0 0 #000 !important;
+  background: #fff !important;
+  padding: 12px 14px !important;
+  margin: 10px 0 14px !important;
+}
+
+body.gf-dark-mode #password-rules,
+html.gf-dark-mode #password-rules {
+  background: #27272a !important;
+  color: #fff !important;
+}
