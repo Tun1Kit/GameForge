@@ -18,19 +18,45 @@ public class AdminDashboardService {
     public AdminStatsDTO getStats() {
         AdminStatsDTO stats = new AdminStatsDTO();
 
+        // Users
         stats.setTotalUsers(count("SELECT COUNT(u.id) FROM User u"));
         stats.setActiveUsers(count("SELECT COUNT(u.id) FROM User u WHERE u.status = 'ACTIVE'"));
         stats.setLockedUsers(count("SELECT COUNT(u.id) FROM User u WHERE u.status = 'LOCKED'"));
         stats.setTotalPublishers(count(
                 "SELECT COUNT(DISTINCT u.id) FROM User u JOIN u.roles r WHERE r.code = 'ROLE_PUBLISHER'"));
-        stats.setTotalWalletTransactions(count("SELECT COUNT(wt.id) FROM WalletTransaction wt"));
-        stats.setPendingKycRequests(count("SELECT COUNT(k.id) FROM KycRequest k WHERE k.status = 'PENDING'"));
-        stats.setPendingPayoutRequests(count("SELECT COUNT(p.id) FROM PayoutRequest p WHERE p.status = 'PENDING'"));
 
-        BigDecimal totalBalance = sessionFactory.getCurrentSession()
-                .createQuery("SELECT COALESCE(SUM(w.balance), 0) FROM Wallet w", BigDecimal.class)
-                .uniqueResult();
-        stats.setTotalWalletBalance(totalBalance == null ? BigDecimal.ZERO : totalBalance);
+        // Games
+        stats.setTotalGames(count("SELECT COUNT(g.id) FROM Game g"));
+        stats.setActiveGames(count("SELECT COUNT(g.id) FROM Game g WHERE g.status = 'ACTIVE'"));
+
+        // Orders
+        stats.setTotalOrders(count("SELECT COUNT(o.id) FROM Order o"));
+        stats.setCompletedOrders(count("SELECT COUNT(o.id) FROM Order o WHERE o.status = 'PAID'"));
+
+        // Revenue
+        BigDecimal totalRevenue = querySingle(
+                "SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.status = 'PAID'",
+                BigDecimal.class);
+        stats.setTotalRevenue(totalRevenue != null ? totalRevenue : BigDecimal.ZERO);
+
+        BigDecimal platformRevenue = querySingle(
+                "SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.status = 'PAID'",
+                BigDecimal.class);
+        stats.setPlatformRevenue(platformRevenue != null ? platformRevenue : BigDecimal.ZERO);
+
+        // KYC & Payout
+        stats.setPendingKyc(count("SELECT COUNT(k.id) FROM KycRequest k WHERE k.status = 'PENDING'"));
+        stats.setPendingPayouts(count("SELECT COUNT(p.id) FROM PayoutRequest p WHERE p.status = 'PENDING'"));
+
+        // Wallet
+        stats.setTotalWalletTransactions(count("SELECT COUNT(wt.id) FROM WalletTransaction wt"));
+        BigDecimal totalBalance = querySingle(
+                "SELECT COALESCE(SUM(w.balance), 0) FROM Wallet w", BigDecimal.class);
+        stats.setTotalWalletBalance(totalBalance != null ? totalBalance : BigDecimal.ZERO);
+
+        // Orders today
+        stats.setOrdersToday(count(
+                "SELECT COUNT(o.id) FROM Order o WHERE CAST(o.createdAt AS DATE) = CAST(GETDATE() AS DATE) AND o.status = 'PAID'"));
 
         return stats;
     }
@@ -40,5 +66,11 @@ public class AdminDashboardService {
                 .createQuery(hql, Long.class)
                 .uniqueResult();
         return result == null ? 0L : result;
+    }
+
+    private <T> T querySingle(String hql, Class<T> type) {
+        return sessionFactory.getCurrentSession()
+                .createQuery(hql, type)
+                .uniqueResult();
     }
 }
