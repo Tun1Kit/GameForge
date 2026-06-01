@@ -417,8 +417,8 @@
       "services": ["AdminDashboardService", "KycService", "PayoutService", "SystemSettingService"],
       "daos": ["UserDAO", "KycRequestDAO", "PayoutRequestDAO", "PublisherProfileDAO", "SystemSettingDAO"],
       "jsp_views": ["admin/dashboard.jsp", "admin/users.jsp", "admin/kyc.jsp", "admin/settings.jsp", "admin/payouts.jsp"],
-      "js_files": [],
-      "css_files": [],
+      "js_files": ["admin.js"],
+      "css_files": ["admin.css"],
       "risks": [
         "Admin interceptor chỉ kiểm tra hasRole('ROLE_ADMIN') — không dùng @PreAuthorize",
         "KYC file upload không validate type/size nghiêm ngặt"
@@ -443,8 +443,8 @@
       "services": ["PayoutService", "WalletService"],
       "daos": ["PublisherProfileDAO", "PayoutRequestDAO", "WalletDAO", "WalletTransactionDAO"],
       "jsp_views": ["publisher/dashboard.jsp", "publisher/payouts.jsp"],
-      "js_files": [],
-      "css_files": [],
+      "js_files": ["publisher.js"],
+      "css_files": ["publisher.css"],
       "risks": [
         "Payout không có idempotency — double request có thể tạo 2 payout",
         "Wallet debit không có optimistic lock"
@@ -468,8 +468,8 @@
       "services": ["KycService"],
       "daos": ["KycRequestDAO", "UserDAO", "RoleDAO", "PublisherProfileDAO"],
       "jsp_views": ["kyc/index.jsp"],
-      "js_files": [],
-      "css_files": [],
+      "js_files": ["kyc.js"],
+      "css_files": ["kyc.css"],
       "risks": [
         "KYC document không scan virus — potential security risk",
         "Tax ID không validate format"

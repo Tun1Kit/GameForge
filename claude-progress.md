@@ -124,8 +124,8 @@ D:\Eclipse\GameStore\
 | Phase 6: Harness Update | 2026-06-01 | ✅ COMPLETE | 16 features, 18 tables, all harness files |
 | C01-C08: Critical Fixes | TBD | ⬜ PENDING | EAGER fetch, race condition, SQL injection |
 | W01-W07: Warning Fixes | TBD | ⬜ PENDING | Rate limiting, pagination, CSRF |
-| **JSP Pages**: admin/ publisher/ kyc | TBD | ⬜ PENDING | Tạo JSP views cho admin/publisher/kyc |
-| Database: Chạy migrate scripts | TBD | ⬜ PENDING | migrate-create-new-tables.sql + migrate-seed-roles.sql |
+| **JSP Pages**: admin/ publisher/ kyc | ✅ Hoàn thành 2026-06-01 | ✅ 8 JSP + 6 CSS + 3 JS Neo-Brutalism |
+| Database: Chạy migrate scripts | ✅ Hoàn thành 2026-06-01 | User đã chạy migrate scripts |
 
 ---
 
@@ -160,16 +160,15 @@ D:\Eclipse\GameStore\
 
 ## TIẾP THEO CẦN LÀM GÌ?
 
-**Ngay sau merge:**
+**Hoàn tất sau merge (Phase 7):**
 
-1. **Tạo JSP pages cho admin/publisher/kyc** — Controllers đã có nhưng chưa có views
-2. **Chạy migration scripts** trong SQL Server:
-   - `plan/migrate-create-new-tables.sql` — tạo 6 bảng mới + FK columns
-   - `plan/migrate-seed-roles.sql` — seed 3 roles + gán ROLE_USER cho users hiện tại
-3. **C03 ĐÃ FIX**: UserDAO chuyển sang named parameters
+1. **Deploy và test thực tế** — Chạy `mvn clean package` và deploy `gamestore.war` lên Tomcat
+2. **Test toàn bộ flow** — Login, register OTP, checkout, recharge, admin lock/unlock, KYC approve, payout
+3. **C03 ĐÃ FIX**: UserDAO chuyển sang named parameters ✅
 4. **Sửa C02**: Thêm optimistic lock vào Wallet entity
 5. **Sửa C05**: Thêm unique constraint trên CartItem(userId, gameId)
 6. **Sửa C01**: Game.java EAGER → LAZY fetch
+7. **Merge PR**: Chạy `git merge feature/otp-auth-merge` vào master
 
 ---
 
@@ -183,5 +182,5 @@ D:\Eclipse\GameStore\
 | Java Services | 7 | EmailService, WalletService, CheckoutService, + 4 new |
 | Java DTOs | 4 | PendingRegisterDTO, PageResult, AdminStatsDTO, WalletActionForm |
 | Java Interceptors | 1 | AuthInterceptor |
-| JSP Views | 9 | verify-otp.jsp + 8 existing (admin/publisher/kyc cần tạo) |
+| JSP Views | 17 | verify-otp.jsp, admin/*, publisher/*, kyc/index.jsp + 10 existing |
 | SQL Migration | 3 | migrate-create-new-tables.sql, migrate-seed-roles.sql |

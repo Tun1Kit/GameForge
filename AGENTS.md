@@ -91,6 +91,9 @@ BẮT BUỘC giữ nguyên các file CSS/JS hiện có trong /assets/:
   /assets/css/library.css    — 46 lines
   /assets/css/recharge.css   — 77 lines
   /assets/css/transactions.css — 271 lines
+  /assets/css/admin.css      — 280 lines, shared admin table/pagination/toast
+  /assets/css/publisher.css  — 90 lines, shared publisher table/pagination
+  /assets/css/kyc.css        — 65 lines, KYC form card/upload styles
   /assets/js/index.js        — 490 lines, cart/favorites trong localStorage
   /assets/js/login.js        — 214 lines
   /assets/js/dashboard.js    — 40 lines
@@ -98,6 +101,9 @@ BẮT BUỘC giữ nguyên các file CSS/JS hiện có trong /assets/:
   /assets/js/library.js       — 335 lines
   /assets/js/recharge.js      — 274 lines
   /assets/js/transactions.js  — 224 lines
+  /assets/js/admin.js         — 350 lines, AJAX lock/unlock/KYC/payout/settings
+  /assets/js/publisher.js     — 30 lines, payout form validation
+  /assets/js/kyc.js           — 80 lines, image preview + KYC form validation
 ```
 
 **Quy tắc:**
@@ -412,6 +418,21 @@ mvn clean package -DskipTests && cp target/gamestore.war $CATALINA_HOME/webapps/
 | `/api/profile/*` | * | ProfileApiController | Yes | Profile API |
 | `/api/recharge/*` | * | RechargeController | Yes | Recharge API |
 | `/api/admin/generate-keys` | POST | GameController | Yes | Generate license keys |
+| `/admin` | GET | AdminController | ROLE_ADMIN | Dashboard tổng quan |
+| `/admin/users` | GET | AdminController | ROLE_ADMIN | Quản lý người dùng |
+| `/admin/users/lock` | POST | AdminController | ROLE_ADMIN | Khóa tài khoản |
+| `/admin/users/unlock` | POST | AdminController | ROLE_ADMIN | Mở khóa tài khoản |
+| `/admin/kyc` | GET | AdminController | ROLE_ADMIN | Duyệt KYC |
+| `/admin/kyc/approve` | POST | AdminController | ROLE_ADMIN | Phê duyệt KYC |
+| `/admin/kyc/reject` | POST | AdminController | ROLE_ADMIN | Từ chối KYC |
+| `/admin/settings` | GET/POST | AdminController | ROLE_ADMIN | Cài đặt hệ thống |
+| `/admin/payouts` | GET | AdminController | ROLE_ADMIN | Quản lý payout |
+| `/admin/payouts/approve` | POST | AdminController | ROLE_ADMIN | Phê duyệt payout |
+| `/admin/payouts/reject` | POST | AdminController | ROLE_ADMIN | Từ chối payout |
+| `/publisher` | GET | PublisherController | ROLE_PUBLISHER | Dashboard nhà phát hành |
+| `/publisher/payouts` | GET/POST | PublisherController | ROLE_PUBLISHER | Yêu cầu rút tiền |
+| `/kyc` | GET/POST | KycController | Yes | Nộp / xem trạng thái KYC |
+| `/verify-otp` | GET/POST | AuthController | No | Xác thực OTP email |
 
 ---
 
@@ -431,6 +452,12 @@ mvn clean package -DskipTests && cp target/gamestore.war $CATALINA_HOME/webapps/
 | LicenseKey | LicenseKey | keyId | gameId + key string |
 | LibraryItem | LibraryItem | libraryItemId | FK userId + gameId |
 | PromoCode | PromoCode | promoId | usage limit + expiry |
+| roles | Role | id | ROLE_USER, ROLE_ADMIN, ROLE_PUBLISHER |
+| user_roles | — | (user_id, role_id) | @ManyToMany junction |
+| publisher_profiles | PublisherProfile | id | 1-to-1 với Users |
+| kyc_requests | KycRequest | id | PENDING/APPROVED/REJECTED |
+| payout_requests | PayoutRequest | id | PENDING/APPROVED/REJECTED |
+| system_settings | SystemSetting | setting_key | PLATFORM_COMMISSION_RATE |
 
 ---
 
