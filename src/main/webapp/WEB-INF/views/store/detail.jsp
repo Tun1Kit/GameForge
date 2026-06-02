@@ -74,7 +74,15 @@
     }
     /* Hiệu ứng chuyển cảnh Fade cực mượt */
     #gfMainProductBanner {
-      transition: opacity 0.15s ease-in-out;
+      transition: transform 0.15s ease-out, opacity 0.12s ease-in-out;
+      transform-origin: center center;
+    }
+    .gf-banner-zoom-container {
+      overflow: hidden;
+      position: relative;
+    }
+    .gf-banner-zoom-container:hover #gfMainProductBanner {
+      transform: scale(2.0);
     }
   </style>
 </head>
@@ -244,8 +252,8 @@
           
           <div class="bg-white gf-border gf-shadow rounded-4 p-4 text-center">
             
-            <div class="mb-4 gf-border rounded-3 overflow-hidden" style="border-width: 2px !important; cursor: pointer;"
-                 onclick="openLightboxFromBanner()">
+            <div class="mb-4 gf-border rounded-3 overflow-hidden gf-banner-zoom-container" style="border-width: 2px !important; cursor: pointer; position: relative;"
+                 onclick="openLightboxFromBanner()" id="gfMainBannerContainer">
               <c:set var="mainBanner" value="" />
               <c:catch var="mediaError">
                 <c:forEach var="media" items="${game.mediaList}">
@@ -326,6 +334,56 @@
 
     let lightboxModalInstance = null;
 
+    // Array of screenshot URLs for the auto-cycling slideshow
+    const screenshotUrls = [];
+    <c:forEach var="media" items="${game.mediaList}">
+        <c:if test="${media.mediaType == 'IMAGE'}">
+            screenshotUrls.push('${pageContext.request.contextPath}${media.mediaUrl}');
+        </c:if>
+    </c:forEach>
+
+    let currentSlideIndex = 0;
+    let slideshowInterval = null;
+
+    // Auto-cycling slideshow timer logic
+    function startSlideshow() {
+        if (screenshotUrls.length <= 1) return;
+        
+        slideshowInterval = setInterval(() => {
+            currentSlideIndex = (currentSlideIndex + 1) % screenshotUrls.length;
+            const nextUrl = screenshotUrls[currentSlideIndex];
+            
+            // Smooth fade update
+            const mainBanner = document.getElementById('gfMainProductBanner');
+            if (mainBanner) {
+                mainBanner.style.opacity = '0';
+                setTimeout(() => {
+                    mainBanner.src = nextUrl;
+                    mainBanner.style.opacity = '1';
+                }, 120);
+            }
+            
+            // Update the active state of thumbnail list on the left to match the slideshow
+            document.querySelectorAll('.gf-gallery-thumb').forEach(thumb => {
+                const thumbSrc = thumb.getAttribute('src');
+                thumb.classList.toggle('active', thumbSrc && thumbSrc.endsWith(nextUrl));
+            });
+        }, 3000); // 3-second cycle
+    }
+
+    // Reset slideshow timer when user manually interacts
+    function resetSlideshowTimer(imgSrc) {
+        if (screenshotUrls.length <= 1) return;
+        const index = screenshotUrls.findIndex(url => imgSrc.endsWith(url) || url.endsWith(imgSrc));
+        if (index !== -1) {
+            currentSlideIndex = index;
+        }
+        if (slideshowInterval) {
+            clearInterval(slideshowInterval);
+            startSlideshow();
+        }
+    }
+
     // HÀM CHUYỂN ĐỔI ẢNH SIDEBAR CÓ HIỆU ỨNG FADE
     function changeMainProductView(imgSrc, element) {
         const mainBanner = document.getElementById('gfMainProductBanner');
@@ -345,12 +403,12 @@
     // CLICK ẢNH NHỎ: Chuyển ảnh sidebar + Bung luôn Popup phóng to to đùng
     function triggerDoubleAction(imgSrc, element) {
         changeMainProductView(imgSrc, element);
+        resetSlideshowTimer(imgSrc);
 
         const lightboxImg = document.getElementById('gfLightboxTargetImage');
         if (lightboxImg) {
             lightboxImg.src = imgSrc;
             if (!lightboxModalInstance) {
-                // Nhờ đảo thư viện lên đầu, câu lệnh khởi tạo này sẽ chạy trơn tru 100%
                 lightboxModalInstance = new bootstrap.Modal(document.getElementById('gfGlobalImageLightbox'));
             }
             lightboxModalInstance.show();
@@ -368,6 +426,28 @@
             }
             lightboxModalInstance.show();
         }
+    }
+
+    // HOVER ZOOM IN-PLACE EFFECT FOR MAIN BANNER (Origin Shifting)
+    function initBannerZoom() {
+        const container = document.getElementById('gfMainBannerContainer');
+        const img = document.getElementById('gfMainProductBanner');
+        if (!container || !img) return;
+
+        container.addEventListener('mousemove', function(e) {
+            const rect = container.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const xPercent = (x / rect.width) * 100;
+            const yPercent = (y / rect.height) * 100;
+            
+            img.style.transformOrigin = `${xPercent}% ${yPercent}%`;
+        });
+
+        container.addEventListener('mouseleave', function() {
+            img.style.transformOrigin = 'center center';
+        });
     }
 
     // ENGINE ĐỌC CẤU HÌNH JSON THỜI THƯỢNG (ĐÃ TÍCH HỢP CHỮ DỰ PHÒNG THEO YÊU CẦU)
@@ -413,7 +493,11 @@
         recContainer.innerHTML = buildHtml(rawRecJson, "Chưa cập nhật. Vui lòng liên hệ nhà phát triển để biết cấu hình đề nghị.");
     }
 
-    document.addEventListener("DOMContentLoaded", renderSystemSpecifications);
+    document.addEventListener("DOMContentLoaded", function() {
+        renderSystemSpecifications();
+        initBannerZoom();
+        startSlideshow();
+    });
   </script>
 </body>
 </html>
