@@ -1,0 +1,6 @@
+[
+  {"id": "verified", "title": "Được xác minh", "icon": "shield-check", "color": "#94FFB4", "type": "static"},
+  {"id": "hot", "title": "Sản Phẩm Hot", "icon": "flame", "color": "var(--gf-pink)", "type": "static"},
+  {"id": "top-downloaded", "title": "%COUNT% Lượt Tải", "icon": "download", "color": "#FFFEE4", "type": "dynamic_downloads"},
+  {"id": "award", "title": "Game Award Prize", "icon": "trophy", "color": "var(--gf-yellow)", "type": "static"}
+]

@@ -40,6 +40,9 @@ public class Game {
 
     private String status;
 
+    @Column(name = "badges", columnDefinition = "VARCHAR(MAX)")
+    private String badges;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "publisher_id")
     private PublisherProfile publisher;
@@ -91,6 +94,8 @@ public class Game {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getBadges() { return badges; }
+    public void setBadges(String badges) { this.badges = badges; }
     public List<GameMedia> getMediaList() { return mediaList; }
     public void setMediaList(List<GameMedia> mediaList) { this.mediaList = mediaList; }
     public Set<Category> getCategories() { return categories; }
