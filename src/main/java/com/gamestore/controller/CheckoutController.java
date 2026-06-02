@@ -174,7 +174,7 @@ public class CheckoutController {
             hqSession.save(orderItem);
             hqSession.flush();
 
-            LicenseKey assignedKey = assignLicenseKey(hqSession, managedUser.getId(), item.getGame().getId(), orderItem.getId());
+            LicenseKey assignedKey = assignLicenseKey(hqSession, managedUser.getId(), item.getGame().getId(), orderItem);
 
             Map<String, Object> keyInfo = new HashMap<>();
             keyInfo.put("gameTitle", item.getGame().getTitle());
@@ -369,7 +369,7 @@ public class CheckoutController {
                 hqSession.save(orderItem);
                 hqSession.flush();
 
-                LicenseKey assignedKey = assignLicenseKey(hqSession, managedUser.getId(), item.getGame().getId(), orderItem.getId());
+                LicenseKey assignedKey = assignLicenseKey(hqSession, managedUser.getId(), item.getGame().getId(), orderItem);
 
                 Map<String, Object> keyInfo = new HashMap<>();
                 keyInfo.put("gameTitle", item.getGame().getTitle());
@@ -485,7 +485,7 @@ public class CheckoutController {
                 .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
     }
 
-    private LicenseKey assignLicenseKey(Session hqSession, Long userId, Long gameId, Long orderItemId) {
+    private LicenseKey assignLicenseKey(Session hqSession, Long userId, Long gameId, OrderItem orderItem) {
         String keyHql = "FROM LicenseKey k WHERE k.game.id = :gameId AND k.status = 'AVAILABLE' AND NOT EXISTS (FROM LibraryItem li WHERE li.licenseKey.id = k.id)";
         List<LicenseKey> keys = hqSession.createQuery(keyHql, LicenseKey.class)
                 .setParameter("gameId", gameId)
@@ -496,7 +496,7 @@ public class CheckoutController {
 
         if (assignedKey != null) {
             assignedKey.setStatus("SOLD");
-            assignedKey.setOrderItemId(orderItemId);
+            assignedKey.setOrderItem(orderItem);
             assignedKey.setOwner(hqSession.get(User.class, userId));
             assignedKey.setAssignedAt(LocalDateTime.now());
             hqSession.update(assignedKey);

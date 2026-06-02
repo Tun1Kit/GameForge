@@ -18,11 +18,8 @@ public class LicenseKey {
     @Column(name = "keyString", nullable = false)
     private String keyString;
 
-    @Column(name = "order_item_id")
-    private Long orderItemId;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_item_entity_id")
+    @JoinColumn(name = "order_item_id")
     private OrderItem orderItem;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -50,9 +47,6 @@ public class LicenseKey {
 
     public String getKeyString() { return keyString; }
     public void setKeyString(String keyString) { this.keyString = keyString; }
-
-    public Long getOrderItemId() { return orderItemId; }
-    public void setOrderItemId(Long orderItemId) { this.orderItemId = orderItemId; }
 
     public User getOwner() { return owner; }
     public void setOwner(User owner) { this.owner = owner; }
