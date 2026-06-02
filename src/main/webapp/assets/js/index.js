@@ -102,30 +102,6 @@ const contextPath = window.GAMEFORGE_CONTEXT_PATH || '';
         });
     }
 
-    function loadWishlistFromDb() {
-      if (currentUserId == null) {
-        favorites.clear();
-        updateCounts();
-        updateButtonStates();
-        return;
-      }
-      fetch(contextPath + '/api/wishlist/items')
-        .then(function(res) { return res.text(); })
-        .then(function(text) {
-          var params = parseQuery(text);
-          favorites.clear();
-          if (params.IDS && params.IDS.length > 0) {
-            params.IDS.split(',').forEach(function(id) {
-              favorites.add(String(id.trim()));
-            });
-          }
-          localStorage.setItem(favKey, JSON.stringify(Array.from(favorites)));
-          updateButtonStates();
-          updateCounts();
-        })
-        .catch(function() {});
-    }
-
     function updateButtonStates() {
       document.querySelectorAll('.favorite-button').forEach(function(button) {
         const id = String(button.dataset.gameId || '');
@@ -139,73 +115,30 @@ const contextPath = window.GAMEFORGE_CONTEXT_PATH || '';
     }
 
 	function toggleFavorite(event, id) {
+	  // 1. Phải nhận đủ 2 tham số (event, id) và chặn click lan ra ngoài
 	  if (event) {
 	    event.preventDefault();
 	    event.stopPropagation();
 	  }
 
+	  // Chưa đăng nhập → chuyển đến trang login
 	  if (currentUserId == null) {
 	    window.location.href = contextPath + '/login';
 	    return;
 	  }
 
+	  // 2. Thêm/xóa ID game chuẩn
 	  const gameId = String(id);
-	  var csrfToken = window.GAMEFORGE_CSRF_TOKEN || "";
-	  var csrfHeader = window.GAMEFORGE_CSRF_HEADER || "_csrf";
-
-	  // Optimistic UI update
-	  const wasFavorite = favorites.has(gameId);
-	  if (wasFavorite) {
+	  if (favorites.has(gameId)) {
 	    favorites.delete(gameId);
 	  } else {
 	    favorites.add(gameId);
 	  }
-	  saveState();
 
-	  var body = "gameId=" + encodeURIComponent(gameId);
-	  if (csrfToken) body += "&" + encodeURIComponent(csrfHeader) + "=" + encodeURIComponent(csrfToken);
+	  // 3. Lưu dữ liệu (Hàm saveState đã tự động lo việc đổi màu tim và tăng số lượng)
+	  saveState(); 
 
-	  fetch(contextPath + '/api/wishlist/toggle', {
-	    method: 'POST',
-	    headers: (function() {
-	      var h = { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' };
-	      if (csrfToken) h[csrfHeader] = csrfToken;
-	      return h;
-	    })(),
-	    body: body
-	  })
-	  .then(function(res) { return res.text(); })
-	  .then(function(text) {
-	    var params = parseQuery(text);
-	    if (params.ERROR) {
-	      // Rollback optimistic update
-	      if (wasFavorite) {
-	        favorites.add(gameId);
-	      } else {
-	        favorites.delete(gameId);
-	      }
-	      saveState();
-	      alert(params.ERROR);
-	    } else {
-	      // Server state confirmation
-	      if (params.STATUS === 'ADDED') {
-	        favorites.add(gameId);
-	      } else if (params.STATUS === 'REMOVED') {
-	        favorites.delete(gameId);
-	      }
-	      saveState();
-	    }
-	  })
-	  .catch(function() {
-	    // Rollback on network failure
-	    if (wasFavorite) {
-	      favorites.add(gameId);
-	    } else {
-	      favorites.delete(gameId);
-	    }
-	    saveState();
-	  });
-
+	  // 4. Chỉ render lại lưới khi đang bật chế độ "Chỉ yêu thích", và TẮT hiệu ứng trượt ở Sale Hot (false)
 	  if (favoriteOnlyHot) {
 	    updateHot();
 	  }
@@ -490,10 +423,6 @@ const contextPath = window.GAMEFORGE_CONTEXT_PATH || '';
 
       if (els.favoriteTopBtn) {
         els.favoriteTopBtn.addEventListener('click', function() {
-          if (!document.getElementById('hot-games')) {
-            window.location.href = contextPath + '/wishlist';
-            return;
-          }
           favoriteOnlyHot = !favoriteOnlyHot;
           favoriteOnlySale = favoriteOnlyHot;
           hotIndex = 0;
@@ -558,5 +487,4 @@ const contextPath = window.GAMEFORGE_CONTEXT_PATH || '';
       createIcons();
       // Load cart count từ DB (badge chính xác theo user)
       loadCartCountFromDb();
-      loadWishlistFromDb();
     });

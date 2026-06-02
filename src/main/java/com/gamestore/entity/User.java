@@ -3,8 +3,11 @@ package com.gamestore.entity;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "users")
@@ -15,15 +18,26 @@ public class User {
     private Long id;
 
     @Column(nullable = false, unique = true)
+    @NotBlank(message = "Email không được để trống")
+    @Size(max = 100, message = "Email không được vượt quá 100 ký tự")
     private String email;
 
     @Column(unique = true, nullable = false, length = 100)
+    @NotBlank(message = "Username không được để trống")
+    @Size(min = 3, max = 50, message = "Username phải từ 3 đến 50 ký tự")
+    @Pattern(regexp = "^[a-zA-Z0-9_.-]+$", message = "Username chỉ chấp nhận chữ cái không dấu, số, gạch dưới, gạch nối và dấu chấm")
     private String username;
 
     @Column(nullable = false)
+    @NotBlank(message = "Mật khẩu không được để trống")
     private String password;
 
+    @Column(length = 100)
+    @Size(max = 100, message = "Họ tên không được vượt quá 100 ký tự")
     private String fullName;
+
+    @Column(length = 500)
+    @Size(max = 500, message = "Avatar URL không được vượt quá 500 ký tự")
     private String avatar;
     private String status;
 

@@ -88,7 +88,7 @@
         </a>
 
         <div class="d-none d-lg-flex align-items-center gap-2">
-          <a href="${pageContext.request.contextPath}/" class="gf-nav-link">Cửa Hàng</a>
+          <a href="#store" class="gf-nav-link">Cửa Hàng</a>
           <a href="#sale-games" class="gf-nav-link">Khuyến Mãi</a>
           <a href="#community" class="gf-nav-link">Cộng Đồng</a>
           <a href="#support" class="gf-nav-link">Hỗ Trợ</a>
@@ -279,7 +279,7 @@
                     <div class="col">
                       <article class="gf-game-card gf-press game-item" data-id="${game.id}" data-title="${fn:escapeXml(fn:toLowerCase(game.title))}" data-category="${fn:escapeXml(fn:toLowerCase(primaryCategory))}">
                         <div class="gf-game-banner">
-                          <a href="${pageContext.request.contextPath}/${game.slug}" class="d-block h-100">
+                          <a href="${pageContext.request.contextPath}/game/${game.slug}" class="d-block h-100">
                             <c:choose>
                               <c:when test="${not empty game.mediaList}">
                                 <img src="${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy">
@@ -434,7 +434,7 @@
                     <div class="col">
                       <article class="gf-game-card gf-press game-item" data-id="${game.id}" data-title="${fn:escapeXml(fn:toLowerCase(game.title))}" data-category="${fn:escapeXml(fn:toLowerCase(primaryCategory))}">
                         <div class="gf-game-banner">
-                          <a href="${pageContext.request.contextPath}/${game.slug}" class="d-block h-100">
+                          <a href="${pageContext.request.contextPath}/game/${game.slug}" class="d-block h-100">
                             <c:choose>
                               <c:when test="${not empty game.mediaList}">
                                 <img src="${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy">
@@ -586,7 +586,7 @@
                 <div class="gf-hot-slide-card game-item" data-id="${game.id}" data-title="${fn:escapeXml(fn:toLowerCase(game.title))}" data-category="${fn:escapeXml(fn:toLowerCase(primaryCategory))}">
                   <article class="gf-game-card gf-press">
                     <div class="gf-game-banner">
-                      <a href="${pageContext.request.contextPath}/${game.slug}" class="d-block h-100">
+                      <a href="${pageContext.request.contextPath}/game/${game.slug}" class="d-block h-100">
                         <c:choose>
                           <c:when test="${not empty game.mediaList}">
                             <img src="${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy">
@@ -642,7 +642,7 @@
                         </c:choose>
                       </div>
 
-                      <a href="${pageContext.request.contextPath}/${game.slug}" class="gf-detail-btn mt-auto">
+                      <a href="${pageContext.request.contextPath}/game/${game.slug}" class="gf-detail-btn mt-auto">
                         Xem chi tiết <i data-lucide="external-link" width="16" height="16"></i>
                       </a>
                     </div>
@@ -729,7 +729,7 @@
               <div class="col sale-card-wrapper game-item" data-id="${game.id}" data-title="${fn:escapeXml(fn:toLowerCase(game.title))}" data-category="${fn:escapeXml(fn:toLowerCase(primaryCategory))}">
                 <article class="gf-game-card gf-press">
                   <div class="gf-game-banner">
-                    <a href="${pageContext.request.contextPath}/${game.slug}" class="d-block h-100">
+                    <a href="${pageContext.request.contextPath}/game/${game.slug}" class="d-block h-100">
                       <c:choose>
                         <c:when test="${not empty game.mediaList}">
                           <img src="${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy">
@@ -790,7 +790,7 @@
                       </c:choose>
                     </div>
 
-                    <a href="${pageContext.request.contextPath}/${game.slug}" class="gf-detail-btn mt-auto">
+                    <a href="${pageContext.request.contextPath}/game/${game.slug}" class="gf-detail-btn mt-auto">
                       Xem chi tiết <i data-lucide="external-link" width="16" height="16"></i>
                     </a>
                   </div>
@@ -854,6 +854,7 @@
             type="email" 
             name="email" 
             required
+            maxlength="100"
             placeholder="Email của bạn..."
             class="form-control gf-border gf-shadow-sm rounded-3 fw-semibold px-3 py-3"
           >

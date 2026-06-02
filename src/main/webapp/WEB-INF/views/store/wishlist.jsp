@@ -196,7 +196,7 @@
           </c:forEach>
         </div>
       </c:when>
-      <c:otherwise>
+      <c:when test="${empty wishlistItems}">
         <div class="text-center py-5 bg-white gf-border gf-shadow rounded-4 max-w-md mx-auto p-4">
           <div class="gf-border-2 rounded-4 d-grid mx-auto mb-4 place-items-center" style="width:72px;height:72px;background:var(--gf-pink);box-shadow:3px 3px 0 #000;">
             <i data-lucide="heart-off" width="32" height="32" class="text-white"></i>

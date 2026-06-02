@@ -15,15 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.File;
@@ -32,6 +27,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Controller
 @Transactional
@@ -55,8 +51,18 @@ public class StoreController implements InitializingBean {
     @Autowired
     private org.hibernate.SessionFactory sessionFactory;
 
-    private static final String BADGE_FILE_PATH = "c:\\Users\\kitnef\\Downloads\\GameForce-main\\GameForce-main\\badges_config.json";
+    @Autowired
+    private ServletContext servletContext;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private String getBadgeFilePath() {
+        if (servletContext != null) {
+            String path = servletContext.getRealPath("/WEB-INF/classes/badges_config.json");
+            if (path != null) return path;
+        }
+        return System.getProperty("user.home") + File.separator + "gamestore_badges.json";
+    }
 
     // 1. TỰ ĐỘNG THÊM CỘT BADGES VÀO CSDL KHI KHỞI CHẠY KHÔNG GÂY LỖI
     @Override
@@ -85,7 +91,7 @@ public class StoreController implements InitializingBean {
 
         // Khởi tạo tệp cấu hình huy hiệu nếu chưa tồn tại
         try {
-            File file = new File(BADGE_FILE_PATH);
+            File file = new File(getBadgeFilePath());
             if (!file.exists()) {
                 List<Badge> defaultBadges = new ArrayList<>();
                 defaultBadges.add(new Badge("verified", "Được xác minh", "shield-check", "#94FFB4", "static"));
@@ -103,7 +109,7 @@ public class StoreController implements InitializingBean {
     // Đọc danh sách huy hiệu từ file JSON
     private List<Badge> loadAvailableBadges() {
         try {
-            File file = new File(BADGE_FILE_PATH);
+            File file = new File(getBadgeFilePath());
             if (file.exists()) {
                 return objectMapper.readValue(file, new TypeReference<List<Badge>>() {});
             }
@@ -116,7 +122,7 @@ public class StoreController implements InitializingBean {
     // Ghi danh sách huy hiệu vào file JSON
     private void saveAvailableBadges(List<Badge> list) {
         try {
-            File file = new File(BADGE_FILE_PATH);
+            File file = new File(getBadgeFilePath());
             objectMapper.writeValue(file, list);
         } catch (Exception e) {
             System.err.println(">>> Error saving badges JSON: " + e.getMessage());
@@ -302,6 +308,14 @@ public class StoreController implements InitializingBean {
             return "redirect:/";
         }
 
+        // --- Server-side validation ---
+        if (rating == null || rating < 1 || rating > 5) {
+            return "redirect:/" + game.getSlug();
+        }
+        if (comment == null || comment.trim().isEmpty() || comment.length() > 2000) {
+            return "redirect:/" + game.getSlug();
+        }
+
         Review existing = reviewDAO.findByUserAndGame(currentUser.getId(), gameId);
         if (existing != null) {
             existing.setRating(rating);
@@ -335,6 +349,11 @@ public class StoreController implements InitializingBean {
             return "redirect:/";
         }
 
+        // --- Server-side validation ---
+        if (replyText == null || replyText.trim().isEmpty() || replyText.length() > 1000) {
+            return "redirect:/" + review.getGame().getSlug();
+        }
+
         // Kiểm tra quyền: Chỉ Admin hoặc chính Publisher sở hữu game này mới được phản hồi
         boolean isAdmin = currentUser.hasRole("ROLE_ADMIN");
         boolean isPublisher = false;
@@ -363,6 +382,11 @@ public class StoreController implements InitializingBean {
         Review review = (Review) sessionFactory.getCurrentSession().get(Review.class, reviewId);
         if (review == null) {
             return "redirect:/";
+        }
+
+        // --- Server-side validation ---
+        if (followUpText == null || followUpText.trim().isEmpty() || followUpText.length() > 1000) {
+            return "redirect:/" + review.getGame().getSlug();
         }
 
         // Kiểm tra quyền: Chỉ chính chủ nhân của review mới được bổ sung

@@ -2,6 +2,9 @@ package com.gamestore.entity;
 
 import java.time.LocalDateTime;
 import javax.persistence.*;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "reviews")
@@ -20,15 +23,20 @@ public class Review {
     private User user;
 
     @Column(nullable = false)
+    @NotNull(message = "Rating không được để trống")
+    @Max(value = 5, message = "Rating không được vượt quá 5 sao")
     private Integer rating;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Size(max = 2000, message = "Bình luận không được vượt quá 2000 ký tự")
     private String comment;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Size(max = 1000, message = "Phản hồi không được vượt quá 1000 ký tự")
     private String publisherReply;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
+    @Size(max = 1000, message = "Ý kiến bổ sung không được vượt quá 1000 ký tự")
     private String userFollowUp;
 
     @Column(name = "createdAt", nullable = false)

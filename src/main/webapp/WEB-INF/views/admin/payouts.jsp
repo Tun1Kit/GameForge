@@ -261,7 +261,7 @@
           <input type="hidden" id="rejectPayoutId">
           <div class="mb-3">
             <label class="form-label fw-bold small">Ghi chú từ chối <span class="text-danger">*</span></label>
-            <textarea id="rejectPayoutNote" class="form-control gf-input" rows="3" placeholder="Lý do từ chối..."></textarea>
+            <textarea id="rejectPayoutNote" class="form-control gf-input" rows="3" placeholder="Lý do từ chối..." maxlength="500"></textarea>
           </div>
         </div>
         <div class="modal-footer border-top border-2 border-dark">

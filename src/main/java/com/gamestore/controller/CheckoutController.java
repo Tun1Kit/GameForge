@@ -17,6 +17,10 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,10 +28,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 @Controller
 @Transactional
 public class CheckoutController {
+
+    private final Validator validator;
+
+    public CheckoutController() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        this.validator = factory.getValidator();
+    }
 
     @Autowired
     private SessionFactory sessionFactory;
@@ -87,6 +100,20 @@ public class CheckoutController {
         return "checkout";
     }
 
+    private String buildCheckoutError(Model model, CartItemDAO dao, Long userId, String message) {
+        BigDecimal subtotal = BigDecimal.ZERO;
+        for (CartItem item : dao.getCartItems(userId)) {
+            subtotal = subtotal.add(item.getGame().getPrice());
+        }
+        model.addAttribute("cartItems", dao.getCartItems(userId));
+        model.addAttribute("error", message);
+        model.addAttribute("subtotal", subtotal);
+        model.addAttribute("discount", BigDecimal.ZERO);
+        model.addAttribute("total", subtotal);
+        model.addAttribute("walletBalance", walletService.getBalanceById(userId));
+        return "checkout";
+    }
+
     @PostMapping("/checkout/process")
     public String processCheckout(
             @RequestParam("paymentMethod") String paymentMethod,
@@ -102,6 +129,21 @@ public class CheckoutController {
         User currentUser = userContextService.getCurrentUser(session);
         if (currentUser == null) {
             return "redirect:/login";
+        }
+
+        // --- Server-side validation ---
+        String phonePattern = "^0\\d{9,10}$";
+        if (fullName == null || fullName.trim().isEmpty() || fullName.length() > 100) {
+            return buildCheckoutError(model, cartItemDAO, currentUser.getId(), "Họ tên không được để trống và không vượt quá 100 ký tự.");
+        }
+        if (phone == null || !Pattern.matches(phonePattern, phone.trim())) {
+            return buildCheckoutError(model, cartItemDAO, currentUser.getId(), "Số điện thoại không hợp lệ (phải là 10-11 chữ số, bắt đầu bằng 0).");
+        }
+        if (address == null || address.trim().isEmpty() || address.length() > 300) {
+            return buildCheckoutError(model, cartItemDAO, currentUser.getId(), "Địa chỉ không được để trống và không vượt quá 300 ký tự.");
+        }
+        if (notes != null && notes.length() > 500) {
+            return buildCheckoutError(model, cartItemDAO, currentUser.getId(), "Ghi chú không được vượt quá 500 ký tự.");
         }
 
         Session hqSession = sessionFactory.getCurrentSession();
@@ -174,7 +216,7 @@ public class CheckoutController {
             hqSession.save(orderItem);
             hqSession.flush();
 
-            LicenseKey assignedKey = assignLicenseKey(hqSession, managedUser.getId(), item.getGame().getId(), orderItem);
+            LicenseKey assignedKey = assignLicenseKey(hqSession, managedUser.getId(), item.getGame().getId(), orderItem.getId());
 
             Map<String, Object> keyInfo = new HashMap<>();
             keyInfo.put("gameTitle", item.getGame().getTitle());
@@ -369,7 +411,7 @@ public class CheckoutController {
                 hqSession.save(orderItem);
                 hqSession.flush();
 
-                LicenseKey assignedKey = assignLicenseKey(hqSession, managedUser.getId(), item.getGame().getId(), orderItem);
+                LicenseKey assignedKey = assignLicenseKey(hqSession, managedUser.getId(), item.getGame().getId(), orderItem.getId());
 
                 Map<String, Object> keyInfo = new HashMap<>();
                 keyInfo.put("gameTitle", item.getGame().getTitle());
@@ -485,7 +527,7 @@ public class CheckoutController {
                 .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
     }
 
-    private LicenseKey assignLicenseKey(Session hqSession, Long userId, Long gameId, OrderItem orderItem) {
+    private LicenseKey assignLicenseKey(Session hqSession, Long userId, Long gameId, Long orderItemId) {
         String keyHql = "FROM LicenseKey k WHERE k.game.id = :gameId AND k.status = 'AVAILABLE' AND NOT EXISTS (FROM LibraryItem li WHERE li.licenseKey.id = k.id)";
         List<LicenseKey> keys = hqSession.createQuery(keyHql, LicenseKey.class)
                 .setParameter("gameId", gameId)
@@ -496,7 +538,7 @@ public class CheckoutController {
 
         if (assignedKey != null) {
             assignedKey.setStatus("SOLD");
-            assignedKey.setOrderItem(orderItem);
+            assignedKey.setOrderItemId(orderItemId);
             assignedKey.setOwner(hqSession.get(User.class, userId));
             assignedKey.setAssignedAt(LocalDateTime.now());
             hqSession.update(assignedKey);

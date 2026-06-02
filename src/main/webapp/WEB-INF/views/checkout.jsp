@@ -196,21 +196,21 @@
                     <span class="fw-black text-success" id="checkoutWalletBalanceDisplay" style="font-weight: 900 !important;"><fmt:formatNumber value="${walletBalance}" type="number" maxFractionDigits="0" />₫</span>
                   </div>
                   <label class="form-label fw-bold small mb-1">Số điện thoại đăng ký ví *</label>
-                  <input type="text" class="gf-checkout-input" name="paymentPhone" placeholder="Nhập số điện thoại liên kết ví" required>
+                  <input type="text" class="gf-checkout-input" name="paymentPhone" placeholder="Nhập số điện thoại liên kết ví" required maxlength="11" pattern="\d{10,11}" title="Số điện thoại 10-11 chữ số">
                 </div>
 
                 <!-- CARD FIELDS (visa...) -->
                 <div class="payment-group d-none" id="fields-CARD">
                   <label class="form-label fw-bold small mb-1">Số thẻ tín dụng *</label>
-                  <input type="text" class="gf-checkout-input mb-3" name="cardNumber" placeholder="xxxx xxxx xxxx xxxx">
+                  <input type="text" class="gf-checkout-input mb-3" name="cardNumber" placeholder="xxxx xxxx xxxx xxxx" maxlength="19" pattern="\d{13,19}" title="Số thẻ 13-19 chữ số">
                   <div class="row g-2">
                     <div class="col-6">
                       <label class="form-label fw-bold small mb-1">Ngày hết hạn *</label>
-                      <input type="text" class="gf-checkout-input" name="cardExpiry" placeholder="MM/YY">
+                      <input type="text" class="gf-checkout-input" name="cardExpiry" placeholder="MM/YY" maxlength="5" pattern="(0[1-9]|1[0-2])\/\d{2}" title="Định dạng MM/YY (VD: 12/28)">
                     </div>
                     <div class="col-6">
                       <label class="form-label fw-bold small mb-1">Mã bí mật CVV *</label>
-                      <input type="password" class="gf-checkout-input" name="cardCvv" placeholder="***">
+                      <input type="password" class="gf-checkout-input" name="cardCvv" placeholder="***" maxlength="4" pattern="\d{3,4}" title="Mã CVV 3-4 chữ số">
                     </div>
                   </div>
                 </div>
@@ -240,7 +240,7 @@
               <div class="d-flex flex-column gap-3">
                 <div>
                   <label class="form-label fw-bold small mb-1">Họ và tên *</label>
-                  <input type="text" class="gf-checkout-input" name="fullName" placeholder="Nhập họ và tên đầy đủ" required>
+                  <input type="text" class="gf-checkout-input" name="fullName" placeholder="Nhập họ và tên đầy đủ" required maxlength="100">
                 </div>
 
                 <div>
@@ -254,7 +254,7 @@
 
                 <div>
                   <label class="form-label fw-bold small mb-1">Địa chỉ (Số nhà, Tên đường) *</label>
-                  <input type="text" class="gf-checkout-input" name="address" placeholder="Nhập địa chỉ nhà cụ thể" required>
+                  <input type="text" class="gf-checkout-input" name="address" placeholder="Nhập địa chỉ nhà cụ thể" required maxlength="300">
                 </div>
 
                 <div class="row g-2">
@@ -280,7 +280,7 @@
 
                 <div>
                   <label class="form-label fw-bold small mb-1">Ghi chú thêm (Không bắt buộc)</label>
-                  <textarea class="gf-checkout-input" name="notes" placeholder="Ghi chú đơn hàng nếu cần..." rows="2" style="height:auto;"></textarea>
+                  <textarea class="gf-checkout-input" name="notes" placeholder="Ghi chú đơn hàng nếu cần..." rows="2" style="height:auto;" maxlength="500"></textarea>
                 </div>
               </div>
             </div>

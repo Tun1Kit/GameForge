@@ -1,6 +1,7 @@
 package com.gamestore.entity;
 
 import javax.persistence.*;
+import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -46,13 +47,16 @@ public class Order {
     @Column(name = "paymentMethod")
     private String paymentMethod;
 
-    @Column(name = "fullName")
+    @Column(name = "fullName", length = 100)
+    @Size(max = 100, message = "Họ tên không được vượt quá 100 ký tự")
     private String fullName;
 
-    @Column(name = "phone")
+    @Column(name = "phone", length = 11)
+    @Size(max = 11, message = "Số điện thoại không được vượt quá 11 ký tự")
     private String phone;
 
-    @Column(name = "address")
+    @Column(name = "address", length = 300)
+    @Size(max = 300, message = "Địa chỉ không được vượt quá 300 ký tự")
     private String address;
 
     @Column(name = "province")
@@ -64,7 +68,8 @@ public class Order {
     @Column(name = "ward")
     private String ward;
 
-    @Column(name = "notes")
+    @Column(name = "notes", length = 500)
+    @Size(max = 500, message = "Ghi chú không được vượt quá 500 ký tự")
     private String notes;
 
     // ==============================================================

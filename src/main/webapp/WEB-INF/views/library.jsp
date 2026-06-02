@@ -319,7 +319,7 @@
             <form id="profileUpdateForm" onsubmit="submitProfileUpdate(event)">
               <div class="mb-3">
                 <label class="form-label fw-bold text-dark" style="font-size: 13px;">Tên hiển thị</label>
-                <input type="text" name="fullName" value="${fn:escapeXml(currentUser.fullName)}" required class="form-control gf-border-2 fw-semibold px-3 py-2" style="border-radius: 8px; font-size: 14px;">
+                <input type="text" name="fullName" value="${fn:escapeXml(currentUser.fullName)}" required class="form-control gf-border-2 fw-semibold px-3 py-2" style="border-radius: 8px; font-size: 14px;" maxlength="100">
               </div>
               <div class="mb-3">
                 <label class="form-label fw-bold text-dark" style="font-size: 13px;">Địa chỉ Email</label>
@@ -327,11 +327,11 @@
               </div>
               <div class="mb-3">
                 <label class="form-label fw-bold text-dark" style="font-size: 13px;">Mật khẩu mới</label>
-                <input type="password" name="password" placeholder="••••••••" class="form-control gf-border-2 fw-semibold px-3 py-2" style="border-radius: 8px; font-size: 14px;">
+                <input type="password" name="password" placeholder="••••••••" class="form-control gf-border-2 fw-semibold px-3 py-2" style="border-radius: 8px; font-size: 14px;" maxlength="128">
               </div>
               <div class="mb-4">
                 <label class="form-label fw-bold text-dark" style="font-size: 13px;">Đường dẫn ảnh đại diện (URL)</label>
-                <input type="text" name="avatar" value="${fn:escapeXml(currentUser.avatar)}" placeholder="https://api.dicebear.com/..." class="form-control gf-border-2 fw-semibold px-3 py-2" style="border-radius: 8px; font-size: 14px;">
+                <input type="text" name="avatar" value="${fn:escapeXml(currentUser.avatar)}" placeholder="https://api.dicebear.com/..." class="form-control gf-border-2 fw-semibold px-3 py-2" style="border-radius: 8px; font-size: 14px;" maxlength="500">
               </div>
               
               <button type="submit" class="btn w-100 gf-border gf-shadow-sm gf-press fw-bold py-2.5" style="background: var(--gf-green); border-radius: 10px;">

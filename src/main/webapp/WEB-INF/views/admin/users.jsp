@@ -83,7 +83,7 @@
           <label class="form-label fw-bold small text-secondary">Tìm kiếm</label>
           <div class="position-relative">
             <i data-lucide="search" width="16" height="16" class="position-absolute" style="top:50%;left:12px;transform:translateY(-50%);color:var(--gf-muted);"></i>
-            <input type="text" name="search" value="${fn:escapeXml(param.search)}" class="form-control gf-input ps-5" placeholder="Tên, email hoặc username...">
+            <input type="text" name="search" value="${fn:escapeXml(param.search)}" class="form-control gf-input ps-5" placeholder="Tên, email hoặc username..." maxlength="100">
           </div>
         </div>
         <div class="col-md-2">

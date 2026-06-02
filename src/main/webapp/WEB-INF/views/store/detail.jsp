@@ -597,7 +597,7 @@
                           <c:if test="${not empty _csrf.token}">
                             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                           </c:if>
-                          <textarea name="followUpText" rows="2" class="form-control border border-2 border-dark fw-semibold mb-2" placeholder="Nhập ý kiến bổ sung của bạn sau khi nhà phát hành phản hồi..." required style="font-size:12px; border-radius: 6px;"></textarea>
+                          <textarea name="followUpText" rows="2" class="form-control border border-2 border-dark fw-semibold mb-2" placeholder="Nhập ý kiến bổ sung của bạn sau khi nhà phát hành phản hồi..." required maxlength="1000" style="font-size:12px; border-radius: 6px;"></textarea>
                           <button type="submit" class="btn btn-xs gf-border-2 gf-press fw-bold text-dark px-3 py-1" style="background:var(--gf-pink); font-size:11px;">
                             Gửi ý kiến bổ sung
                           </button>
@@ -649,7 +649,7 @@
 
                   <div class="mb-3">
                     <label for="commentArea" class="fw-bold text-dark small d-block mb-1">Nội dung bình luận:</label>
-                    <textarea id="commentArea" name="comment" rows="3" class="form-control border border-2 border-dark fw-semibold" placeholder="Nhập cảm nhận chân thực của bạn về tựa game này..." required style="box-shadow: 2px 2px 0 #000; border-radius: 8px;">${userReview.comment}</textarea>
+                    <textarea id="commentArea" name="comment" rows="3" class="form-control border border-2 border-dark fw-semibold" placeholder="Nhập cảm nhận chân thực của bạn về tựa game này..." required maxlength="2000" style="box-shadow: 2px 2px 0 #000; border-radius: 8px;">${userReview.comment}</textarea>
                   </div>
 
                   <div class="d-flex gap-2">
@@ -753,7 +753,7 @@
                             <c:if test="${not empty _csrf.token}">
                               <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                             </c:if>
-                            <textarea name="replyText" rows="2" class="form-control border border-2 border-dark fw-semibold mb-2" placeholder="Nhập câu trả lời..." required style="font-size:12px; border-radius: 6px;">${rev.publisherReply}</textarea>
+                            <textarea name="replyText" rows="2" class="form-control border border-2 border-dark fw-semibold mb-2" placeholder="Nhập câu trả lời..." required maxlength="1000" style="font-size:12px; border-radius: 6px;">${rev.publisherReply}</textarea>
                             <div class="d-flex gap-2">
                               <button type="submit" class="btn btn-xs gf-border-2 gf-press fw-bold" style="background:var(--gf-green); color:#000; font-size:11px; padding:2.5px 10px;">
                                 Gửi phản hồi

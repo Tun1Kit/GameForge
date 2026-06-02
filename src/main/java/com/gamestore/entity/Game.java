@@ -24,23 +24,8 @@ public class Game {
     @Column(name = "original_price")
     private BigDecimal originalPrice;
 
-    private String developer;
-
-    @Column(name = "releaseDate")
-    private java.time.LocalDate releaseDate;
-
-    @Column(name = "minimumRequirements", columnDefinition = "NVARCHAR(MAX)")
-    private String minimumRequirements;
-
-    @Column(name = "recommendedRequirements", columnDefinition = "NVARCHAR(MAX)")
-    private String recommendedRequirements;
-
-    @Column(name = "createdAt", nullable = false)
-    private java.time.LocalDateTime createdAt;
-
     private String status;
 
-    @Column(name = "badges", columnDefinition = "VARCHAR(MAX)")
     private String badges;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -62,12 +47,6 @@ public class Game {
     // --- BẮT BUỘC: Bạn phải chuột phải chọn Source -> Generate Getters and Setters... 
     // để tạo lại cho biến mediaList mới này nhé! ---
     
-    @PrePersist
-    public void prePersist() {
-        if (createdAt == null) createdAt = java.time.LocalDateTime.now();
-        if (status == null) status = "ACTIVE";
-    }
-    
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getTitle() { return title; }
@@ -80,18 +59,6 @@ public class Game {
     public void setPrice(BigDecimal price) { this.price = price; }
     public BigDecimal getOriginalPrice() { return originalPrice; }
     public void setOriginalPrice(BigDecimal originalPrice) { this.originalPrice = originalPrice; }
-    
-    public String getDeveloper() { return developer; }
-    public void setDeveloper(String developer) { this.developer = developer; }
-    public java.time.LocalDate getReleaseDate() { return releaseDate; }
-    public void setReleaseDate(java.time.LocalDate releaseDate) { this.releaseDate = releaseDate; }
-    public String getMinimumRequirements() { return minimumRequirements; }
-    public void setMinimumRequirements(String minimumRequirements) { this.minimumRequirements = minimumRequirements; }
-    public String getRecommendedRequirements() { return recommendedRequirements; }
-    public void setRecommendedRequirements(String recommendedRequirements) { this.recommendedRequirements = recommendedRequirements; }
-    public java.time.LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(java.time.LocalDateTime createdAt) { this.createdAt = createdAt; }
-
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public String getBadges() { return badges; }

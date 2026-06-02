@@ -145,7 +145,7 @@
         </p>
 
         <div class="d-flex flex-column flex-sm-row gap-3">
-          <a href="${pageContext.request.contextPath}/" class="btn gf-border gf-shadow gf-press fw-bold fs-5 px-4 py-3 rounded-3 d-inline-flex align-items-center justify-content-center gap-2" style="background: var(--gf-green);">
+          <a href="${pageContext.request.contextPath}/#store" class="btn gf-border gf-shadow gf-press fw-bold fs-5 px-4 py-3 rounded-3 d-inline-flex align-items-center justify-content-center gap-2" style="background: var(--gf-green);">
             <i data-lucide="shopping-bag" width="20" height="20"></i> Tiếp tục mua sắm
           </a>
           <a href="${pageContext.request.contextPath}/library" class="btn gf-border gf-shadow gf-press fw-bold fs-5 px-4 py-3 rounded-3 d-inline-flex align-items-center justify-content-center gap-2" style="background: var(--gf-blue);">

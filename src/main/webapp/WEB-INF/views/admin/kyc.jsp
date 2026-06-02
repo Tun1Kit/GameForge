@@ -276,7 +276,7 @@
           <input type="hidden" id="rejectKycId">
           <div class="mb-3">
             <label class="form-label fw-bold small">Ghi chú từ chối <span class="text-danger">*</span></label>
-            <textarea id="rejectNote" class="form-control gf-input" rows="3" placeholder="Lý do từ chối KYC (bắt buộc)..."></textarea>
+            <textarea id="rejectNote" class="form-control gf-input" rows="3" placeholder="Lý do từ chối KYC (bắt buộc)..." maxlength="500"></textarea>
           </div>
         </div>
         <div class="modal-footer border-top border-2 border-dark">

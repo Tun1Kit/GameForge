@@ -57,7 +57,7 @@ public class AuthController {
         return "login";
     }
 
-    // 2. XỬ LÝ ĐĂNG NHẬP — giữ emailOrUsername + BCrypt auto-upgrade
+    // 2. XỬ LÝ ĐĂNG NHẬP
     @PostMapping("/login")
     @Transactional
     public String processLogin(@RequestParam("emailOrUsername") String emailOrUsername,
@@ -81,9 +81,7 @@ public class AuthController {
         if (isBCryptHash(user.getPassword())) {
             passwordMatched = PasswordEncoderUtil.matches(password, user.getPassword());
         } else {
-            // Hỗ trợ tài khoản cũ lưu password dạng plain text
             passwordMatched = password.equals(user.getPassword());
-            // Auto-upgrade sang BCrypt nếu đăng nhập đúng
             if (passwordMatched) {
                 user.setPassword(PasswordEncoderUtil.encode(password));
                 userDAO.update(user);
@@ -95,7 +93,7 @@ public class AuthController {
             return "login";
         }
 
-        // Session fixation fix — tạo session mới sau khi đăng nhập
+        //tạo session mới sau khi đăng nhập
         session.invalidate();
         HttpSession newSession = request.getSession(true);
         newSession.setAttribute("currentUser", user);
@@ -121,16 +119,32 @@ public class AuthController {
             model.addAttribute("error", "Tên đăng nhập không được để trống!");
             return "login";
         }
+        if (username.trim().length() > 50) {
+            model.addAttribute("error", "Tên đăng nhập không được vượt quá 50 ký tự!");
+            return "login";
+        }
+        if (!username.trim().matches("^[a-zA-Z0-9_.-]+$")) {
+            model.addAttribute("error", "Tên đăng nhập chỉ chấp nhận chữ cái không dấu, số, gạch dưới, gạch nối và dấu chấm!");
+            return "login";
+        }
         if (fullName == null || fullName.trim().isEmpty()) {
             model.addAttribute("error", "Họ tên không được để trống!");
+            return "login";
+        }
+        if (fullName.trim().length() > 100) {
+            model.addAttribute("error", "Họ tên không được vượt quá 100 ký tự!");
             return "login";
         }
         if (email == null || email.trim().isEmpty()) {
             model.addAttribute("error", "Email không được để trống!");
             return "login";
         }
-        if (password == null || password.length() < 6) {
-            model.addAttribute("error", "Mật khẩu phải có ít nhất 6 ký tự!");
+        if (email.trim().length() > 100) {
+            model.addAttribute("error", "Email không được vượt quá 100 ký tự!");
+            return "login";
+        }
+        if (password == null || password.length() < 6 || password.length() > 128) {
+            model.addAttribute("error", "Mật khẩu phải từ 6 đến 128 ký tự!");
             return "login";
         }
         if (!password.equals(confirmPassword)) {
@@ -215,7 +229,7 @@ public class AuthController {
         // Tìm ROLE_USER
         Role userRole = roleDAO.findByCode("ROLE_USER");
         if (userRole == null) {
-            model.addAttribute("error", "Database chưa có ROLE_USER. Vui lòng chạy role seed.");
+            model.addAttribute("error", "Database chưa có ROLE_USER.");
             return "login";
         }
 

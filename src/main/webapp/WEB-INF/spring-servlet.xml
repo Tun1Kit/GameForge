@@ -69,7 +69,6 @@
 			<mvc:mapping path="/library/**" />
 			<mvc:mapping path="/orders" />
 			<mvc:mapping path="/orders/**" />
-			<mvc:mapping path="/wishlist" />
 			<ref bean="authInterceptor" />
 		</mvc:interceptor>
 	</mvc:interceptors>

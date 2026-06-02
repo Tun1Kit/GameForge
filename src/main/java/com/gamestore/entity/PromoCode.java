@@ -21,16 +21,16 @@ public class PromoCode {
     @Column(nullable = false, unique = true, length = 100)
     private String code;
 
-    @Column(name = "discountPercentage", nullable = false, precision = 5, scale = 2)
+    @Column(name = "discount_percentage", nullable = false, precision = 5, scale = 2)
     private BigDecimal discountPercentage;
 
-    @Column(name = "expiryDate")
+    @Column(name = "expiry_date")
     private LocalDateTime expiryDate;
 
-    @Column(name = "usageLimit")
+    @Column(name = "usage_limit")
     private Integer usageLimit;
 
-    @Column(name = "currentUsage", nullable = false)
+    @Column(name = "current_usage", nullable = false)
     private Integer currentUsage = 0;
 
     @Column(nullable = false, length = 50)

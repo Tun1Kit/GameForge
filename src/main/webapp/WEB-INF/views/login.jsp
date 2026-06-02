@@ -148,7 +148,7 @@
                     <label class="form-label fw-black small mb-1">Email hoặc tên đăng nhập</label>
                     <div class="gf-input-wrapper">
                       <i data-lucide="mail" class="gf-input-icon" width="18" height="18"></i>
-                      <input name="emailOrUsername" type="text" class="gf-input" placeholder="vd: vinhnguyen123 hoặc email@example.com" required>
+                      <input name="emailOrUsername" type="text" class="gf-input" placeholder="vd: vinhnguyen123 hoặc email@example.com" required maxlength="100">
                     </div>
                   </div>
 
@@ -156,7 +156,7 @@
                     <label class="form-label fw-black small mb-1">Mật khẩu</label>
                     <div class="gf-input-wrapper">
                       <i data-lucide="lock-keyhole" class="gf-input-icon" width="18" height="18"></i>
-                      <input id="loginPassword" name="password" type="password" class="gf-input" placeholder="Nhập mật khẩu" required>
+                      <input id="loginPassword" name="password" type="password" class="gf-input" placeholder="Nhập mật khẩu" required maxlength="128">
                       <button type="button" onclick="togglePassword('loginPassword', this)" class="gf-eye-btn">
                         <i data-lucide="eye" width="18" height="18"></i>
                       </button>
@@ -194,7 +194,7 @@
                     <label class="form-label fw-black small mb-1">Tên đăng nhập</label>
                     <div class="gf-input-wrapper">
                       <i data-lucide="at-sign" class="gf-input-icon" width="18" height="18"></i>
-                      <input name="username" type="text" class="gf-input" placeholder="vd: vinhnguyen123" required>
+                      <input name="username" type="text" class="gf-input" placeholder="vd: vinhnguyen123" required maxlength="50" pattern="[a-zA-Z0-9_.-]+" title="Chỉ chấp nhận chữ cái không dấu, số, gạch dưới, gạch nối và dấu chấm">
                     </div>
                   </div>
 
@@ -202,7 +202,7 @@
                     <label class="form-label fw-black small mb-1">Tên hiển thị</label>
                     <div class="gf-input-wrapper">
                       <i data-lucide="user" class="gf-input-icon" width="18" height="18"></i>
-                      <input name="fullName" type="text" class="gf-input" placeholder="vd: Nguyễn Văn A">
+                      <input name="fullName" type="text" class="gf-input" placeholder="vd: Nguyễn Văn A" maxlength="100">
                     </div>
                   </div>
 
@@ -210,7 +210,7 @@
                     <label class="form-label fw-black small mb-1">Email</label>
                     <div class="gf-input-wrapper">
                       <i data-lucide="mail" class="gf-input-icon" width="18" height="18"></i>
-                      <input name="email" type="email" class="gf-input" placeholder="Nhập email" required>
+                      <input name="email" type="email" class="gf-input" placeholder="Nhập email" required maxlength="100">
                     </div>
                   </div>
 
@@ -219,7 +219,7 @@
                       <label class="form-label fw-black small mb-1">Mật khẩu</label>
                       <div class="gf-input-wrapper">
                         <i data-lucide="lock-keyhole" class="gf-input-icon" width="16" height="16"></i>
-                        <input id="regPassword" name="password" type="password" class="gf-input" style="padding-left: 36px; padding-right: 32px;" required>
+                        <input id="regPassword" name="password" type="password" class="gf-input" style="padding-left: 36px; padding-right: 32px;" required maxlength="128">
                         <button type="button" onclick="togglePassword('regPassword', this)" class="gf-eye-btn">
                           <i data-lucide="eye" width="16" height="16"></i>
                         </button>
@@ -229,7 +229,7 @@
                       <label class="form-label fw-black small mb-1">Nhập lại</label>
                       <div class="gf-input-wrapper">
                         <i data-lucide="shield-check" class="gf-input-icon" width="16" height="16"></i>
-                        <input id="regConfirm" name="confirmPassword" type="password" class="gf-input" style="padding-left: 36px; padding-right: 32px;" required>
+                        <input id="regConfirm" name="confirmPassword" type="password" class="gf-input" style="padding-left: 36px; padding-right: 32px;" required maxlength="128">
                         <button type="button" onclick="togglePassword('regConfirm', this)" class="gf-eye-btn">
                           <i data-lucide="eye" width="16" height="16"></i>
                         </button>
