@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gamestore.dao.CartItemDAO;
 import com.gamestore.entity.*;
 import com.gamestore.service.EmailService;
+import com.gamestore.service.UserContextService;
+import com.gamestore.service.WalletService;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -35,25 +36,24 @@ public class CheckoutController {
     private CartItemDAO cartItemDAO;
 
     @Autowired
+    private WalletService walletService;
+
+    @Autowired
     private EmailService emailService;
 
-    /**
-     * HIỂN THỊ TRANG THANH TOÁN & GIỎ HÀNG
-     */
+    @Autowired
+    private UserContextService userContextService;
+
     @GetMapping("/checkout")
     public String showCheckoutPage(
             @RequestParam(value = "error", required = false) String error,
             HttpSession session, Model model) {
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = userContextService.getCurrentUser(session);
         if (currentUser == null) {
             return "redirect:/login";
         }
 
-        String hql = "FROM CartItem c JOIN FETCH c.game WHERE c.user.id = :userId";
-        List<CartItem> cartItems = sessionFactory.getCurrentSession()
-                .createQuery(hql, CartItem.class)
-                .setParameter("userId", currentUser.getId())
-                .getResultList();
+        List<CartItem> cartItems = cartItemDAO.getCartItems(currentUser.getId());
 
         BigDecimal subtotal = BigDecimal.ZERO;
         BigDecimal totalDiscount = BigDecimal.ZERO;
@@ -68,19 +68,7 @@ public class CheckoutController {
         }
         BigDecimal total = subtotal.subtract(totalDiscount);
 
-        BigDecimal walletBalance = BigDecimal.ZERO;
-        String hqlWallet = "SELECT w.balance FROM Wallet w WHERE w.user.id = :userId";
-        try {
-            BigDecimal result = sessionFactory.getCurrentSession()
-                    .createQuery(hqlWallet, BigDecimal.class)
-                    .setParameter("userId", currentUser.getId())
-                    .uniqueResult();
-            if (result != null) {
-                walletBalance = result;
-            }
-        } catch (Exception e) {
-            // User chưa có ví trong bảng wallets
-        }
+        BigDecimal walletBalance = walletService.getBalance(currentUser);
 
         if (error != null) {
             if ("wallet_not_found".equals(error)) {
@@ -99,9 +87,6 @@ public class CheckoutController {
         return "checkout";
     }
 
-    /**
-     * XỬ LÝ THANH TOÁN ĐƠN HÀNG
-     */
     @PostMapping("/checkout/process")
     public String processCheckout(
             @RequestParam("paymentMethod") String paymentMethod,
@@ -114,20 +99,15 @@ public class CheckoutController {
             @RequestParam(value = "notes", required = false) String notes,
             HttpSession session, Model model) {
 
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = userContextService.getCurrentUser(session);
         if (currentUser == null) {
             return "redirect:/login";
         }
 
         Session hqSession = sessionFactory.getCurrentSession();
-        // Load managed User to avoid Detached Entity or LazyInitializationException issues from login session
         User managedUser = hqSession.get(User.class, currentUser.getId());
 
-        String hql = "FROM CartItem c JOIN FETCH c.game WHERE c.user.id = :userId";
-        List<CartItem> cartItems = hqSession
-                .createQuery(hql, CartItem.class)
-                .setParameter("userId", managedUser.getId())
-                .getResultList();
+        List<CartItem> cartItems = cartItemDAO.getCartItems(managedUser.getId());
 
         if (cartItems.isEmpty()) {
             return "redirect:/?error=empty_cart";
@@ -140,58 +120,26 @@ public class CheckoutController {
 
         BigDecimal total = subtotal;
 
-        // FIX BUG #4: Chỉ hỗ trợ thanh toán qua Ví GameForge tạm thời
         if (!"WALLET".equals(paymentMethod)) {
-            List<CartItem> cartItemsForModel = hqSession
-                    .createQuery("FROM CartItem c JOIN FETCH c.game WHERE c.user.id = :userId", CartItem.class)
-                    .setParameter("userId", managedUser.getId())
-                    .getResultList();
-            model.addAttribute("cartItems", cartItemsForModel);
+            model.addAttribute("cartItems", cartItemDAO.getCartItems(managedUser.getId()));
             model.addAttribute("error", "Hiện tại chỉ hỗ trợ thanh toán qua Ví GameForge. Vui lòng chọn 'Ví điện tử'.");
-            BigDecimal stForModel = BigDecimal.ZERO;
-            for (CartItem ci : cartItemsForModel) stForModel = stForModel.add(ci.getGame().getPrice());
-            model.addAttribute("subtotal", stForModel);
+            model.addAttribute("subtotal", subtotal);
             model.addAttribute("discount", BigDecimal.ZERO);
-            model.addAttribute("total", stForModel);
-            BigDecimal wb = BigDecimal.ZERO;
-            try {
-                Object r = hqSession.createNativeQuery("SELECT balance FROM wallets WHERE user_id = :uid")
-                        .setParameter("uid", managedUser.getId()).uniqueResult();
-                if (r != null) wb = (r instanceof BigDecimal) ? (BigDecimal) r : new BigDecimal(r.toString());
-            } catch (Exception ex) { /* no wallet */ }
-            model.addAttribute("walletBalance", wb);
+            model.addAttribute("total", subtotal);
+            model.addAttribute("walletBalance", walletService.getBalance(managedUser));
             return "checkout";
         }
 
-        // ====== XỬ LÝ THANH TOÁN BẰNG VÍ ======
         if ("WALLET".equals(paymentMethod)) {
-            Wallet wallet = hqSession
-                        .createQuery("FROM Wallet WHERE user.id = :userId", Wallet.class)
-                        .setParameter("userId", managedUser.getId())
-                        .uniqueResult();
-
-            if (wallet == null) {
-                return "redirect:/checkout?error=wallet_not_found";
-            }
+            Wallet wallet = walletService.getOrCreateWallet(managedUser);
 
             if (wallet.getBalance().compareTo(total) < 0) {
                 return "redirect:/checkout?error=insufficient_balance";
             }
 
-            wallet.setBalance(wallet.getBalance().subtract(total));
-            hqSession.update(wallet);
-
-            WalletTransaction tx = new WalletTransaction();
-            tx.setWallet(wallet);
-            tx.setType("PURCHASE");
-            tx.setAmount(total);
-            tx.setStatus("SUCCESS");
-            tx.setReferenceId("ORDER_" + System.currentTimeMillis());
-            hqSession.save(tx);
+            walletService.purchase(managedUser, total, "ORDER_" + System.currentTimeMillis());
         }
-        // ====== KẾT THÚC XỬ LÝ VÍ ======
 
-        // Tạo đơn hàng
         Order order = new Order();
         order.setUser(managedUser);
         order.setSubtotalAmount(subtotal);
@@ -226,48 +174,8 @@ public class CheckoutController {
             hqSession.save(orderItem);
             hqSession.flush();
 
-            // Tìm license key AVAILABLE cho game này
-            String keyHql = "FROM LicenseKey k WHERE k.game.id = :gameId AND k.status = 'AVAILABLE' AND NOT EXISTS (FROM LibraryItem li WHERE li.licenseKey.id = k.id)";
-            List<LicenseKey> keys = hqSession.createQuery(keyHql, LicenseKey.class)
-                    .setParameter("gameId", item.getGame().getId())
-                    .setMaxResults(1)
-                    .getResultList();
+            LicenseKey assignedKey = assignLicenseKey(hqSession, managedUser.getId(), item.getGame().getId(), orderItem.getId());
 
-            LicenseKey assignedKey = (!keys.isEmpty()) ? keys.get(0) : null;
-
-            if (assignedKey != null) {
-                // FIX BUG #1: Cập nhật key sang SOLD trước khi gán cho user
-                assignedKey.setStatus("SOLD");
-                assignedKey.setOrderItemId(orderItem.getId());
-                assignedKey.setOwner(managedUser);
-                assignedKey.setAssignedAt(LocalDateTime.now());
-                hqSession.update(assignedKey);
-
-                // Kiểm tra user đã sở hữu game này chưa — tránh trùng unique key (sử dụng list đề phòng duplicate lịch sử)
-                String libHql = "FROM LibraryItem WHERE user.id = :userId AND game.id = :gameId";
-                List<LibraryItem> existingLibs = hqSession.createQuery(libHql, LibraryItem.class)
-                        .setParameter("userId", managedUser.getId())
-                        .setParameter("gameId", item.getGame().getId())
-                        .getResultList();
-                LibraryItem existingLib = !existingLibs.isEmpty() ? existingLibs.get(0) : null;
-
-                if (existingLib == null) {
-                    LibraryItem libItem = new LibraryItem();
-                    libItem.setUser(managedUser);
-                    libItem.setGame(item.getGame());
-                    libItem.setLicenseKey(assignedKey);
-                    libItem.setStatus("ACTIVE");
-                    libItem.setAcquiredAt(LocalDateTime.now());
-                    hqSession.save(libItem);
-                } else {
-                    // Game đã có trong thư viện, chỉ cập nhật key
-                    existingLib.setLicenseKey(assignedKey);
-                    existingLib.setAcquiredAt(LocalDateTime.now());
-                    hqSession.update(existingLib);
-                }
-            }
-
-            // Ghi log key dù có hay không (cho trang success)
             Map<String, Object> keyInfo = new HashMap<>();
             keyInfo.put("gameTitle", item.getGame().getTitle());
             keyInfo.put("keyString", (assignedKey != null) ? assignedKey.getKeyString() : "[Đang chờ cấp phát]");
@@ -277,7 +185,6 @@ public class CheckoutController {
             hqSession.delete(item);
         }
 
-        // Truyền 8 trường giao hàng qua session để hiển thị ở trang success
         Map<String, String> shippingInfo = new HashMap<>();
         shippingInfo.put("fullName", fullName);
         shippingInfo.put("phone", phone);
@@ -290,7 +197,6 @@ public class CheckoutController {
         session.setAttribute("shippingInfo", shippingInfo);
         session.setAttribute("assignedKeys", assignedKeys);
 
-        // Gửi email hóa đơn & key kích hoạt tự động cho user
         try {
             emailService.sendOrderConfirmation(managedUser, order, assignedKeys);
         } catch (Exception e) {
@@ -300,19 +206,15 @@ public class CheckoutController {
         return "redirect:/checkout/success?orderId=" + order.getId();
     }
 
-    /**
-     * TRANG HOÀN TẤT THÀNH CÔNG
-     */
     @GetMapping("/checkout/success")
     public String orderSuccess(@RequestParam(value = "orderId", required = false) Long orderIdParam, Model model, HttpSession session) {
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = userContextService.getCurrentUser(session);
         if (currentUser == null) {
             return "redirect:/login";
         }
 
         Session hqSession = sessionFactory.getCurrentSession();
 
-        // Lấy orderId từ request param hoặc từ session (do API endpoint đặt)
         Long orderId = orderIdParam;
         if (orderId == null) {
             Object sessionOrderId = session.getAttribute("lastOrderId");
@@ -355,10 +257,6 @@ public class CheckoutController {
         return "order-success";
     }
 
-    /**
-     * API AJAX: XỬ LÝ THANH TOÁN ĐƠN HÀNG (QR / WALLET / BANK)
-     * Trả về JSON thay vì redirect — dùng cho modal QR checkout
-     */
     @PostMapping("/api/checkout/process")
     public void apiProcessCheckout(
             @RequestParam("paymentMethod") String paymentMethod,
@@ -379,7 +277,7 @@ public class CheckoutController {
         ObjectMapper mapper = new ObjectMapper();
 
         Map<String, Object> response = new HashMap<>();
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = userContextService.getCurrentUser(session);
         if (currentUser == null) {
             response.put("success", false);
             response.put("message", "Chưa đăng nhập.");
@@ -388,14 +286,9 @@ public class CheckoutController {
         }
 
         Session hqSession = sessionFactory.getCurrentSession();
-        // Load managed User to avoid Detached Entity or LazyInitializationException issues from login session
         User managedUser = hqSession.get(User.class, currentUser.getId());
 
-        String cartHql = "FROM CartItem c JOIN FETCH c.game WHERE c.user.id = :userId";
-        List<CartItem> cartItems = hqSession
-                .createQuery(cartHql, CartItem.class)
-                .setParameter("userId", managedUser.getId())
-                .getResultList();
+        List<CartItem> cartItems = cartItemDAO.getCartItems(managedUser.getId());
 
         if (cartItems.isEmpty()) {
             response.put("success", false);
@@ -426,17 +319,7 @@ public class CheckoutController {
         try {
             boolean useGameForgeWallet = "WALLET".equals(paymentMethod) && "GAMEFORGE".equals(walletProvider);
             if (useGameForgeWallet) {
-                Wallet wallet = hqSession
-                        .createQuery("FROM Wallet WHERE user.id = :userId", Wallet.class)
-                        .setParameter("userId", managedUser.getId())
-                        .uniqueResult();
-
-                if (wallet == null) {
-                    response.put("success", false);
-                    response.put("message", "Bạn chưa có ví GameForge. Vui lòng nạp tiền trước.");
-                    out.print(mapper.writeValueAsString(response));
-                    return;
-                }
+                Wallet wallet = walletService.getOrCreateWallet(managedUser);
 
                 if (wallet.getBalance().compareTo(total) < 0) {
                     response.put("success", false);
@@ -445,16 +328,7 @@ public class CheckoutController {
                     return;
                 }
 
-                wallet.setBalance(wallet.getBalance().subtract(total));
-                hqSession.update(wallet);
-
-                WalletTransaction tx = new WalletTransaction();
-                tx.setWallet(wallet);
-                tx.setType("PURCHASE");
-                tx.setAmount(total);
-                tx.setStatus("SUCCESS");
-                tx.setReferenceId("ORDER_" + System.currentTimeMillis());
-                hqSession.save(tx);
+                walletService.purchase(managedUser, total, "ORDER_" + System.currentTimeMillis());
 
                 response.put("newBalance", wallet.getBalance());
             } else {
@@ -495,42 +369,7 @@ public class CheckoutController {
                 hqSession.save(orderItem);
                 hqSession.flush();
 
-                String keyHql = "FROM LicenseKey k WHERE k.game.id = :gameId AND k.status = 'AVAILABLE' AND NOT EXISTS (FROM LibraryItem li WHERE li.licenseKey.id = k.id)";
-                List<LicenseKey> keys = hqSession.createQuery(keyHql, LicenseKey.class)
-                        .setParameter("gameId", item.getGame().getId())
-                        .setMaxResults(1)
-                        .getResultList();
-
-                LicenseKey assignedKey = (!keys.isEmpty()) ? keys.get(0) : null;
-
-                if (assignedKey != null) {
-                    assignedKey.setStatus("SOLD");
-                    assignedKey.setOrderItemId(orderItem.getId());
-                    assignedKey.setOwner(managedUser);
-                    assignedKey.setAssignedAt(LocalDateTime.now());
-                    hqSession.update(assignedKey);
-
-                    String libHql = "FROM LibraryItem WHERE user.id = :userId AND game.id = :gameId";
-                    List<LibraryItem> existingLibs = hqSession.createQuery(libHql, LibraryItem.class)
-                            .setParameter("userId", managedUser.getId())
-                            .setParameter("gameId", item.getGame().getId())
-                            .getResultList();
-                    LibraryItem existingLib = !existingLibs.isEmpty() ? existingLibs.get(0) : null;
-
-                    if (existingLib == null) {
-                        LibraryItem libItem = new LibraryItem();
-                        libItem.setUser(managedUser);
-                        libItem.setGame(item.getGame());
-                        libItem.setLicenseKey(assignedKey);
-                        libItem.setStatus("ACTIVE");
-                        libItem.setAcquiredAt(LocalDateTime.now());
-                        hqSession.save(libItem);
-                    } else {
-                        existingLib.setLicenseKey(assignedKey);
-                        existingLib.setAcquiredAt(LocalDateTime.now());
-                        hqSession.update(existingLib);
-                    }
-                }
+                LicenseKey assignedKey = assignLicenseKey(hqSession, managedUser.getId(), item.getGame().getId(), orderItem.getId());
 
                 Map<String, Object> keyInfo = new HashMap<>();
                 keyInfo.put("gameTitle", item.getGame().getTitle());
@@ -576,30 +415,6 @@ public class CheckoutController {
         }
     }
 
-    /**
-     * FIX BUG #2: Áp dụng mã khuyến mãi
-     */
-    private BigDecimal applyPromoCode(Session session, String promoCodeStr, BigDecimal subtotal) {
-        if (promoCodeStr == null || promoCodeStr.trim().isEmpty()) {
-            return BigDecimal.ZERO;
-        }
-        PromoCode promo = session
-                .createQuery("FROM PromoCode WHERE UPPER(code) = :code AND status = 'ACTIVE'", PromoCode.class)
-                .setParameter("code", promoCodeStr.trim().toUpperCase())
-                .uniqueResult();
-        if (promo == null) {
-            return BigDecimal.ZERO;
-        }
-        if (promo.getExpiryDate() != null && promo.getExpiryDate().isBefore(LocalDateTime.now())) {
-            return BigDecimal.ZERO;
-        }
-        if (promo.getUsageLimit() != null && promo.getCurrentUsage() >= promo.getUsageLimit()) {
-            return BigDecimal.ZERO;
-        }
-        return subtotal.multiply(promo.getDiscountPercentage())
-                .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
-    }
-
     @GetMapping("/api/promo/validate")
     public void validatePromoCode(
             @RequestParam("code") String code,
@@ -612,7 +427,7 @@ public class CheckoutController {
         ObjectMapper mapper = new ObjectMapper();
 
         Map<String, Object> response = new HashMap<>();
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = userContextService.getCurrentUser(session);
         if (currentUser == null) {
             response.put("success", false);
             response.put("message", "Vui lòng đăng nhập.");
@@ -620,11 +435,7 @@ public class CheckoutController {
             return;
         }
         Session hqSession = sessionFactory.getCurrentSession();
-        String hql = "FROM CartItem c JOIN FETCH c.game WHERE c.user.id = :userId";
-        List<CartItem> cartItems = hqSession
-                .createQuery(hql, CartItem.class)
-                .setParameter("userId", currentUser.getId())
-                .getResultList();
+        List<CartItem> cartItems = cartItemDAO.getCartItems(currentUser.getId());
         if (cartItems.isEmpty()) {
             response.put("success", false);
             response.put("message", "Giỏ hàng trống.");
@@ -653,4 +464,65 @@ public class CheckoutController {
         out.print(mapper.writeValueAsString(response));
     }
 
+    private BigDecimal applyPromoCode(Session session, String promoCodeStr, BigDecimal subtotal) {
+        if (promoCodeStr == null || promoCodeStr.trim().isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        PromoCode promo = session
+                .createQuery("FROM PromoCode WHERE UPPER(code) = :code AND status = 'ACTIVE'", PromoCode.class)
+                .setParameter("code", promoCodeStr.trim().toUpperCase())
+                .uniqueResult();
+        if (promo == null) {
+            return BigDecimal.ZERO;
+        }
+        if (promo.getExpiryDate() != null && promo.getExpiryDate().isBefore(LocalDateTime.now())) {
+            return BigDecimal.ZERO;
+        }
+        if (promo.getUsageLimit() != null && promo.getCurrentUsage() >= promo.getUsageLimit()) {
+            return BigDecimal.ZERO;
+        }
+        return subtotal.multiply(promo.getDiscountPercentage())
+                .divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
+    }
+
+    private LicenseKey assignLicenseKey(Session hqSession, Long userId, Long gameId, Long orderItemId) {
+        String keyHql = "FROM LicenseKey k WHERE k.game.id = :gameId AND k.status = 'AVAILABLE' AND NOT EXISTS (FROM LibraryItem li WHERE li.licenseKey.id = k.id)";
+        List<LicenseKey> keys = hqSession.createQuery(keyHql, LicenseKey.class)
+                .setParameter("gameId", gameId)
+                .setMaxResults(1)
+                .getResultList();
+
+        LicenseKey assignedKey = (!keys.isEmpty()) ? keys.get(0) : null;
+
+        if (assignedKey != null) {
+            assignedKey.setStatus("SOLD");
+            assignedKey.setOrderItemId(orderItemId);
+            assignedKey.setOwner(hqSession.get(User.class, userId));
+            assignedKey.setAssignedAt(LocalDateTime.now());
+            hqSession.update(assignedKey);
+
+            String libHql = "FROM LibraryItem WHERE user.id = :userId AND game.id = :gameId";
+            List<LibraryItem> existingLibs = hqSession.createQuery(libHql, LibraryItem.class)
+                    .setParameter("userId", userId)
+                    .setParameter("gameId", gameId)
+                    .getResultList();
+            LibraryItem existingLib = !existingLibs.isEmpty() ? existingLibs.get(0) : null;
+
+            if (existingLib == null) {
+                LibraryItem libItem = new LibraryItem();
+                libItem.setUser(hqSession.get(User.class, userId));
+                libItem.setGame(hqSession.get(com.gamestore.entity.Game.class, gameId));
+                libItem.setLicenseKey(assignedKey);
+                libItem.setStatus("ACTIVE");
+                libItem.setAcquiredAt(LocalDateTime.now());
+                hqSession.save(libItem);
+            } else {
+                existingLib.setLicenseKey(assignedKey);
+                existingLib.setAcquiredAt(LocalDateTime.now());
+                hqSession.update(existingLib);
+            }
+        }
+
+        return assignedKey;
+    }
 }

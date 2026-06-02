@@ -8,6 +8,7 @@ import com.gamestore.service.AdminDashboardService;
 import com.gamestore.service.KycService;
 import com.gamestore.service.PayoutService;
 import com.gamestore.service.SystemSettingService;
+import com.gamestore.service.UserContextService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -37,9 +38,12 @@ public class AdminController {
     @Autowired
     private SystemSettingService systemSettingService;
 
+    @Autowired
+    private UserContextService userContextService;
+
     @GetMapping("/admin/dashboard")
     public String dashboard(HttpSession session, Model model) {
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = userContextService.getCurrentUser(session);
         AdminStatsDTO stats = adminDashboardService.getStats();
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("stats", stats);
@@ -55,7 +59,7 @@ public class AdminController {
 
     @PostMapping("/admin/users/lock")
     public String lockUser(@RequestParam("userId") Long userId, HttpSession session) {
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = userContextService.getCurrentUser(session);
         if (currentUser != null && currentUser.getId().equals(userId)) {
             return "redirect:/admin/users?error=self-lock";
         }

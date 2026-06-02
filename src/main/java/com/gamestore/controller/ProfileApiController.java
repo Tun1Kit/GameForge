@@ -2,6 +2,7 @@ package com.gamestore.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gamestore.entity.User;
+import com.gamestore.service.UserContextService;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -21,6 +22,9 @@ public class ProfileApiController {
     @Autowired
     private SessionFactory sessionFactory;
 
+    @Autowired
+    private UserContextService userContextService;
+
     @PostMapping("/api/profile/update")
     public void updateProfile(
             @RequestParam("fullName") String fullName,
@@ -35,7 +39,7 @@ public class ProfileApiController {
         ObjectMapper mapper = new ObjectMapper();
 
         Map<String, Object> response = new HashMap<>();
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = userContextService.getCurrentUser(session);
 
         if (currentUser == null) {
             response.put("success", false);
@@ -75,7 +79,7 @@ public class ProfileApiController {
             sessionFactory.getCurrentSession().update(user);
             sessionFactory.getCurrentSession().flush();
 
-            session.setAttribute("currentUser", user);
+            userContextService.updateSessionUser(session, user);
 
             response.put("success", true);
             response.put("message", "Cập nhật hồ sơ cá nhân thành công!");

@@ -39,4 +39,36 @@ public class OrderDAO extends BaseDAO<Order> {
             return null;
         }
     }
+
+    /**
+     * Lấy các đơn hàng gần nhất của user, giới hạn số lượng.
+     */
+    @Transactional(readOnly = true)
+    public List<Order> findRecentByUserId(Long userId, int limit) {
+        return sessionFactory.getCurrentSession()
+                .createQuery(
+                        "FROM Order o WHERE o.user.id = :userId ORDER BY o.createdAt DESC",
+                        Order.class)
+                .setParameter("userId", userId)
+                .setMaxResults(limit)
+                .getResultList();
+    }
+
+    /**
+     * Lấy đơn hàng PAID của user kèm items và game đã fetch.
+     * Dùng cho LibraryController.showTransactions().
+     */
+    @Transactional(readOnly = true)
+    public List<Order> findPaidByUserIdWithItems(Long userId) {
+        return sessionFactory.getCurrentSession()
+                .createQuery(
+                        "SELECT DISTINCT o FROM Order o " +
+                        "LEFT JOIN FETCH o.items i " +
+                        "LEFT JOIN FETCH i.game " +
+                        "WHERE o.user.id = :userId AND o.status = 'PAID' " +
+                        "ORDER BY o.createdAt DESC",
+                        Order.class)
+                .setParameter("userId", userId)
+                .getResultList();
+    }
 }

@@ -1,11 +1,13 @@
 package com.gamestore.controller;
 
-import com.gamestore.entity.LibraryItem;
+import com.gamestore.dao.OrderDAO;
+import com.gamestore.dao.WalletTransactionDAO;
+import com.gamestore.dto.TransactionDTO;
 import com.gamestore.entity.Order;
-import com.gamestore.entity.WalletTransaction;
 import com.gamestore.entity.User;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import com.gamestore.entity.WalletTransaction;
+import com.gamestore.service.UserContextService;
+import com.gamestore.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,94 +28,53 @@ import java.util.List;
 public class LibraryController {
 
     @Autowired
-    private SessionFactory sessionFactory;
+    private WalletService walletService;
+
+    @Autowired
+    private com.gamestore.dao.LibraryItemDAO libraryItemDAO;
+
+    @Autowired
+    private OrderDAO orderDAO;
+
+    @Autowired
+    private WalletTransactionDAO walletTransactionDAO;
+
+    @Autowired
+    private UserContextService userContextService;
 
     @GetMapping("/library")
     public String showLibrary(HttpSession session, Model model) {
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = userContextService.getCurrentUser(session);
         if (currentUser == null) {
             return "redirect:/login";
         }
 
-        // 1. Lấy ví và số dư hiện tại của tài khoản
-        BigDecimal walletBalance = BigDecimal.ZERO;
-        try {
-            Object result = sessionFactory.getCurrentSession()
-                    .createNativeQuery("SELECT balance FROM wallets WHERE user_id = :uid")
-                    .setParameter("uid", currentUser.getId())
-                    .uniqueResult();
-            if (result != null) {
-                walletBalance = (result instanceof BigDecimal)
-                        ? (BigDecimal) result
-                        : new BigDecimal(result.toString());
-            }
-        } catch (Exception e) {
-            // Không có ví
-        }
+        BigDecimal walletBalance = walletService.getBalance(currentUser);
 
-        // 2. Lấy danh sách game đã mua từ thư viện của user
-        String hql = "SELECT li FROM LibraryItem li " +
-                     "JOIN FETCH li.game g " +
-                     "LEFT JOIN FETCH li.licenseKey k " +
-                     "WHERE li.user.id = :uid AND li.status = 'ACTIVE' " +
-                     "ORDER BY li.acquiredAt DESC";
-        
-        List<LibraryItem> libraryItems = sessionFactory.getCurrentSession()
-                .createQuery(hql, LibraryItem.class)
-                .setParameter("uid", currentUser.getId())
-                .getResultList();
+        List<com.gamestore.entity.LibraryItem> libraryItems =
+                libraryItemDAO.findActiveByUserIdWithDetails(currentUser.getId());
 
         model.addAttribute("walletBalance", walletBalance);
         model.addAttribute("libraryItems", libraryItems);
-        
+
         return "library";
     }
 
-    /**
-     * TRANG LỊCH SỬ GIAO DỊCH (TRANSACTION HISTORY)
-     * Kết hợp cả Đơn hàng (Mua game - Biến động giảm) và WalletTransaction (Nạp tiền - Biến động tăng)
-     */
     @GetMapping("/transactions")
     public String showTransactions(HttpSession session, Model model) {
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = userContextService.getCurrentUser(session);
         if (currentUser == null) {
             return "redirect:/login";
         }
 
-        Session hqSession = sessionFactory.getCurrentSession();
-        
-        // 1. Lấy ví và số dư ví hiện tại
-        BigDecimal walletBalance = BigDecimal.ZERO;
-        try {
-            Object result = hqSession
-                    .createNativeQuery("SELECT balance FROM wallets WHERE user_id = :uid")
-                    .setParameter("uid", currentUser.getId())
-                    .uniqueResult();
-            if (result != null) {
-                walletBalance = (result instanceof BigDecimal)
-                        ? (BigDecimal) result
-                        : new BigDecimal(result.toString());
-            }
-        } catch (Exception e) {
-            // Không có ví
-        }
+        BigDecimal walletBalance = walletService.getBalance(currentUser);
 
-        // 2. Lấy danh sách Orders (Mua game) của user
-        List<Order> orders = hqSession
-                .createQuery("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.items i LEFT JOIN FETCH i.game WHERE o.user.id = :uid AND o.status = 'PAID' ORDER BY o.createdAt DESC", Order.class)
-                .setParameter("uid", currentUser.getId())
-                .getResultList();
-
-        // 3. Lấy danh sách nạp tiền WalletTransaction của user
-        List<WalletTransaction> recharges = hqSession
-                .createQuery("SELECT tx FROM WalletTransaction tx JOIN FETCH tx.wallet w WHERE w.user.id = :uid AND tx.type IN ('RECHARGE', 'DEPOSIT') AND tx.status = 'SUCCESS' ORDER BY tx.createdAt DESC", WalletTransaction.class)
-                .setParameter("uid", currentUser.getId())
-                .getResultList();
+        List<Order> orders = orderDAO.findPaidByUserIdWithItems(currentUser.getId());
+        List<WalletTransaction> recharges = walletTransactionDAO.findRechargesByUserId(currentUser.getId());
 
         List<TransactionDTO> dtos = new ArrayList<>();
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-        // Gộp các Order (Biến động giảm ví do mua game)
         for (Order o : orders) {
             TransactionDTO dto = new TransactionDTO();
             dto.setId("ORD_" + o.getId());
@@ -123,8 +84,7 @@ public class LibraryController {
             dto.setType("PURCHASE");
             dto.setAmount(o.getTotalAmount());
             dto.setStatus(o.getStatus());
-            
-            // Xây dựng mô tả các tựa game mua
+
             StringBuilder sb = new StringBuilder("Mua game: ");
             for (int i = 0; i < o.getItems().size(); i++) {
                 if (i > 0) sb.append(", ");
@@ -134,7 +94,6 @@ public class LibraryController {
             dtos.add(dto);
         }
 
-        // Gộp các Nạp tiền WalletTransaction (Biến động tăng ví)
         for (WalletTransaction tx : recharges) {
             TransactionDTO dto = new TransactionDTO();
             dto.setId("TXN_" + tx.getId());
@@ -148,7 +107,6 @@ public class LibraryController {
             dtos.add(dto);
         }
 
-        // Sắp xếp theo thứ tự thời gian mới nhất lên đầu
         Collections.sort(dtos, new Comparator<TransactionDTO>() {
             @Override
             public int compare(TransactionDTO a, TransactionDTO b) {
@@ -156,7 +114,6 @@ public class LibraryController {
             }
         });
 
-        // Tính toán running balance (Số dư sau giao dịch) ngược từ thời điểm hiện tại về quá khứ
         BigDecimal current = walletBalance;
         for (TransactionDTO dto : dtos) {
             dto.setRunningBalance(current);
@@ -167,11 +124,10 @@ public class LibraryController {
             }
         }
 
-        // Tính toán chỉ số thống kê cho tháng hiện tại
         LocalDateTime now = LocalDateTime.now();
         int curMonth = now.getMonthValue();
         int curYear = now.getYear();
-        
+
         BigDecimal totalSpentThisMonth = BigDecimal.ZERO;
         int transactionCountThisMonth = 0;
 
@@ -191,39 +147,5 @@ public class LibraryController {
         model.addAttribute("transactions", dtos);
 
         return "transactions";
-    }
-
-    /**
-     * DTO đại diện cho một bản ghi giao dịch hiển thị trên giao diện
-     */
-    public static class TransactionDTO {
-        private String id;
-        private String code;
-        private LocalDateTime rawDate;
-        private String dateFormatted;
-        private String description;
-        private String type; // "PURCHASE" or "RECHARGE"
-        private BigDecimal amount;
-        private BigDecimal runningBalance;
-        private String status;
-
-        public String getId() { return id; }
-        public void setId(String id) { this.id = id; }
-        public String getCode() { return code; }
-        public void setCode(String code) { this.code = code; }
-        public LocalDateTime getRawDate() { return rawDate; }
-        public void setRawDate(LocalDateTime rawDate) { this.rawDate = rawDate; }
-        public String getDateFormatted() { return dateFormatted; }
-        public void setDateFormatted(String dateFormatted) { this.dateFormatted = dateFormatted; }
-        public String getDescription() { return description; }
-        public void setDescription(String description) { this.description = description; }
-        public String getType() { return type; }
-        public void setType(String type) { this.type = type; }
-        public BigDecimal getAmount() { return amount; }
-        public void setAmount(BigDecimal amount) { this.amount = amount; }
-        public BigDecimal getRunningBalance() { return runningBalance; }
-        public void setRunningBalance(BigDecimal runningBalance) { this.runningBalance = runningBalance; }
-        public String getStatus() { return status; }
-        public void setStatus(String status) { this.status = status; }
     }
 }

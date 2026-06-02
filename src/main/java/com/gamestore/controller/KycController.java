@@ -3,6 +3,7 @@ package com.gamestore.controller;
 import com.gamestore.entity.KycRequest;
 import com.gamestore.entity.User;
 import com.gamestore.service.KycService;
+import com.gamestore.service.UserContextService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,9 +22,12 @@ public class KycController {
     @Autowired
     private KycService kycService;
 
+    @Autowired
+    private UserContextService userContextService;
+
     @GetMapping("/kyc")
     public String kycPage(HttpSession session, Model model) {
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = userContextService.getCurrentUser(session);
         if (currentUser == null) return "redirect:/login";
         KycRequest latestRequest = kycService.getLatestRequestByUser(currentUser.getId());
         model.addAttribute("latestRequest", latestRequest);
@@ -36,7 +40,7 @@ public class KycController {
                             HttpSession session,
                             Model model) {
 
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = userContextService.getCurrentUser(session);
         if (currentUser == null) return "redirect:/login";
 
         try {

@@ -1,5 +1,6 @@
 package com.gamestore.dao;
 
+import com.gamestore.dao.BaseDAO;
 import com.gamestore.dto.PageResult;
 import com.gamestore.entity.WalletTransaction;
 import org.hibernate.query.Query;
@@ -69,5 +70,24 @@ public class WalletTransactionDAO extends BaseDAO<WalletTransaction> {
         Long totalItems = countQuery.uniqueResult();
 
         return new PageResult<>(items, totalItems == null ? 0L : totalItems, safePage, safeSize);
+    }
+
+    /**
+     * Lấy danh sách giao dịch nạp tiền (RECHARGE/DEPOSIT) của user.
+     * Dùng cho LibraryController.showTransactions().
+     */
+    @Transactional(readOnly = true)
+    public List<WalletTransaction> findRechargesByUserId(Long userId) {
+        return sessionFactory.getCurrentSession()
+                .createQuery(
+                        "SELECT tx FROM WalletTransaction tx " +
+                        "JOIN tx.wallet w " +
+                        "WHERE w.user.id = :userId " +
+                        "AND tx.type IN ('RECHARGE', 'DEPOSIT') " +
+                        "AND tx.status = 'SUCCESS' " +
+                        "ORDER BY tx.createdAt DESC",
+                        WalletTransaction.class)
+                .setParameter("userId", userId)
+                .getResultList();
     }
 }

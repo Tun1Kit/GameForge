@@ -4,6 +4,7 @@ import com.gamestore.entity.PayoutRequest;
 import com.gamestore.entity.User;
 import com.gamestore.entity.Wallet;
 import com.gamestore.service.PayoutService;
+import com.gamestore.service.UserContextService;
 import com.gamestore.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -25,16 +26,19 @@ public class PublisherController {
     @Autowired
     private WalletService walletService;
 
+    @Autowired
+    private UserContextService userContextService;
+
     @GetMapping("/publisher/dashboard")
     public String dashboard(HttpSession session, Model model) {
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = userContextService.getCurrentUser(session);
         model.addAttribute("currentUser", currentUser);
         return "publisher/dashboard";
     }
 
     @GetMapping("/publisher/payouts")
     public String payouts(HttpSession session, Model model) {
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = userContextService.getCurrentUser(session);
         if (currentUser == null) return "redirect:/login";
 
         try {
@@ -55,7 +59,7 @@ public class PublisherController {
                                       HttpSession session,
                                       Model model) {
 
-        User currentUser = (User) session.getAttribute("currentUser");
+        User currentUser = userContextService.getCurrentUser(session);
         if (currentUser == null) return "redirect:/login";
 
         try {

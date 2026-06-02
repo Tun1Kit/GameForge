@@ -36,4 +36,36 @@ public class LibraryItemDAO extends BaseDAO<LibraryItem> {
                 .uniqueResult();
         return count != null && count > 0;
     }
+
+    /**
+     * Lấy danh sách library items kèm game và license key đã fetch sẵn.
+     */
+    @Transactional(readOnly = true)
+    public List<LibraryItem> findActiveByUserIdWithDetails(Long userId) {
+        return sessionFactory.getCurrentSession()
+                .createQuery(
+                        "SELECT li FROM LibraryItem li " +
+                        "JOIN FETCH li.game g " +
+                        "LEFT JOIN FETCH li.licenseKey k " +
+                        "WHERE li.user.id = :userId AND li.status = 'ACTIVE' " +
+                        "ORDER BY li.acquiredAt DESC",
+                        LibraryItem.class)
+                .setParameter("userId", userId)
+                .getResultList();
+    }
+
+    /**
+     * Lấy danh sách game ID mà user đã sở hữu (ACTIVE).
+     * Dùng cho GameController hiển thị trạng thái "Đã sở hữu" trên trang chủ.
+     */
+    @Transactional(readOnly = true)
+    public List<Long> findOwnedGameIds(Long userId) {
+        return sessionFactory.getCurrentSession()
+                .createQuery(
+                        "SELECT li.game.id FROM LibraryItem li " +
+                        "WHERE li.user.id = :userId AND li.status = 'ACTIVE'",
+                        Long.class)
+                .setParameter("userId", userId)
+                .getResultList();
+    }
 }
