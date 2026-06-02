@@ -10,13 +10,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
-@RequestMapping("/game")
 public class StoreController {
 
     @Autowired
     private GameDAO gameDAO;
 
-    // Cấu trúc URL động chuẩn hóa theo nhánh game: /game/{gameSlug}
+    // Cấu trúc URL động chuẩn hóa: /{gameSlug}
     @RequestMapping(value = "/{gameSlug}", method = RequestMethod.GET)
     public String viewGameDetail(@PathVariable("gameSlug") String gameSlug, Model model) {
 

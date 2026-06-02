@@ -74,15 +74,24 @@
     }
     /* Hiệu ứng chuyển cảnh Fade cực mượt */
     #gfMainProductBanner {
-      transition: transform 0.15s ease-out, opacity 0.12s ease-in-out;
-      transform-origin: center center;
+      transition: opacity 0.12s ease-in-out;
     }
-    .gf-banner-zoom-container {
+    .lightbox-zoom-container {
       overflow: hidden;
       position: relative;
+      width: 100%;
+      height: 84vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-in;
     }
-    .gf-banner-zoom-container:hover #gfMainProductBanner {
-      transform: scale(2.0);
+    .lightbox-zoom-container img {
+      transition: transform 0.1s ease-out;
+      transform-origin: center center;
+    }
+    .lightbox-zoom-container:hover img {
+      transform: scale(2.5);
     }
   </style>
 </head>
@@ -103,7 +112,7 @@
         </a>
 
         <div class="d-none d-lg-flex align-items-center gap-2">
-          <a href="${pageContext.request.contextPath}/#store" class="gf-nav-link">Cửa Hàng</a>
+          <a href="${pageContext.request.contextPath}/" class="gf-nav-link">Cửa Hàng</a>
           <a href="${pageContext.request.contextPath}/#sale-games" class="gf-nav-link">Khuyến Mãi</a>
           <a href="${pageContext.request.contextPath}/#community" class="gf-nav-link">Cộng Đồng</a>
           <a href="${pageContext.request.contextPath}/#support" class="gf-nav-link">Hỗ Trợ</a>
@@ -252,7 +261,7 @@
           
           <div class="bg-white gf-border gf-shadow rounded-4 p-4 text-center">
             
-            <div class="mb-4 gf-border rounded-3 overflow-hidden gf-banner-zoom-container" style="border-width: 2px !important; cursor: pointer; position: relative;"
+            <div class="mb-4 gf-border rounded-3 overflow-hidden gf-banner-slideshow-container" style="border-width: 2px !important; cursor: pointer; position: relative;"
                  onclick="openLightboxFromBanner()" id="gfMainBannerContainer">
               <c:set var="mainBanner" value="" />
               <c:catch var="mediaError">
@@ -309,8 +318,10 @@
           <h5 class="modal-title fw-black text-dark"><i data-lucide="maximize-2" class="d-inline mb-1 me-1" width="16" height="16"></i> Chế độ xem ảnh phóng to chi tiết</h5>
           <button type="button" class="btn-close modal-close-brutal" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body text-center p-2 bg-dark d-flex align-items-center justify-content-center" style="overflow: auto; min-height: 75vh;">
-          <img id="gfLightboxTargetImage" src="" class="img-fluid rounded-1" style="max-height: 84vh; object-fit: contain; cursor: zoom-in;">
+        <div class="modal-body text-center p-2 bg-dark d-flex align-items-center justify-content-center" style="overflow: auto; min-height: 75vh; padding: 0 !important;">
+          <div class="lightbox-zoom-container" id="gfLightboxZoomContainer" style="width: 100%;">
+            <img id="gfLightboxTargetImage" src="" class="img-fluid rounded-1" style="max-height: 84vh; object-fit: contain;">
+          </div>
         </div>
       </div>
     </div>
@@ -368,7 +379,7 @@
                 const thumbSrc = thumb.getAttribute('src');
                 thumb.classList.toggle('active', thumbSrc && thumbSrc.endsWith(nextUrl));
             });
-        }, 3000); // 3-second cycle
+        }, 5000); // 5-second cycle
     }
 
     // Reset slideshow timer when user manually interacts
@@ -428,10 +439,10 @@
         }
     }
 
-    // HOVER ZOOM IN-PLACE EFFECT FOR MAIN BANNER (Origin Shifting)
-    function initBannerZoom() {
-        const container = document.getElementById('gfMainBannerContainer');
-        const img = document.getElementById('gfMainProductBanner');
+    // HOVER ZOOM IN-PLACE EFFECT FOR LIGHTBOX POPUP IMAGE (Origin Shifting)
+    function initLightboxZoom() {
+        const container = document.getElementById('gfLightboxZoomContainer');
+        const img = document.getElementById('gfLightboxTargetImage');
         if (!container || !img) return;
 
         container.addEventListener('mousemove', function(e) {
@@ -495,7 +506,7 @@
 
     document.addEventListener("DOMContentLoaded", function() {
         renderSystemSpecifications();
-        initBannerZoom();
+        initLightboxZoom();
         startSlideshow();
     });
   </script>
