@@ -2,6 +2,8 @@ package com.gamestore.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gamestore.dao.CartItemDAO;
+import com.gamestore.dao.LibraryItemDAO;
+import com.gamestore.dao.OrderItemDAO;
 import com.gamestore.entity.*;
 import com.gamestore.service.EmailService;
 import com.gamestore.service.UserContextService;
@@ -47,6 +49,12 @@ public class CheckoutController {
 
     @Autowired
     private CartItemDAO cartItemDAO;
+
+    @Autowired
+    private LibraryItemDAO libraryItemDAO;
+
+    @Autowired
+    private OrderItemDAO orderItemDAO;
 
     @Autowired
     private WalletService walletService;
@@ -117,6 +125,7 @@ public class CheckoutController {
     @PostMapping("/checkout/process")
     public String processCheckout(
             @RequestParam("paymentMethod") String paymentMethod,
+            @RequestParam(value = "walletProvider", required = false) String walletProvider,
             @RequestParam("fullName") String fullName,
             @RequestParam("phone") String phone,
             @RequestParam("address") String address,
@@ -155,6 +164,14 @@ public class CheckoutController {
             return "redirect:/?error=empty_cart";
         }
 
+        for (CartItem item : cartItems) {
+            if (libraryItemDAO.existsActiveByUserAndGame(managedUser.getId(), item.getGame().getId())
+                || orderItemDAO.existsPaidOrderByUserAndGame(managedUser.getId(), item.getGame().getId())) {
+                return buildCheckoutError(model, cartItemDAO, managedUser.getId(),
+                    "Bạn đã sở hữu hoặc đang chờ cấp key cho game '" + item.getGame().getTitle() + "'. Vui lòng xóa khỏi giỏ hàng.");
+            }
+        }
+
         BigDecimal subtotal = BigDecimal.ZERO;
         for (CartItem item : cartItems) {
             subtotal = subtotal.add(item.getGame().getPrice());
@@ -172,7 +189,8 @@ public class CheckoutController {
             return "checkout";
         }
 
-        if ("WALLET".equals(paymentMethod)) {
+        boolean useGameForgeWallet = "WALLET".equals(paymentMethod) && "GAMEFORGE".equals(walletProvider);
+        if (useGameForgeWallet) {
             Wallet wallet = walletService.getOrCreateWallet(managedUser);
 
             if (wallet.getBalance().compareTo(total) < 0) {
@@ -188,7 +206,7 @@ public class CheckoutController {
         order.setDiscountAmount(BigDecimal.ZERO);
         order.setTotalAmount(total);
         order.setStatus("PAID");
-        order.setPaymentMethod(paymentMethod);
+        order.setPaymentMethod(useGameForgeWallet ? "GAMEFORGE" : (walletProvider != null ? walletProvider : paymentMethod));
         order.setFullName(fullName);
         order.setPhone(phone);
         order.setAddress(address);
@@ -339,6 +357,16 @@ public class CheckoutController {
             return;
         }
 
+        for (CartItem item : cartItems) {
+            if (libraryItemDAO.existsActiveByUserAndGame(managedUser.getId(), item.getGame().getId())
+                || orderItemDAO.existsPaidOrderByUserAndGame(managedUser.getId(), item.getGame().getId())) {
+                response.put("success", false);
+                response.put("message", "Bạn đã sở hữu hoặc đang chờ cấp key cho game '" + item.getGame().getTitle() + "'. Vui lòng xóa khỏi giỏ hàng.");
+                out.print(mapper.writeValueAsString(response));
+                return;
+            }
+        }
+
         BigDecimal subtotal = BigDecimal.ZERO;
         for (CartItem item : cartItems) {
             if (item.getGame() == null || item.getGame().getPrice() == null) {
@@ -383,7 +411,7 @@ public class CheckoutController {
             order.setDiscountAmount(BigDecimal.ZERO);
             order.setTotalAmount(total);
             order.setStatus("PAID");
-            order.setPaymentMethod(paymentMethod);
+            order.setPaymentMethod(useGameForgeWallet ? "GAMEFORGE" : (walletProvider != null && !walletProvider.trim().isEmpty() ? walletProvider : paymentMethod));
             order.setFullName(fullName);
             order.setPhone(phone);
             order.setAddress(address);

@@ -222,7 +222,7 @@
                       Chưa cài đặt
                     </span>
                     <span class="small text-secondary gf-muted" style="font-size: 12px;">
-                      Mua: <fmt:parseDate value="${item.acquiredAt}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedAcquiredDate" type="both" /><fmt:formatDate value="${parsedAcquiredDate}" pattern="dd/MM/yyyy" />
+                      Mua: ${item.formattedAcquiredAt}
                     </span>
                   </div>
                   
@@ -248,8 +248,62 @@
               </article>
             </div>
           </c:forEach>
+
+          <c:forEach var="pItem" items="${pendingItems}">
+            <c:set var="primaryCategory" value="Game" />
+            <c:forEach var="cat" items="${pItem.game.categories}" varStatus="catStatus">
+              <c:if test="${catStatus.first}">
+                <c:set var="primaryCategory" value="${cat.name}" />
+              </c:if>
+            </c:forEach>
+            
+            <div class="col library-card-col" 
+                 data-title="${fn:escapeXml(fn:toLowerCase(pItem.game.title))}" 
+                 data-installed="false" 
+                 data-favorite="false"
+                 data-acquired="${pItem.order.paidAt}"
+                 data-item-id="pending-${pItem.id}"
+                 data-game-id="${pItem.game.id}">
+              <article class="gf-game-card gf-press">
+                <div class="game-cover-container">
+                  <c:choose>
+                    <c:when test="${not empty pItem.game.mediaList}">
+                      <img src="${pItem.game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(pItem.game.title)}" loading="lazy">
+                    </c:when>
+                    <c:otherwise>
+                      <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg" alt="Cover" loading="lazy">
+                    </c:otherwise>
+                  </c:choose>
+                  
+                  <span class="gf-tag" style="background: var(--gf-yellow); border: 2px solid #000; font-weight: bold;">
+                    ${primaryCategory}
+                  </span>
+                </div>
+                
+                <div class="p-4 d-flex flex-column flex-grow-1">
+                  <div class="d-flex align-items-center justify-content-between mb-3">
+                    <span class="badge border border-2 border-black fw-bold py-1 px-2 text-dark bg-warning" 
+                          style="border-radius: 999px; font-size: 11px;">
+                      Đang chờ cấp key
+                    </span>
+                    <span class="small text-secondary gf-muted" style="font-size: 12px;">
+                      Mua: ${pItem.formattedPaidAt}
+                    </span>
+                  </div>
+                  
+                  <h3 class="fs-5 fw-black fw-bold mb-3 text-truncate" title="${fn:escapeXml(pItem.game.title)}">${pItem.game.title}</h3>
+                  
+                  <div class="d-flex gap-2 align-items-center">
+                    <button type="button" class="btn w-100 gf-border gf-shadow-sm fw-bold py-2" style="background: #e9ecef; color: #6c757d; border-radius: 10px; cursor: not-allowed;" disabled>
+                      <i data-lucide="clock" width="16" height="16" class="me-1"></i> Chờ cấp key
+                    </button>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </c:forEach>
           
-          <c:if test="${empty libraryItems}">
+          <c:if test="${empty libraryItems && empty pendingItems}">
             <div class="col-12">
               <div class="bg-white gf-border rounded-4 p-5 text-center gf-shadow">
                 <div class="mx-auto mb-4 gf-border rounded-4 gf-shadow-sm d-grid place-items-center" style="width:64px;height:64px;background:var(--gf-pink);color:#000;">

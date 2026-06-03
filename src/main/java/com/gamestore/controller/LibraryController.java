@@ -1,9 +1,11 @@
 package com.gamestore.controller;
 
 import com.gamestore.dao.OrderDAO;
+import com.gamestore.dao.OrderItemDAO;
 import com.gamestore.dao.WalletTransactionDAO;
 import com.gamestore.dto.TransactionDTO;
 import com.gamestore.entity.Order;
+import com.gamestore.entity.OrderItem;
 import com.gamestore.entity.User;
 import com.gamestore.entity.WalletTransaction;
 import com.gamestore.service.UserContextService;
@@ -34,6 +36,9 @@ public class LibraryController {
     private com.gamestore.dao.LibraryItemDAO libraryItemDAO;
 
     @Autowired
+    private OrderItemDAO orderItemDAO;
+
+    @Autowired
     private OrderDAO orderDAO;
 
     @Autowired
@@ -54,8 +59,11 @@ public class LibraryController {
         List<com.gamestore.entity.LibraryItem> libraryItems =
                 libraryItemDAO.findActiveByUserIdWithDetails(currentUser.getId());
 
+        List<OrderItem> pendingItems = orderItemDAO.findPendingKeyOrderItems(currentUser.getId());
+
         model.addAttribute("walletBalance", walletBalance);
         model.addAttribute("libraryItems", libraryItems);
+        model.addAttribute("pendingItems", pendingItems);
 
         return "library";
     }
@@ -84,6 +92,7 @@ public class LibraryController {
             dto.setType("PURCHASE");
             dto.setAmount(o.getTotalAmount());
             dto.setStatus(o.getStatus());
+            dto.setPaymentMethod(o.getPaymentMethod());
 
             StringBuilder sb = new StringBuilder("Mua game: ");
             for (int i = 0; i < o.getItems().size(); i++) {
@@ -118,7 +127,10 @@ public class LibraryController {
         for (TransactionDTO dto : dtos) {
             dto.setRunningBalance(current);
             if ("PURCHASE".equals(dto.getType())) {
-                current = current.add(dto.getAmount());
+                boolean isWalletPurchase = "WALLET".equals(dto.getPaymentMethod()) || "GAMEFORGE".equals(dto.getPaymentMethod());
+                if (isWalletPurchase) {
+                    current = current.add(dto.getAmount());
+                }
             } else if ("RECHARGE".equals(dto.getType())) {
                 current = current.subtract(dto.getAmount());
             }

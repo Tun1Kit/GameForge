@@ -822,9 +822,18 @@
               <fmt:formatNumber value="${game.price}" type="number" maxFractionDigits="0" />₫
             </div>
 
-            <button type="button" onclick="quickAddToCart(event, '${game.id}')" class="btn w-100 gf-border gf-shadow gf-press fw-black fw-bold fs-5 py-3 rounded-3 d-flex align-items-center justify-content-center gap-2 mb-3 cart-button" style="background:var(--gf-green); color:#000;" data-game-id="${game.id}">
-              <i data-lucide="shopping-cart" width="20" height="20"></i> THÊM VÀO GIỎ HÀNG
-            </button>
+            <c:choose>
+              <c:when test="${isOwned}">
+                <a href="${pageContext.request.contextPath}/library" class="btn w-100 gf-border gf-shadow gf-press fw-black fw-bold fs-5 py-3 rounded-3 d-flex align-items-center justify-content-center gap-2 mb-3" style="background:#e9ecef; color:#6c757d; border: 3px solid #000; cursor: pointer; text-decoration: none;">
+                  <i data-lucide="library" width="20" height="20"></i> ĐÃ SỞ HỮU / CHỜ CẤP KEY
+                </a>
+              </c:when>
+              <c:otherwise>
+                <button type="button" onclick="quickAddToCart(event, '${game.id}')" class="btn w-100 gf-border gf-shadow gf-press fw-black fw-bold fs-5 py-3 rounded-3 d-flex align-items-center justify-content-center gap-2 mb-3 cart-button" style="background:var(--gf-green); color:#000;" data-game-id="${game.id}">
+                  <i data-lucide="shopping-cart" width="20" height="20"></i> THÊM VÀO GIỎ HÀNG
+                </button>
+              </c:otherwise>
+            </c:choose>
 
             <button type="button" onclick="toggleFavorite(event, '${game.id}')" class="btn w-100 gf-border gf-shadow-sm gf-press fw-black fw-bold py-2.5 rounded-3 d-flex align-items-center justify-content-center gap-2 bg-white text-dark favorite-button" data-game-id="${game.id}">
               <i data-lucide="heart" width="18" height="18" style="color:var(--gf-pink);"></i> YÊU THÍCH

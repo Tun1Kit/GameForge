@@ -1,6 +1,7 @@
 package com.gamestore.controller;
 
 import com.gamestore.dao.LibraryItemDAO;
+import com.gamestore.dao.OrderItemDAO;
 import com.gamestore.entity.Game;
 import com.gamestore.entity.User;
 import com.gamestore.service.UserContextService;
@@ -31,6 +32,9 @@ public class GameController {
     private LibraryItemDAO libraryItemDAO;
 
     @Autowired
+    private OrderItemDAO orderItemDAO;
+
+    @Autowired
     private UserContextService userContextService;
 
     @RequestMapping(value = {"/", "/home"}, method = RequestMethod.GET)
@@ -47,7 +51,10 @@ public class GameController {
             model.addAttribute("walletBalance", walletBalance);
 
             List<Long> ownedGameIds = libraryItemDAO.findOwnedGameIds(currentUser.getId());
-            model.addAttribute("ownedGameIds", ownedGameIds);
+            List<Long> paidGameIds = orderItemDAO.findPaidGameIds(currentUser.getId());
+            java.util.Set<Long> uniqueOwnedIds = new java.util.HashSet<>(ownedGameIds);
+            uniqueOwnedIds.addAll(paidGameIds);
+            model.addAttribute("ownedGameIds", new java.util.ArrayList<>(uniqueOwnedIds));
         }
 
         return "index";

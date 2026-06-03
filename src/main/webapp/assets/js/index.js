@@ -204,6 +204,7 @@ const contextPath = window.GAMEFORGE_CONTEXT_PATH || '';
           if (params.ERROR) {
             cart.delete(gameId);
             saveState();
+            alert(params.ERROR);
           }
           updateCounts();
         }).catch(function() {});
