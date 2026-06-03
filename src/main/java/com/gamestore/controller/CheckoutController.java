@@ -438,6 +438,12 @@ public class CheckoutController {
 
             hqSession.flush();
 
+            try {
+                emailService.sendOrderConfirmation(managedUser, order, assignedKeys);
+            } catch (Exception e) {
+                System.err.println("Gửi mail hóa đơn thất bại: " + e.getMessage());
+            }
+
             response.put("success", true);
             response.put("message", "Thanh toán thành công!");
             response.put("orderId", order.getId());

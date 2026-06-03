@@ -2,7 +2,6 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
-<%@ java.time.format.DateTimeFormatter %>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -132,7 +131,7 @@
       <!-- PHẦN CHÀO MỪNG BÊN TRÁI -->
       <div class="col-lg-6">
         <div class="d-inline-flex align-items-center gap-2 gf-border-2 rounded-pill px-4 py-2 fw-bold text-black mb-4" style="background: #94FFB4; box-shadow: 3px 3px 0 #000;">
-          👋 Thành viên từ <fmt:parseDate value="${currentUser.createdAt}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedDate" type="both" /><fmt:formatDate value="${parsedDate}" pattern="MM/yyyy" />
+          👋 Thành viên từ ${currentUser.formattedCreatedAt}
         </div>
 
         <h1 class="fw-black fw-bold mb-4" style="font-size: clamp(2.5rem, 6vw, 3.8rem); line-height: 1.1; letter-spacing: -0.03em;">
@@ -240,8 +239,7 @@
                         <div>
                           <div class="fw-black text-dark mb-1">#GF-2026-0${order.id}</div>
                           <div class="small text-secondary gf-muted">
-                            <fmt:parseDate value="${order.createdAt}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedOrderDate" type="both" />
-                            <fmt:formatDate value="${parsedOrderDate}" pattern="dd/MM/yyyy" />
+                            ${order.formattedCreatedAt}
                           </div>
                         </div>
                         <div class="d-flex align-items-center gap-3">

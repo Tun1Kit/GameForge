@@ -242,6 +242,7 @@ public class AuthController {
         newUser.getRoles().add(userRole);
         newUser.setStatus("ACTIVE");
         newUser.setAvatar("default-avatar.png");
+        newUser.setCreatedAt(LocalDateTime.now());
 
         userDAO.save(newUser);
 

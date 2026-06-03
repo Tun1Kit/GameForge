@@ -19,7 +19,7 @@ import java.util.Map;
 @Service
 public class EmailService {
 
-    @Autowired(required = false)
+    @Autowired
     private JavaMailSender mailSender;
 
     @Value("${email.enabled:false}")
