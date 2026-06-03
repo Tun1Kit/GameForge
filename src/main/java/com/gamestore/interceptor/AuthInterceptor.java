@@ -18,46 +18,67 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         User currentUser = (User) request.getSession().getAttribute("currentUser");
 
-        if (isLoginRequired(uri, contextPath)) {
-            if (currentUser == null) {
-                response.sendRedirect(contextPath + "/login");
-                return false;
-            }
+        boolean adminPath = isAdminPath(uri, contextPath);
+        boolean publisherPath = isPublisherPath(uri, contextPath);
+        boolean userOnlyPath = isUserOnlyPath(uri, contextPath);
+
+        if (currentUser == null && (adminPath || publisherPath || userOnlyPath)) {
+            response.sendRedirect(contextPath + "/login");
+            return false;
         }
 
-        if (uri.startsWith(contextPath + "/admin")) {
-            if (currentUser == null) {
-                response.sendRedirect(contextPath + "/login");
-                return false;
-            }
-            if (!currentUser.hasRole("ROLE_ADMIN")) {
-                response.sendRedirect(contextPath + "/access-denied");
-                return false;
-            }
+        if (currentUser == null) {
+            return true;
         }
 
-        if (uri.startsWith(contextPath + "/publisher")) {
-            if (currentUser == null) {
-                response.sendRedirect(contextPath + "/login");
-                return false;
-            }
-            boolean isPublisher = currentUser.hasRole("ROLE_PUBLISHER");
-            boolean isAdmin = currentUser.hasRole("ROLE_ADMIN");
-            if (!isPublisher && !isAdmin) {
-                response.sendRedirect(contextPath + "/access-denied");
-                return false;
-            }
+        boolean isAdmin = currentUser.hasRole("ROLE_ADMIN");
+        boolean isPublisher = currentUser.hasRole("ROLE_PUBLISHER");
+        boolean isUser = currentUser.hasRole("ROLE_USER");
+
+        if (adminPath && !isAdmin) {
+            response.sendRedirect(contextPath + "/access-denied");
+            return false;
+        }
+
+        if (publisherPath && !isPublisher) {
+            response.sendRedirect(contextPath + "/access-denied");
+            return false;
+        }
+
+        if (userOnlyPath && (isAdmin || isPublisher || !isUser)) {
+            response.sendRedirect(contextPath + "/access-denied");
+            return false;
         }
 
         return true;
     }
 
-    private boolean isLoginRequired(String uri, String contextPath) {
-        return uri.startsWith(contextPath + "/wallet")
-                || uri.startsWith(contextPath + "/kyc")
-                || uri.startsWith(contextPath + "/cart")
-                || uri.startsWith(contextPath + "/checkout")
-                || uri.startsWith(contextPath + "/library")
-                || uri.startsWith(contextPath + "/orders");
+    private boolean isAdminPath(String uri, String contextPath) {
+        return uri.startsWith(contextPath + "/admin");
+    }
+
+    private boolean isPublisherPath(String uri, String contextPath) {
+        return uri.startsWith(contextPath + "/publisher");
+    }
+
+    private boolean isUserOnlyPath(String uri, String contextPath) {
+        return uri.equals(contextPath + "/dashboard")
+                || uri.startsWith(contextPath + "/dashboard/")
+                || uri.equals(contextPath + "/kyc")
+                || uri.startsWith(contextPath + "/kyc/")
+                || uri.equals(contextPath + "/cart")
+                || uri.startsWith(contextPath + "/cart/")
+                || uri.equals(contextPath + "/checkout")
+                || uri.startsWith(contextPath + "/checkout/")
+                || uri.equals(contextPath + "/library")
+                || uri.startsWith(contextPath + "/library/")
+                || uri.equals(contextPath + "/orders")
+                || uri.startsWith(contextPath + "/orders/")
+                || uri.equals(contextPath + "/wishlist")
+                || uri.startsWith(contextPath + "/wishlist/")
+                || uri.equals(contextPath + "/recharge")
+                || uri.startsWith(contextPath + "/recharge/")
+                || uri.equals(contextPath + "/transactions")
+                || uri.startsWith(contextPath + "/transactions/");
     }
 }

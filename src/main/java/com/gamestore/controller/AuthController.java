@@ -38,26 +38,44 @@ public class AuthController {
     @Autowired
     private SessionFactory sessionFactory;
 
-    // 1. HIỂN THỊ GIAO DIỆN
     @GetMapping("/login")
     public String showLoginPage(HttpSession session) {
         User currentUser = (User) session.getAttribute("currentUser");
+
         if (currentUser != null) {
-            if (currentUser.hasRole("ROLE_ADMIN")) return "redirect:/admin/dashboard";
-            if (currentUser.hasRole("ROLE_PUBLISHER")) return "redirect:/publisher/dashboard";
+            if (currentUser.hasRole("ROLE_ADMIN")) {
+                return "redirect:/admin/dashboard";
+            }
+
+            if (currentUser.hasRole("ROLE_PUBLISHER")) {
+                return "redirect:/publisher/dashboard";
+            }
+
             return "redirect:/";
         }
+
         return "login";
     }
 
     @GetMapping("/register")
     public String showRegisterPage(HttpSession session) {
         User currentUser = (User) session.getAttribute("currentUser");
-        if (currentUser != null) return "redirect:/";
+
+        if (currentUser != null) {
+            if (currentUser.hasRole("ROLE_ADMIN")) {
+                return "redirect:/admin/dashboard";
+            }
+
+            if (currentUser.hasRole("ROLE_PUBLISHER")) {
+                return "redirect:/publisher/dashboard";
+            }
+
+            return "redirect:/";
+        }
+
         return "login";
     }
 
-    // 2. XỬ LÝ ĐĂNG NHẬP — giữ emailOrUsername + BCrypt auto-upgrade
     @PostMapping("/login")
     @Transactional
     public String processLogin(@RequestParam("emailOrUsername") String emailOrUsername,
@@ -67,6 +85,7 @@ public class AuthController {
                                Model model) {
 
         User user = userDAO.findByEmail(emailOrUsername);
+
         if (user == null) {
             user = userDAO.findByUsername(emailOrUsername);
         }
@@ -76,14 +95,18 @@ public class AuthController {
             return "login";
         }
 
-        boolean passwordMatched = false;
+        if ("LOCKED".equalsIgnoreCase(user.getStatus())) {
+            model.addAttribute("error", "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.");
+            return "login";
+        }
+
+        boolean passwordMatched;
 
         if (isBCryptHash(user.getPassword())) {
             passwordMatched = PasswordEncoderUtil.matches(password, user.getPassword());
         } else {
-            // Hỗ trợ tài khoản cũ lưu password dạng plain text
             passwordMatched = password.equals(user.getPassword());
-            // Auto-upgrade sang BCrypt nếu đăng nhập đúng
+
             if (passwordMatched) {
                 user.setPassword(PasswordEncoderUtil.encode(password));
                 userDAO.update(user);
@@ -95,18 +118,22 @@ public class AuthController {
             return "login";
         }
 
-        // Session fixation fix — tạo session mới sau khi đăng nhập
         session.invalidate();
+
         HttpSession newSession = request.getSession(true);
         newSession.setAttribute("currentUser", user);
 
-        // Role-based redirect
-        if (user.hasRole("ROLE_ADMIN")) return "redirect:/admin/dashboard";
-        if (user.hasRole("ROLE_PUBLISHER")) return "redirect:/publisher/dashboard";
+        if (user.hasRole("ROLE_ADMIN")) {
+            return "redirect:/admin/dashboard";
+        }
+
+        if (user.hasRole("ROLE_PUBLISHER")) {
+            return "redirect:/publisher/dashboard";
+        }
+
         return "redirect:/";
     }
 
-    // 3. XỬ LÝ ĐĂNG KÝ — gửi OTP email → verify trước khi tạo tài khoản
     @PostMapping("/register")
     public String processRegister(@RequestParam("username") String username,
                                   @RequestParam("fullName") String fullName,
@@ -116,31 +143,36 @@ public class AuthController {
                                   HttpSession session,
                                   Model model) {
 
-        // Validate
         if (username == null || username.trim().isEmpty()) {
             model.addAttribute("error", "Tên đăng nhập không được để trống!");
             return "login";
         }
+
         if (fullName == null || fullName.trim().isEmpty()) {
             model.addAttribute("error", "Họ tên không được để trống!");
             return "login";
         }
+
         if (email == null || email.trim().isEmpty()) {
             model.addAttribute("error", "Email không được để trống!");
             return "login";
         }
+
         if (password == null || password.length() < 6) {
             model.addAttribute("error", "Mật khẩu phải có ít nhất 6 ký tự!");
             return "login";
         }
+
         if (!password.equals(confirmPassword)) {
             model.addAttribute("error", "Mật khẩu nhập lại không khớp!");
             return "login";
         }
+
         if (userDAO.findByEmail(email.trim()) != null) {
             model.addAttribute("error", "Email này đã được sử dụng!");
             return "login";
         }
+
         if (userDAO.existsByUsername(username.trim())) {
             model.addAttribute("error", "Tên đăng nhập đã được sử dụng!");
             return "login";
@@ -166,6 +198,7 @@ public class AuthController {
             model.addAttribute("email", email.trim());
             model.addAttribute("success", "Mã OTP đã được gửi đến email của bạn.");
             return "verify-otp";
+
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("error", "Không gửi được email OTP. Vui lòng thử lại.");
@@ -173,19 +206,19 @@ public class AuthController {
         }
     }
 
-    // 4. TRANG XÁC THỰC OTP
     @GetMapping("/verify-otp")
     public String showVerifyOtpPage(HttpSession session, Model model) {
         PendingRegisterDTO pendingRegister =
                 (PendingRegisterDTO) session.getAttribute("pendingRegister");
+
         if (pendingRegister == null) {
             return "redirect:/register";
         }
+
         model.addAttribute("email", pendingRegister.getEmail());
         return "verify-otp";
     }
 
-    // 5. XỬ LÝ XÁC THỰC OTP — tạo tài khoản + wallet + gán ROLE_USER
     @PostMapping("/verify-otp")
     @Transactional
     public String processVerifyOtp(@RequestParam("otp") String otp,
@@ -212,14 +245,13 @@ public class AuthController {
             return "verify-otp";
         }
 
-        // Tìm ROLE_USER
         Role userRole = roleDAO.findByCode("ROLE_USER");
+
         if (userRole == null) {
             model.addAttribute("error", "Database chưa có ROLE_USER. Vui lòng chạy role seed.");
             return "login";
         }
 
-        // Tạo User mới
         User newUser = new User();
         newUser.setUsername(pendingRegister.getUsername());
         newUser.setFullName(pendingRegister.getFullName());
@@ -231,10 +263,10 @@ public class AuthController {
 
         userDAO.save(newUser);
 
-        // Tạo Wallet cho user mới
         Wallet wallet = new Wallet();
         wallet.setUser(newUser);
         wallet.setBalance(BigDecimal.ZERO);
+
         sessionFactory.getCurrentSession().save(wallet);
 
         session.removeAttribute("pendingRegister");
@@ -243,7 +275,6 @@ public class AuthController {
         return "login";
     }
 
-    // 6. GỬI LẠI OTP
     @PostMapping("/resend-otp")
     @Transactional
     public String resendOtp(HttpSession session, Model model) {
@@ -254,8 +285,8 @@ public class AuthController {
             return "redirect:/register";
         }
 
-        // Giới hạn 60 giây giữa 2 lần gửi
         Long lastSent = (Long) session.getAttribute("otpLastSentAt");
+
         if (lastSent != null && (System.currentTimeMillis() - lastSent) < 60_000) {
             long remaining = 60 - (System.currentTimeMillis() - lastSent) / 1000;
             model.addAttribute("error", "Vui lòng đợi " + remaining + "s trước khi gửi lại.");
@@ -264,8 +295,10 @@ public class AuthController {
         }
 
         String newOtp = generateOtp();
+
         pendingRegister.setOtp(newOtp);
         pendingRegister.setExpiredAt(LocalDateTime.now().plusMinutes(5));
+
         session.setAttribute("pendingRegister", pendingRegister);
         session.setAttribute("otpLastSentAt", System.currentTimeMillis());
 
@@ -276,18 +309,21 @@ public class AuthController {
         return "verify-otp";
     }
 
-    // 7. XỬ LÝ ĐĂNG XUẤT
     @GetMapping("/logout")
     public String processLogout(HttpSession session) {
         session.removeAttribute("currentUser");
+        session.invalidate();
         return "redirect:/";
     }
 
-    // ===== PRIVATE HELPERS =====
-
     private boolean isBCryptHash(String password) {
-        if (password == null) return false;
-        return password.startsWith("$2a$") || password.startsWith("$2b$") || password.startsWith("$2y$");
+        if (password == null) {
+            return false;
+        }
+
+        return password.startsWith("$2a$")
+                || password.startsWith("$2b$")
+                || password.startsWith("$2y$");
     }
 
     private String generateOtp() {

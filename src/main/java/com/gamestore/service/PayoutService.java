@@ -27,28 +27,45 @@ public class PayoutService {
     @Autowired
     private WalletService walletService;
 
+    @Transactional(readOnly = true)
     public List<PayoutRequest> getAllRequests() {
         return payoutRequestDAO.findAllOrderByNewest();
     }
 
+    @Transactional(readOnly = true)
     public List<PayoutRequest> getRequestsByPublisherUser(Long userId) {
         PublisherProfile profile = publisherProfileDAO.findByUserId(userId);
+
         if (profile == null) {
             throw new IllegalArgumentException("Không tìm thấy hồ sơ Publisher.");
         }
+
         return payoutRequestDAO.findByPublisherId(profile.getId());
     }
 
     public void createPayoutRequest(User publisherUser, BigDecimal amount, String bankAccountInfo) {
         validateAmount(amount);
+
         if (publisherUser == null || !publisherUser.hasRole("ROLE_PUBLISHER")) {
             throw new IllegalArgumentException("Chỉ Publisher mới được tạo yêu cầu payout.");
         }
+
+        if (bankAccountInfo == null || bankAccountInfo.trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng nhập thông tin tài khoản ngân hàng.");
+        }
+
         PublisherProfile profile = publisherProfileDAO.findByUserId(publisherUser.getId());
+
         if (profile == null) {
             throw new IllegalArgumentException("Tài khoản chưa có Publisher Profile.");
         }
+
         Wallet wallet = walletService.getOrCreateWallet(publisherUser);
+
+        if (wallet == null || wallet.getBalance() == null) {
+            throw new IllegalArgumentException("Không tìm thấy ví Publisher.");
+        }
+
         if (wallet.getBalance().compareTo(amount) < 0) {
             throw new IllegalArgumentException("Số dư ví không đủ để tạo yêu cầu rút tiền.");
         }
@@ -56,32 +73,56 @@ public class PayoutService {
         PayoutRequest request = new PayoutRequest();
         request.setPublisher(profile);
         request.setAmount(amount);
-        request.setBankAccountInfo(bankAccountInfo);
+        request.setBankAccountInfo(bankAccountInfo.trim());
         request.setStatus("PENDING");
+        request.setRequestedAt(LocalDateTime.now());
 
         payoutRequestDAO.save(request);
     }
 
     public void approvePayout(Long requestId) {
         PayoutRequest request = payoutRequestDAO.findById(requestId);
-        if (request == null) throw new IllegalArgumentException("Không tìm thấy yêu cầu payout.");
-        if (!"PENDING".equals(request.getStatus())) throw new IllegalArgumentException("Yêu cầu payout này đã được xử lý.");
+
+        if (request == null) {
+            throw new IllegalArgumentException("Không tìm thấy yêu cầu payout.");
+        }
+
+        if (!"PENDING".equalsIgnoreCase(request.getStatus())) {
+            throw new IllegalArgumentException("Yêu cầu payout này đã được xử lý.");
+        }
+
+        if (request.getPublisher() == null || request.getPublisher().getUser() == null) {
+            throw new IllegalArgumentException("Không tìm thấy Publisher của yêu cầu payout.");
+        }
 
         User publisherUser = request.getPublisher().getUser();
-        walletService.payoutToPublisher(publisherUser, request.getAmount(), "PAYOUT_" + request.getId());
+
+        walletService.payoutToPublisher(
+                publisherUser,
+                request.getAmount(),
+                "PAYOUT_" + request.getId()
+        );
 
         request.setStatus("PAID");
         request.setProcessedAt(LocalDateTime.now());
+
         payoutRequestDAO.update(request);
     }
 
     public void rejectPayout(Long requestId) {
         PayoutRequest request = payoutRequestDAO.findById(requestId);
-        if (request == null) throw new IllegalArgumentException("Không tìm thấy yêu cầu payout.");
-        if (!"PENDING".equals(request.getStatus())) throw new IllegalArgumentException("Yêu cầu payout này đã được xử lý.");
+
+        if (request == null) {
+            throw new IllegalArgumentException("Không tìm thấy yêu cầu payout.");
+        }
+
+        if (!"PENDING".equalsIgnoreCase(request.getStatus())) {
+            throw new IllegalArgumentException("Yêu cầu payout này đã được xử lý.");
+        }
 
         request.setStatus("REJECTED");
         request.setProcessedAt(LocalDateTime.now());
+
         payoutRequestDAO.update(request);
     }
 

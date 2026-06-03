@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Service
 @Transactional(readOnly = true)
@@ -55,8 +57,7 @@ public class AdminDashboardService {
         stats.setTotalWalletBalance(totalBalance != null ? totalBalance : BigDecimal.ZERO);
 
         // Orders today
-        stats.setOrdersToday(count(
-                "SELECT COUNT(o.id) FROM Order o WHERE CAST(o.createdAt AS DATE) = CAST(GETDATE() AS DATE) AND o.status = 'PAID'"));
+        stats.setOrdersToday(countOrdersToday());
 
         return stats;
     }
@@ -72,5 +73,25 @@ public class AdminDashboardService {
         return sessionFactory.getCurrentSession()
                 .createQuery(hql, type)
                 .uniqueResult();
+    }
+
+    private Long countOrdersToday() {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime startOfTomorrow = startOfDay.plusDays(1);
+
+        Long result = sessionFactory.getCurrentSession()
+                .createQuery(
+                        "SELECT COUNT(o.id) " +
+                        "FROM Order o " +
+                        "WHERE o.createdAt >= :startOfDay " +
+                        "AND o.createdAt < :startOfTomorrow " +
+                        "AND o.status = :status",
+                        Long.class)
+                .setParameter("startOfDay", startOfDay)
+                .setParameter("startOfTomorrow", startOfTomorrow)
+                .setParameter("status", "PAID")
+                .uniqueResult();
+
+        return result == null ? 0L : result;
     }
 }

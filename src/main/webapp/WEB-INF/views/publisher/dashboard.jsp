@@ -29,22 +29,26 @@
   <nav class="gf-navbar" style="background:#18181b;border-bottom:3px solid #000;">
     <div class="container-xl py-3">
       <div class="d-flex align-items-center justify-content-between gap-3">
-        <a href="${pageContext.request.contextPath}/" class="d-flex align-items-center gap-2 text-decoration-none flex-shrink-0">
+        <a href="${pageContext.request.contextPath}/publisher/dashboard" class="d-flex align-items-center gap-2 text-decoration-none flex-shrink-0">
           <div class="gf-logo-box gf-press" style="background:var(--gf-green);">
             <i data-lucide="gamepad-2" width="20" height="20"></i>
           </div>
           <span class="fs-5 fw-black fw-bold text-white">GAME<span style="color:var(--gf-green)">FORGE</span> <span class="badge ms-1" style="font-size:9px;border-radius:999px;padding:2px 6px;background:var(--gf-yellow);color:#000;">PUBLISHER</span></span>
         </a>
+
         <div class="d-flex align-items-center gap-2">
-          <a href="${pageContext.request.contextPath}/publisher" class="btn btn-sm gf-border-2 gf-press text-white fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3" style="background:var(--gf-green);border-color:#000;">
+          <a href="${pageContext.request.contextPath}/publisher/dashboard" class="btn btn-sm gf-border-2 gf-press text-white fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3" style="background:var(--gf-green);border-color:#000;">
             <i data-lucide="layout-dashboard" width="14" height="14"></i> Dashboard
           </a>
+
           <a href="${pageContext.request.contextPath}/publisher/payouts" class="btn btn-sm gf-border-2 gf-shadow-sm gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3">
             <i data-lucide="banknote" width="14" height="14"></i> Payout
           </a>
-          <a href="${pageContext.request.contextPath}/kyc" class="btn btn-sm gf-border-2 gf-shadow-sm gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3">
+
+          <a href="${pageContext.request.contextPath}/publisher/kyc" class="btn btn-sm gf-border-2 gf-shadow-sm gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3">
             <i data-lucide="id-card" width="14" height="14"></i> KYC
           </a>
+
           <div class="dropdown">
             <button class="btn dropdown-toggle gf-press d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown"
                     style="background:#18181b;border:3px solid var(--gf-green);border-radius:999px;height:40px;padding:4px 14px 4px 6px;color:#fff;box-shadow:3px 3px 0 0 #000;">
@@ -52,7 +56,11 @@
               <span class="d-none d-sm-inline fw-black text-white" style="font-size:12px;">${fn:escapeXml(currentUser.username)}</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end gf-border-2 gf-shadow-sm p-2" style="border-radius:12px;min-width:180px;">
-              <li><a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/logout"><i data-lucide="log-out" width="14" height="14"></i> Đăng xuất</a></li>
+              <li>
+                <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/logout">
+                  <i data-lucide="log-out" width="14" height="14"></i> Đăng xuất
+                </a>
+              </li>
             </ul>
           </div>
         </div>
@@ -66,11 +74,15 @@
       <div class="d-inline-flex align-items-center gap-2 gf-border-2 rounded-pill px-4 py-2 fw-bold text-black mb-3" style="background:var(--gf-green);box-shadow:3px 3px 0 #000;">
         <i data-lucide="bar-chart-2" width="16" height="16"></i> Trang nhà phát hành
       </div>
+
       <h1 class="fw-black fw-bold mb-2" style="font-size:clamp(2rem,5vw,3rem);line-height:1.1;letter-spacing:-0.03em;">
         Chào mừng, <br>
         <span style="color:var(--gf-green);text-shadow:2px 2px 0 #000;">${fn:escapeXml(currentUser.fullName)}!</span>
       </h1>
-      <p class="fs-5 fw-semibold text-secondary gf-muted" style="max-width:500px;">Quản lý doanh thu, theo dõi payout và nạp KYC.</p>
+
+      <p class="fs-5 fw-semibold text-secondary gf-muted" style="max-width:500px;">
+        Quản lý doanh thu, theo dõi payout, hồ sơ KYC và đăng game mới.
+      </p>
     </div>
 
     <!-- STATS CARDS -->
@@ -82,10 +94,13 @@
               <i data-lucide="wallet" width="22" height="22"></i>
             </div>
           </div>
-          <div class="fs-4 fw-black mb-1"><fmt:formatNumber value="${wallet.balance}" type="number" maxFractionDigits="0"/>đ</div>
+          <div class="fs-4 fw-black mb-1">
+            <fmt:formatNumber value="${wallet.balance}" type="number" maxFractionDigits="0"/>đ
+          </div>
           <div class="small fw-bold text-secondary">Số dư ví</div>
         </div>
       </div>
+
       <div class="col-sm-6 col-lg-3">
         <div class="bg-white gf-border rounded-4 gf-shadow p-4 h-100">
           <div class="d-flex align-items-center justify-content-between mb-3">
@@ -93,10 +108,13 @@
               <i data-lucide="trending-up" width="22" height="22"></i>
             </div>
           </div>
-          <div class="fs-4 fw-black mb-1"><fmt:formatNumber value="${totalRevenue}" type="number" maxFractionDigits="0"/>đ</div>
+          <div class="fs-4 fw-black mb-1">
+            <fmt:formatNumber value="${totalRevenue}" type="number" maxFractionDigits="0"/>đ
+          </div>
           <div class="small fw-bold text-secondary">Tổng doanh thu</div>
         </div>
       </div>
+
       <div class="col-sm-6 col-lg-3">
         <div class="bg-white gf-border rounded-4 gf-shadow p-4 h-100">
           <div class="d-flex align-items-center justify-content-between mb-3">
@@ -104,10 +122,13 @@
               <i data-lucide="gamepad-2" width="22" height="22"></i>
             </div>
           </div>
-          <div class="fs-2 fw-black mb-1"><fmt:formatNumber value="${totalGames}" type="number"/></div>
+          <div class="fs-2 fw-black mb-1">
+            <fmt:formatNumber value="${totalGames}" type="number"/>
+          </div>
           <div class="small fw-bold text-secondary">Game đã đăng</div>
         </div>
       </div>
+
       <div class="col-sm-6 col-lg-3">
         <div class="bg-white gf-border rounded-4 gf-shadow p-4 h-100">
           <div class="d-flex align-items-center justify-content-between mb-3">
@@ -115,7 +136,9 @@
               <i data-lucide="banknote" width="22" height="22"></i>
             </div>
           </div>
-          <div class="fs-2 fw-black mb-1"><fmt:formatNumber value="${pendingPayout}" type="number" maxFractionDigits="0"/>đ</div>
+          <div class="fs-2 fw-black mb-1">
+            <fmt:formatNumber value="${pendingPayout}" type="number" maxFractionDigits="0"/>đ
+          </div>
           <div class="small fw-bold text-secondary">Chờ payout</div>
         </div>
       </div>
@@ -126,23 +149,32 @@
       <div class="p-3 fw-black d-flex align-items-center gap-2 mb-3" style="background:var(--gf-yellow);border-bottom:3px solid #000;">
         <i data-lucide="wallet" width="18" height="18"></i> Thông tin ví
       </div>
+
       <div class="row g-3">
         <div class="col-sm-4">
           <div class="gf-border-2 rounded-3 p-3 text-center" style="background:#94FFB4;border:2px solid #000;">
             <div class="small fw-bold text-secondary mb-1">Số dư khả dụng</div>
-            <div class="fs-4 fw-black"><fmt:formatNumber value="${wallet.balance}" type="number" maxFractionDigits="0"/>đ</div>
+            <div class="fs-4 fw-black">
+              <fmt:formatNumber value="${wallet.balance}" type="number" maxFractionDigits="0"/>đ
+            </div>
           </div>
         </div>
+
         <div class="col-sm-4">
           <div class="gf-border-2 rounded-3 p-3 text-center" style="background:var(--gf-lavender);border:2px solid #000;">
             <div class="small fw-bold text-secondary mb-1">Đang chờ payout</div>
-            <div class="fs-4 fw-black"><fmt:formatNumber value="${pendingPayout}" type="number" maxFractionDigits="0"/>đ</div>
+            <div class="fs-4 fw-black">
+              <fmt:formatNumber value="${pendingPayout}" type="number" maxFractionDigits="0"/>đ
+            </div>
           </div>
         </div>
+
         <div class="col-sm-4">
           <div class="gf-border-2 rounded-3 p-3 text-center" style="background:var(--gf-yellow);border:2px solid #000;">
             <div class="small fw-bold text-secondary mb-1">Khả dụng rút</div>
-            <div class="fs-4 fw-black"><fmt:formatNumber value="${wallet.balance - pendingPayout > 0 ? wallet.balance - pendingPayout : 0}" type="number" maxFractionDigits="0"/>đ</div>
+            <div class="fs-4 fw-black">
+              <fmt:formatNumber value="${wallet.balance - pendingPayout > 0 ? wallet.balance - pendingPayout : 0}" type="number" maxFractionDigits="0"/>đ
+            </div>
           </div>
         </div>
       </div>
@@ -153,6 +185,7 @@
       <div class="p-3 fw-black d-flex align-items-center gap-2" style="background:var(--gf-lavender);border-bottom:3px solid #000;">
         <i data-lucide="history" width="18" height="18"></i> Giao dịch gần đây
       </div>
+
       <div class="table-responsive">
         <table class="table table-hover mb-0 gf-pub-table">
           <thead>
@@ -186,6 +219,7 @@
                   </tr>
                 </c:forEach>
               </c:when>
+
               <c:otherwise>
                 <tr>
                   <td colspan="5" class="text-center py-4">
@@ -216,19 +250,21 @@
           </div>
         </a>
       </div>
+
       <div class="col-sm-6 col-lg-4">
-        <a href="${pageContext.request.contextPath}/kyc" class="text-decoration-none">
+        <a href="${pageContext.request.contextPath}/publisher/kyc" class="text-decoration-none">
           <div class="bg-white gf-border rounded-4 gf-shadow gf-press p-4 text-center h-100">
             <div class="gf-border-2 rounded-3 d-grid mx-auto mb-3 place-items-center" style="width:52px;height:52px;background:var(--gf-lavender);">
               <i data-lucide="id-card" width="24" height="24"></i>
             </div>
-            <h5 class="fw-black mb-1">Nạp KYC</h5>
-            <p class="small text-secondary gf-muted mb-0">Xác minh danh tính để đăng game</p>
+            <h5 class="fw-black mb-1">Hồ sơ KYC</h5>
+            <p class="small text-secondary gf-muted mb-0">Xem trạng thái xác minh Publisher</p>
           </div>
         </a>
       </div>
+
       <div class="col-sm-6 col-lg-4">
-        <a href="${pageContext.request.contextPath}/" class="text-decoration-none">
+        <a href="${pageContext.request.contextPath}/publisher/games/new" class="text-decoration-none">
           <div class="bg-white gf-border rounded-4 gf-shadow gf-press p-4 text-center h-100">
             <div class="gf-border-2 rounded-3 d-grid mx-auto mb-3 place-items-center" style="width:52px;height:52px;background:var(--gf-pink);">
               <i data-lucide="plus" width="24" height="24"></i>
@@ -249,5 +285,8 @@
 
   <script src="${pageContext.request.contextPath}/assets/js/publisher.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
 </body>
 </html>

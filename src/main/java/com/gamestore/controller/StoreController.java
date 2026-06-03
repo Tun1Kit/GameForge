@@ -124,7 +124,7 @@ public class StoreController implements InitializingBean {
     }
 
     // Cấu trúc URL động chuẩn hóa: /{gameSlug}
-    @RequestMapping(value = "/{gameSlug}", method = RequestMethod.GET)
+    @RequestMapping(value = "/game/{gameSlug}", method = RequestMethod.GET)
     public String viewGameDetail(@PathVariable("gameSlug") String gameSlug, HttpSession session, Model model) {
 
         // Truy vấn dữ liệu thực tế từ SQL Server

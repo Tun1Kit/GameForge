@@ -120,7 +120,7 @@
     </div>
 
     <!-- KYC FORM -->
-    <c:if test="${currentKycStatus != 'APPROVED'}">
+<c:if test="${currentKycStatus != 'APPROVED' && currentKycStatus != 'PENDING'}">
     <div class="bg-white gf-border rounded-4 gf-shadow overflow-hidden mb-4" id="kycFormCard">
       <div class="p-3 fw-black d-flex align-items-center gap-2" style="background:var(--gf-green);color:#000;border-bottom:3px solid #000;">
         <i data-lucide="upload" width="18" height="18"></i> Nộp hồ sơ KYC
@@ -181,7 +181,7 @@
               <span class="gf-border-2 rounded-circle d-grid place-items-center" style="width:28px;height:28px;background:var(--gf-yellow);border:2px solid #000;font-size:13px;">2</span>
               Số giấy tờ
             </h5>
-            <input type="text" name="idNumber" value="${fn:escapeXml(kycFormData.idNumber)}" class="form-control gf-input" placeholder="VD: 001209012345" maxlength="20" required>
+            <input type="text" id="taxId" name="taxId" value="${fn:escapeXml(kycFormData.idNumber)}" class="form-control gf-input" placeholder="VD: 001209012345" maxlength="20" required>
           </div>
 
           <!-- STEP 3: Full Name -->
@@ -198,12 +198,12 @@
             <h5 class="fw-black mb-3 d-flex align-items-center gap-2">
               <span class="gf-border-2 rounded-circle d-grid place-items-center" style="width:28px;height:28px;background:var(--gf-yellow);border:2px solid #000;font-size:13px;">4</span>
               Ảnh giấy tờ
-              <span class="badge bg-dark ms-1" style="border-radius:999px;font-size:10px;">Tùy chọn</span>
+              <span class="badge bg-dark ms-1" style="border-radius:999px;font-size:10px;">Bắt buộc</span>
             </h5>
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="kyc-upload-box gf-border-2 rounded-3 p-4 text-center gf-border" for="frontImage">
-                  <input type="file" name="frontImage" id="frontImage" accept="image/*" class="d-none" onchange="previewImage(this, 'frontPreview')">
+                  <input type="file" name="documentFile" id="frontImage" accept="image/*" class="d-none" onchange="previewImage(this, 'frontPreview')" required>
                   <div id="frontPreview">
                     <div class="gf-border-2 rounded-3 d-grid mx-auto mb-2 place-items-center" style="width:48px;height:48px;background:var(--gf-lavender);">
                       <i data-lucide="image" width="22" height="22"></i>

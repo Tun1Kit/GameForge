@@ -142,7 +142,7 @@
             <div class="col-12 col-sm-6 col-md-4 col-lg-3" id="wish-item-${game.id}">
               <div class="wish-card h-100 d-flex flex-column">
                 
-                <a href="${pageContext.request.contextPath}/${game.slug}" class="text-decoration-none text-reset">
+                <a href="${pageContext.request.contextPath}/game/${game.slug}" class="text-decoration-none text-reset">
                   <div class="wish-img-wrapper">
                     <c:set var="gameImg" value="" />
                     <c:forEach var="media" items="${game.mediaList}">
@@ -166,7 +166,7 @@
                 <div class="p-3 d-flex flex-column flex-grow-1 justify-content-between">
                   <div>
                     <h3 class="fs-6 fw-black fw-bold mb-1 text-truncate">
-                      <a href="${pageContext.request.contextPath}/${game.slug}" class="text-decoration-none text-dark hover-underline">
+                      <a href="${pageContext.request.contextPath}/game/${game.slug}" class="text-decoration-none text-dark hover-underline">
                         ${game.title}
                       </a>
                     </h3>
