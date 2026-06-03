@@ -28,7 +28,6 @@ public class CartItemDAO extends BaseDAO<CartItem> {
 
     /**
      * Lấy danh sách CartItem kèm Game đã fetch sẵn.
-     * Thay thế 8 đoạn trùng lặp trong DashboardController, CheckoutController, CartApiController.
      */
     @Transactional(readOnly = true)
     public List<CartItem> getCartItems(Long userId) {

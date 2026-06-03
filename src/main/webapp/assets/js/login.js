@@ -100,14 +100,14 @@ function togglePassword(id, btn) {
 }
 
 
-// --- BẮT LỖI MẬT KHẨU REAL-TIME & KIỂM TRA CHUẨN ISO ---
+// --- BẮT LỖI MẬT KHẨU REAL-TIME ---
 document.addEventListener('DOMContentLoaded', () => {
     const regPassword = document.getElementById('regPassword');
     const regConfirm = document.getElementById('regConfirm');
     const regBtn = document.querySelector('form[action$="/register"] button[type="submit"]');
     const rulesBox = document.getElementById('password-rules');
 
-    // Các thẻ hiển thị từng quy tắc ISO
+    // Các thẻ hiển thị từng quy tắc 
     const ruleLength = document.getElementById('rule-length');
     const ruleUpper = document.getElementById('rule-upper');
     const ruleLower = document.getElementById('rule-lower');
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (regPassword && regConfirm && regBtn && rulesBox) {
         
-        // 1. Lắng nghe khi gõ ô MẬT KHẨU CHÍNH (Kiểm tra ISO)
+        // 1. Lắng nghe khi gõ ô MẬT KHẨU CHÍNH (Kiểm tra)
         regPassword.addEventListener('input', function() {
             const pass = this.value;
 
@@ -187,11 +187,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 regBtn.innerHTML = '<i data-lucide="shield-alert" width="20" height="20"></i> Mật khẩu không khớp';
                 
             } else if (passValue === confirmValue && !isIsoValid) {
-                // Khớp nhưng chưa đạt chuẩn ISO
+                // Khớp nhưng chưa đạt chuẩn
                 this.style.backgroundColor = ''; 
                 this.style.borderColor = '#000';
                 this.style.boxShadow = '3px 3px 0 0 #000';
-                regBtn.innerHTML = '<i data-lucide="shield-alert" width="20" height="20"></i> Cần đạt chuẩn ISO';
+                regBtn.innerHTML = '<i data-lucide="shield-alert" width="20" height="20"></i> Cần đạt chuẩn';
                 
             } else if (passValue === confirmValue && isIsoValid) {
                 // HOÀN HẢO!
