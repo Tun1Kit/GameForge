@@ -14,6 +14,8 @@
 7. [HỆ THỐNG HUY HIỆU SẢN PHẨM (BADGE SYSTEM)](#7-hệ-thống-huy-hiệu-sản-phẩm-badge-system)
 8. [HỆ THỐNG THÔNG BÁO & BỘ LỌC ĐIỀU HƯỚNG (NOTIFICATION & INTERCEPTOR)](#8-hệ-thống-thông-báo--bộ-lọc-điều-hướng-notification--interceptor)
 9. [LUỒNG NGHỆP VỤ ĐẶC BIỆT: XÓA SẢN PHẨM & HOÀN TIỀN VÍ (GAME DELETION & REFUND FLOW)](#9-luồng-nghiệp-vụ-đặc-biệt-xóa-sản-phẩm--hoàn-tiền-ví-game-deletion--refund-flow)
+10. [HỆ THỐNG RÀNG BUỘC DỮ LIỆU ĐẦU VÀO (INPUT VALIDATION CONSTRAINTS)](#10-hệ-thống-ràng-buộc-dữ-liệu-đầu-vào-input-validation-constraints)
+11. [KỊCH BẢN HỎI VẶN NÂNG CAO CỦA GIÁO VIÊN (TEACHER Q&A)](#11-kịch-bản-hỏi-vặn-nâng-cao-của-giáo-viên-teacher-qa)
 
 ---
 
@@ -444,7 +446,43 @@ VALUES (N'Yêu cầu xóa game đã được duyệt', N'Yêu cầu xóa tựa g
 
 ---
 
-## 10. KỊCH BẢN HỎI VẶN NÂNG CAO CỦA GIÁO VIÊN (TEACHER Q&A)
+## 10. HỆ THỐNG RÀNG BUỘC DỮ LIỆU ĐẦU VÀO (INPUT VALIDATION CONSTRAINTS)
+
+Để bảo đảm tính toàn vẹn dữ liệu từ Giao diện (Client-side) xuống Cơ sở dữ liệu (Database), hệ thống GameForce áp dụng cơ chế xác thực dữ liệu 2 lớp (Two-way Validation): Xác thực trực tiếp trên trình duyệt (HTML5/JavaScript) và Xác thực phía máy chủ (Bean Validation/Spring Controller/Database Constraints).
+
+Dưới đây là bảng chi tiết tất cả các trường nhập liệu thuộc phạm vi phụ trách của Frontend Lead:
+
+### 10.1 Bảng Ràng Buộc Chi Tiết Các Trường Nhập Liệu
+
+| Phân hệ / Biểu mẫu | Tên Trường | Ràng buộc Giao diện (Frontend) | Ràng buộc Máy chủ (Backend) | Kiểu dữ liệu / Database | Mô tả lỗi hiển thị / Ghi chú |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Đăng / Sửa Game** *(Publisher)* | **Tên game** (`title`) | `required`, `maxlength="150"` | `@NotBlank`, tự động loại bỏ khoảng trắng | `NVARCHAR(150)`, NOT NULL | Báo lỗi nếu trống hoặc vượt quá độ dài quy định. |
+| | **Slug** (`slug`) | `maxlength="150"` | Tự tạo từ `title` nếu trống. Chuẩn hóa qua hàm `toSlug()`. Kiểm tra trùng lặp trong DB. | `VARCHAR(150)`, UNIQUE | "Slug đường dẫn đã tồn tại trên hệ thống!" |
+| | **Giá bán** (`price`) | `required`, `type="number"`, `min="0"` | Ràng buộc giá trị không âm. Giá trị tự gán cho `originalPrice`. | `DECIMAL(15,2)`, NOT NULL | Giá game có thể là 0đ (miễn phí) hoặc giá trị nguyên dương. |
+| | **Nhà phát triển** (`developer`) | `required`, `maxlength="100"` | `@NotBlank` | `NVARCHAR(100)`, NOT NULL | Tự động lấy tên công ty hoặc họ tên nhà phát hành làm mặc định. |
+| | **Ngày phát hành** (`releaseDate`) | `required`, `type="date"`, `min="1970-01-01"`, `max="2100-12-31"` | `BindingResult` kiểm tra lỗi định dạng. Ràng buộc năm từ `1970` đến `2100`. | `DATE`, NOT NULL | "Ngày phát hành không hợp lệ! Năm phải từ 1970 đến 2100." |
+| | **Thể loại** (`categoryIds`) | Chọn checkbox từ danh sách | Chuyển đổi ID sang thực thể `Category`. Chặn lỗi null. | Quan hệ Nhiều-Nhiều (`game_categories`) | Game bắt buộc phải được gắn ít nhất một thể loại. |
+| | **Mô tả** (`description`) | `required`, `rows="5"` | `@NotBlank` | `NVARCHAR(MAX)` | Giới thiệu chi tiết trò chơi. |
+| | **Ảnh đại diện** (`coverImageFile`) | `required` (khi tạo mới), `accept="image/*"` | Phải là tệp hình ảnh hợp lệ, lưu trữ vật lý vĩnh viễn về source. | `VARCHAR(500)` (`isPrimary = 1` trong `game_media`) | "Ảnh đại diện game là bắt buộc khi đăng game mới!" |
+| | **Ảnh Screenshots** (`screenshotFiles`) | Tùy chọn, `accept="image/*"`, hỗ trợ `multiple` | Upload nhiều file ảnh chụp màn hình game. | `VARCHAR(500)` (`isPrimary = 0` trong `game_media`) | Tạo bộ sưu tập ảnh cho game. |
+| | **Video Trailer** (`trailerUrl`) | Tùy chọn, URL nhúng (embed) | Kiểm tra định dạng url nhúng phát được trực tiếp (iframe). | `VARCHAR(500)` (`mediaType = 'VIDEO'` trong `game_media`) | Ví dụ: `https://www.youtube.com/embed/dQw4w9WgXcQ` |
+| | **Cấu hình** (`minimumRequirements` & `recommendedRequirements`) | Nhập OS, CPU, RAM, GPU, DX, Storage, Notes riêng | Javascript tự động gom các trường lại đóng gói thành chuỗi JSON khi Submit. | `NVARCHAR(MAX)` dạng JSON | Tự động điền cấu hình mặc định (ví dụ RAM 8GB/16GB) nếu bỏ trống. |
+| **Đánh Giá Game** *(User / Store)* | **Điểm đánh giá** (`rating`) | Bắt buộc chọn từ 1 đến 5 sao | `@NotNull`, `@Min(1)`, `@Max(5)` | `INT`, NOT NULL | Thang điểm từ 1 đến 5. Chặn đánh giá trùng lặp bằng `UNIQUE(game_id, user_id)`. |
+| | **Bình luận** (`comment`) | `maxlength="2000"` | `@Size(max = 2000)` | `NVARCHAR(MAX)` | Nhận xét không quá 2000 ký tự. |
+| **Phản Hồi Đánh Giá** *(Publisher/Admin)* | **Phản hồi** (`publisherReply`) | `maxlength="1000"` | `@Size(max = 1000)` | `NVARCHAR(MAX)` | Lưu phản hồi chính thức của NPH hoặc Admin, tối đa 1000 ký tự. Ghi đè nếu phản hồi đè. |
+| **Đánh Giá Bổ Sung** *(User / Store)* | **Nội dung bổ sung** (`userFollowUp`) | `maxlength="1000"` | `@Size(max = 1000)` | `NVARCHAR(MAX)` | Phản hồi lại câu trả lời của NPH, tối đa 1000 ký tự (chỉ được viết 1 lần duy nhất). |
+| | **Điểm bổ sung** (`userFollowUpRating`) | Chọn 1-5 sao | `@Min(1)`, `@Max(5)` | `INT` | Số sao mới sau khi trải nghiệm lại sản phẩm. Sẽ ghi đè lên sao cũ khi tính trung bình động. |
+| **Yêu Cầu Rút Tiền** *(Publisher)* | **Số tiền rút** (`amount`) | `required`, `type="number"` | So sánh với `MIN_PAYOUT_AMOUNT` (10.000 VNĐ) và `availableAmount` (số dư ví trừ các khoản rút đang chờ duyệt). | `DECIMAL(15,2)`, NOT NULL | "Số tiền rút tối thiểu là 10.000đ." hoặc "Số dư ví khả dụng không đủ." |
+| | **Thông tin ngân hàng** (`bankAccountInfo`) | `required` | Bắt buộc nhập, kiểm tra rỗng hoặc khoảng trắng | `NVARCHAR(MAX)`, NOT NULL | Nhập thông tin số tài khoản, tên ngân hàng và chủ tài khoản. |
+| **Hồ Sơ KYC** *(Publisher)* | **Số giấy tờ** (`taxId`) | `required`, `minlength="6"` | Kiểm tra độ dài tối thiểu 6 ký tự | `VARCHAR(100)`, NOT NULL | "Số giấy tờ phải có ít nhất 6 ký tự." |
+| | **Ảnh giấy tờ** (`documentFile`) | `required`, `accept="image/*"` | Dung lượng tối đa 5MB. Định dạng bắt buộc `.jpg`, `.jpeg`, `.png`. | `VARCHAR(500)`, NOT NULL | "File quá lớn. Dung lượng tối đa là 5MB." hoặc "Chỉ hỗ trợ file ảnh JPG, JPEG hoặc PNG." |
+| **Cập Nhật Hồ Sơ** *(User)* | **Tên hiển thị** (`fullName`) | `required` | Không được rỗng hoặc chỉ toàn khoảng trắng | `NVARCHAR(100)` | "Tên hiển thị không được để trống." |
+| | **Mật khẩu mới** (`password`) | Tùy chọn | Chỉ cập nhật nếu có dữ liệu nhập vào | `VARCHAR(128)` | Cập nhật mật khẩu bảo mật mới cho tài khoản. |
+| | **Ảnh đại diện** (`avatar`) | Chọn từ 18 avatar hạt giống tĩnh | Ràng buộc chuỗi seed của dicebear API | `VARCHAR(500)` | `@Size(max = 500)`. Giao diện cập nhật lập tức qua Fetch API. |
+
+---
+
+## 11. KỊCH BẢN HỎI VẶN NÂNG CAO CỦA GIÁO VIÊN (TEACHER Q&A)
 
 Dưới đây là danh sách các câu hỏi hóc búa nhất mà hội đồng 3 giáo viên thường sử dụng để chất vấn sinh viên trong buổi bảo vệ đồ án công nghệ thông tin phân hệ Java Web / Spring MVC. Mỗi câu hỏi được chia làm 3 phần rõ rệt để bạn chuẩn bị tâm lý và ghi điểm tuyệt đối.
 
@@ -572,4 +610,4 @@ Dưới đây là danh sách các câu hỏi hóc búa nhất mà hội đồng 
 
 ---
 **Tài Liệu Đã Hoàn Thành! 🎉**  
-*Tài liệu đã được tối ưu hóa 100% bằng Tiếng Việt, loại bỏ phần Giỏ hàng (Cart) không liên quan, làm nổi bật hệ thống Huy hiệu (Badge), Thông báo (Notification), Bảo mật điều hướng (Interceptor) cùng kịch bản hỏi vặn chuyên sâu 3 bước.*
+*Tài liệu đã được tối ưu hóa 100% bằng Tiếng Việt, loại bỏ phần Giỏ hàng (Cart) không liên quan, làm nổi bật hệ thống Huy hiệu (Badge), Thông báo (Notification), Bảo mật điều hướng (Interceptor), bảng ràng buộc dữ liệu đầu vào (Validation Constraints) cùng kịch bản hỏi vặn chuyên sâu 3 bước.*

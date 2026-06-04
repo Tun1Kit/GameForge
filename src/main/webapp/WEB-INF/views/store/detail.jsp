@@ -965,7 +965,7 @@
 
   <footer class="bg-dark text-white border-top border-3 border-black py-5 mt-5">
     <div class="container-xl text-center small fw-semibold text-secondary">
-      © 2026 GameForge. Hệ thống Cửa hàng tự động hóa hoàn chỉnh bởi Kiệt.
+      © 2026 GameForge - Nền Tảng Phân Phối Game Toàn Cầu
     </div>
   </footer>
 
