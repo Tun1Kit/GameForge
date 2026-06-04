@@ -28,8 +28,8 @@ public class LibraryItemDAO extends BaseDAO<LibraryItem> {
     public boolean existsActiveByUserAndGame(Long userId, Long gameId) {
         Long count = sessionFactory.getCurrentSession()
                 .createQuery(
-                        "SELECT COUNT(li.id) FROM LibraryItem li " +
-                        "WHERE li.user.id = :userId AND li.game.id = :gameId AND li.status = 'ACTIVE'",
+                        "SELECT COUNT(li.id) FROM LibraryItem li JOIN li.game g " +
+                        "WHERE li.user.id = :userId AND li.game.id = :gameId AND li.status = 'ACTIVE' AND g.status != 'DELETED'",
                         Long.class)
                 .setParameter("userId", userId)
                 .setParameter("gameId", gameId)
@@ -47,7 +47,7 @@ public class LibraryItemDAO extends BaseDAO<LibraryItem> {
                         "SELECT li FROM LibraryItem li " +
                         "JOIN FETCH li.game g " +
                         "LEFT JOIN FETCH li.licenseKey k " +
-                        "WHERE li.user.id = :userId AND li.status = 'ACTIVE' " +
+                        "WHERE li.user.id = :userId AND li.status = 'ACTIVE' AND g.status != 'DELETED' " +
                         "ORDER BY li.acquiredAt DESC",
                         LibraryItem.class)
                 .setParameter("userId", userId)
@@ -69,8 +69,8 @@ public class LibraryItemDAO extends BaseDAO<LibraryItem> {
     public List<Long> findOwnedGameIds(Long userId) {
         return sessionFactory.getCurrentSession()
                 .createQuery(
-                        "SELECT li.game.id FROM LibraryItem li " +
-                        "WHERE li.user.id = :userId AND li.status = 'ACTIVE'",
+                        "SELECT li.game.id FROM LibraryItem li JOIN li.game g " +
+                        "WHERE li.user.id = :userId AND li.status = 'ACTIVE' AND g.status != 'DELETED'",
                         Long.class)
                 .setParameter("userId", userId)
                 .getResultList();
