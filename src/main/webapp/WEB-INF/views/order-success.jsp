@@ -202,7 +202,7 @@
 
   <footer class="bg-dark text-white border-top border-3 border-black py-5 mt-5">
     <div class="container-xl text-center small fw-semibold text-secondary">
-      © 2026 GameForge. Bootstrap 5 Neo Brutalism Order Success Page.
+      © 2026 GameForce - Order Confirmation
     </div>
   </footer>
 

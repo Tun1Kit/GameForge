@@ -292,7 +292,7 @@
 
   <footer class="bg-dark text-white border-top border-3 border-black py-4 mt-5">
     <div class="container-xl text-center small fw-semibold text-secondary">
-      © 2026 GameForge &mdash; Neo-Brutalism Design
+      © 2026 GameForce - KYC Verification
     </div>
   </footer>
 

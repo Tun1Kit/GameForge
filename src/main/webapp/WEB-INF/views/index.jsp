@@ -95,9 +95,10 @@
         </div>
 
         <div class="d-flex align-items-center gap-2 gap-sm-3">
-          <div class="d-none d-md-flex align-items-center bg-white border border-2 border-black rounded-3 px-3 py-2 gf-shadow-sm">
+          <div class="d-none d-md-flex align-items-center bg-white border border-2 border-black rounded-3 px-3 py-2 gf-shadow-sm position-relative">
             <i data-lucide="search" width="16" height="16" class="text-secondary"></i>
             <input id="searchInput" type="text" placeholder="Tìm game..." class="border-0 bg-transparent ms-2 fw-semibold small" style="outline:none;width:170px;">
+            <div id="searchSuggestions" class="position-absolute bg-white border border-2 border-black rounded-3 p-2 gf-shadow d-none" style="top: calc(100% + 8px); left: 0; right: 0; z-index: 1000; min-width: 280px; max-height: 300px; overflow-y: auto;"></div>
           </div>
 
           <button id="favoriteTopBtn" class="gf-icon-btn gf-press" style="background:var(--gf-pink)" type="button" title="Game yêu thích">
@@ -124,9 +125,23 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end gf-border-2 gf-shadow-sm p-2" style="border-radius: 12px; min-width: 210px;">
                   <li>
-                    <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/dashboard">
-                      <i data-lucide="layout-dashboard" width="16" height="16"></i> Bảng điều khiển
-                    </a>
+                    <c:choose>
+                      <c:when test="${currentUser.hasRole('ROLE_ADMIN')}">
+                        <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/admin/dashboard">
+                          <i data-lucide="layout-dashboard" width="16" height="16"></i> Bảng điều khiển
+                        </a>
+                      </c:when>
+                      <c:when test="${currentUser.hasRole('ROLE_PUBLISHER')}">
+                        <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/publisher/dashboard">
+                          <i data-lucide="layout-dashboard" width="16" height="16"></i> Bảng điều khiển
+                        </a>
+                      </c:when>
+                      <c:otherwise>
+                        <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/dashboard">
+                          <i data-lucide="layout-dashboard" width="16" height="16"></i> Bảng điều khiển
+                        </a>
+                      </c:otherwise>
+                    </c:choose>
                   </li>
                  <c:if test="${not currentUser.hasRole('ROLE_PUBLISHER') and not currentUser.hasRole('ROLE_ADMIN')}">
   <li>
@@ -200,11 +215,11 @@
       <span>🔥 Flash Sale - Giảm đến 80%</span><span>•</span>
       <span>🎮 Game hot trượt từng game mượt</span><span>•</span>
       <span>💎 Sale giữ grid cũ, hiệu ứng không nhấp nháy</span><span>•</span>
-      <span>🏆 Bootstrap 5 Neo Brutalism Store</span><span>•</span>
+      <span>🏆 GameForce Platform - Nền Tảng Phân Phối Game</span><span>•</span>
       <span>🔥 Flash Sale - Giảm đến 80%</span><span>•</span>
       <span>🎮 Game hot trượt từng game mượt</span><span>•</span>
       <span>💎 Sale giữ grid cũ, hiệu ứng không nhấp nháy</span><span>•</span>
-      <span>🏆 Bootstrap 5 Neo Brutalism Store</span><span>•</span>
+      <span>🏆 GameForce Platform - Nền Tảng Phân Phối Game</span><span>•</span>
     </div>
   </div>
 
@@ -247,10 +262,12 @@
                   <c:if test="${status.index lt 4}">
                     <c:set var="isSoftware" value="false" />
                     <c:set var="primaryCategory" value="Game" />
+                    <c:set var="allCategoriesStr" value="" />
                     <c:forEach var="cat" items="${game.categories}" varStatus="catStatus">
                       <c:if test="${catStatus.first}">
                         <c:set var="primaryCategory" value="${cat.name}" />
                       </c:if>
+                      <c:set var="allCategoriesStr" value="${allCategoriesStr}${fn:toLowerCase(cat.name)} " />
                       <c:if test="${fn:toLowerCase(cat.name) == 'software' || fn:toLowerCase(cat.name) == 'phần mềm'}">
                         <c:set var="isSoftware" value="true" />
                       </c:if>
@@ -286,18 +303,36 @@
                     </c:if>
 
                     <div class="col">
-                      <article class="gf-game-card gf-press game-item" data-id="${game.id}" data-title="${fn:escapeXml(fn:toLowerCase(game.title))}" data-category="${fn:escapeXml(fn:toLowerCase(primaryCategory))}">
+                      <article class="gf-game-card gf-press game-item" data-id="${game.id}" data-title="${fn:escapeXml(fn:toLowerCase(game.title))}" data-categories="${fn:escapeXml(allCategoriesStr)}" data-price="${game.price}" data-min-req="${fn:escapeXml(fn:toLowerCase(game.minimumRequirements))}" data-rec-req="${fn:escapeXml(fn:toLowerCase(game.recommendedRequirements))}">
                         <div class="gf-game-banner">
                           <a href="${pageContext.request.contextPath}/game/${game.slug}" class="d-block h-100">
+                            <c:set var="hasLocalImage" value="false" />
+                            <c:if test="${not empty game.mediaList}">
+                              <c:set var="imgUrl" value="${game.mediaList[0].mediaUrl}" />
+                              <c:if test="${not fn:startsWith(imgUrl, 'http') && not fn:startsWith(imgUrl, 'https') && not fn:startsWith(imgUrl, '//')}">
+                                <%
+                                  com.gamestore.entity.Game g = (com.gamestore.entity.Game) pageContext.getAttribute("game");
+                                  if (g != null && g.getMediaList() != null && !g.getMediaList().isEmpty()) {
+                                      Object media = g.getMediaList().get(0);
+                                      if (media instanceof com.gamestore.entity.GameMedia) {
+                                          String path = ((com.gamestore.entity.GameMedia) media).getMediaUrl();
+                                          String realPath = application.getRealPath(path);
+                                          if (realPath != null && new java.io.File(realPath).exists()) {
+                                              pageContext.setAttribute("hasLocalImage", "true");
+                                          }
+                                      }
+                                  }
+                                %>
+                              </c:if>
+                            </c:if>
                             <c:choose>
-                              <c:when test="${not empty game.mediaList && not fn:startsWith(game.mediaList[0].mediaUrl, 'http')}">
+                              <c:when test="${hasLocalImage == 'true'}">
                                 <img src="${pageContext.request.contextPath}${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
                               </c:when>
-                              <c:when test="${not empty game.mediaList}">
-                                <img src="${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
-                              </c:when>
                               <c:otherwise>
-                                <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg" alt="Cover" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
+                                <div class="d-flex align-items-center justify-content-center text-secondary fw-black fw-bold text-center px-2" style="width: 100%; height: 180px; background: #e4e4e7; font-size: 14px; color: #71717a;">
+                                  Chưa có ảnh
+                                </div>
                               </c:otherwise>
                             </c:choose>
                           </a>
@@ -405,10 +440,12 @@
                   <c:if test="${status.index lt 4}">
                     <c:set var="isSoftware" value="false" />
                     <c:set var="primaryCategory" value="Game" />
+                    <c:set var="allCategoriesStr" value="" />
                     <c:forEach var="cat" items="${game.categories}" varStatus="catStatus">
                       <c:if test="${catStatus.first}">
                         <c:set var="primaryCategory" value="${cat.name}" />
                       </c:if>
+                      <c:set var="allCategoriesStr" value="${allCategoriesStr}${fn:toLowerCase(cat.name)} " />
                       <c:if test="${fn:toLowerCase(cat.name) == 'software' || fn:toLowerCase(cat.name) == 'phần mềm'}">
                         <c:set var="isSoftware" value="true" />
                       </c:if>
@@ -444,18 +481,36 @@
                     </c:if>
 
                     <div class="col">
-                      <article class="gf-game-card gf-press game-item" data-id="${game.id}" data-title="${fn:escapeXml(fn:toLowerCase(game.title))}" data-category="${fn:escapeXml(fn:toLowerCase(primaryCategory))}">
+                      <article class="gf-game-card gf-press game-item" data-id="${game.id}" data-title="${fn:escapeXml(fn:toLowerCase(game.title))}" data-categories="${fn:escapeXml(allCategoriesStr)}" data-price="${game.price}" data-min-req="${fn:escapeXml(fn:toLowerCase(game.minimumRequirements))}" data-rec-req="${fn:escapeXml(fn:toLowerCase(game.recommendedRequirements))}">
                         <div class="gf-game-banner">
                           <a href="${pageContext.request.contextPath}/game/${game.slug}" class="d-block h-100">
+                            <c:set var="hasLocalImage" value="false" />
+                            <c:if test="${not empty game.mediaList}">
+                              <c:set var="imgUrl" value="${game.mediaList[0].mediaUrl}" />
+                              <c:if test="${not fn:startsWith(imgUrl, 'http') && not fn:startsWith(imgUrl, 'https') && not fn:startsWith(imgUrl, '//')}">
+                                <%
+                                  com.gamestore.entity.Game g = (com.gamestore.entity.Game) pageContext.getAttribute("game");
+                                  if (g != null && g.getMediaList() != null && !g.getMediaList().isEmpty()) {
+                                      Object media = g.getMediaList().get(0);
+                                      if (media instanceof com.gamestore.entity.GameMedia) {
+                                          String path = ((com.gamestore.entity.GameMedia) media).getMediaUrl();
+                                          String realPath = application.getRealPath(path);
+                                          if (realPath != null && new java.io.File(realPath).exists()) {
+                                              pageContext.setAttribute("hasLocalImage", "true");
+                                          }
+                                      }
+                                  }
+                                %>
+                              </c:if>
+                            </c:if>
                             <c:choose>
-                              <c:when test="${not empty game.mediaList && not fn:startsWith(game.mediaList[0].mediaUrl, 'http')}">
+                              <c:when test="${hasLocalImage == 'true'}">
                                 <img src="${pageContext.request.contextPath}${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
                               </c:when>
-                              <c:when test="${not empty game.mediaList}">
-                                <img src="${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
-                              </c:when>
                               <c:otherwise>
-                                <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg" alt="Cover" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
+                                <div class="d-flex align-items-center justify-content-center text-secondary fw-black fw-bold text-center px-2" style="width: 100%; height: 180px; background: #e4e4e7; font-size: 14px; color: #71717a;">
+                                  Chưa có ảnh
+                                </div>
                               </c:otherwise>
                             </c:choose>
                           </a>
@@ -541,7 +596,7 @@
     <div class="container-xl py-4">
       <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-end justify-content-between gap-4 mb-5">
         <div>
-          <span class="d-inline-block gf-border-2 gf-shadow-sm rounded-pill px-3 py-1 fw-black fw-bold text-uppercase small" style="background:var(--gf-pink);color:#000;">Layout 1</span>
+          <span class="d-inline-block gf-border-2 gf-shadow-sm rounded-pill px-3 py-1 fw-black fw-bold text-uppercase small" style="background:var(--gf-pink);color:#000;">Top Game</span>
           <h2 class="display-5 fw-black fw-bold mt-3">Game <span class="gf-green">Hot</span></h2>
           <p class="fw-semibold text-secondary gf-muted mb-0">Một hàng card, chuyển từng game 1 bằng smooth horizontal carousel, không chớp.</p>
         </div>
@@ -564,8 +619,10 @@
               <c:if test="${status.index lt 12}">
                 <c:set var="isSoftware" value="false" />
                 <c:set var="primaryCategory" value="Game" />
+                <c:set var="allCategoriesStr" value="" />
                 <c:forEach var="cat" items="${game.categories}" varStatus="catStatus">
                   <c:if test="${catStatus.first}"><c:set var="primaryCategory" value="${cat.name}" /></c:if>
+                  <c:set var="allCategoriesStr" value="${allCategoriesStr}${fn:toLowerCase(cat.name)} " />
                   <c:if test="${fn:toLowerCase(cat.name) == 'software' || fn:toLowerCase(cat.name) == 'phần mềm'}"><c:set var="isSoftware" value="true" /></c:if>
                 </c:forEach>
 
@@ -598,19 +655,37 @@
                   <c:set var="isDiscounted" value="true" />
                 </c:if>
 
-                <div class="gf-hot-slide-card game-item" data-id="${game.id}" data-title="${fn:escapeXml(fn:toLowerCase(game.title))}" data-category="${fn:escapeXml(fn:toLowerCase(primaryCategory))}">
+                <div class="gf-hot-slide-card game-item" data-id="${game.id}" data-title="${fn:escapeXml(fn:toLowerCase(game.title))}" data-categories="${fn:escapeXml(allCategoriesStr)}" data-price="${game.price}" data-min-req="${fn:escapeXml(fn:toLowerCase(game.minimumRequirements))}" data-rec-req="${fn:escapeXml(fn:toLowerCase(game.recommendedRequirements))}">
                   <article class="gf-game-card gf-press">
                     <div class="gf-game-banner">
                       <a href="${pageContext.request.contextPath}/game/${game.slug}" class="d-block h-100">
+                        <c:set var="hasLocalImage" value="false" />
+                        <c:if test="${not empty game.mediaList}">
+                          <c:set var="imgUrl" value="${game.mediaList[0].mediaUrl}" />
+                          <c:if test="${not fn:startsWith(imgUrl, 'http') && not fn:startsWith(imgUrl, 'https') && not fn:startsWith(imgUrl, '//')}">
+                            <%
+                              com.gamestore.entity.Game g = (com.gamestore.entity.Game) pageContext.getAttribute("game");
+                              if (g != null && g.getMediaList() != null && !g.getMediaList().isEmpty()) {
+                                  Object media = g.getMediaList().get(0);
+                                  if (media instanceof com.gamestore.entity.GameMedia) {
+                                      String path = ((com.gamestore.entity.GameMedia) media).getMediaUrl();
+                                      String realPath = application.getRealPath(path);
+                                      if (realPath != null && new java.io.File(realPath).exists()) {
+                                          pageContext.setAttribute("hasLocalImage", "true");
+                                      }
+                                  }
+                              }
+                            %>
+                          </c:if>
+                        </c:if>
                         <c:choose>
-                          <c:when test="${not empty game.mediaList && not fn:startsWith(game.mediaList[0].mediaUrl, 'http')}">
+                          <c:when test="${hasLocalImage == 'true'}">
                             <img src="${pageContext.request.contextPath}${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
                           </c:when>
-                          <c:when test="${not empty game.mediaList}">
-                            <img src="${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
-                          </c:when>
                           <c:otherwise>
-                            <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg" alt="Cover" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
+                            <div class="d-flex align-items-center justify-content-center text-secondary fw-black fw-bold text-center px-2" style="width: 100%; height: 180px; background: #e4e4e7; font-size: 14px; color: #71717a;">
+                              Chưa có ảnh
+                            </div>
                           </c:otherwise>
                         </c:choose>
                       </a>
@@ -699,6 +774,47 @@
         </div>
       </div>
 
+      <!-- BỘ LỌC ĐA NĂNG (Price, Category, RAM Requirements) -->
+      <div class="bg-white gf-border-2 rounded-4 p-4 mb-5 gf-shadow-sm text-dark">
+        <div class="row g-4 align-items-center">
+          <div class="col-12 col-md-4">
+            <label class="form-label fw-black fw-bold text-dark small mb-2 d-flex align-items-center gap-1"><i data-lucide="tags" width="16" height="16"></i> Thể Loại</label>
+            <select id="filterCategory" class="form-select gf-border fw-semibold text-dark bg-white">
+              <option value="all">Tất cả thể loại</option>
+              <option value="action">Hành Động</option>
+              <option value="rpg">Nhập Vai</option>
+              <option value="strategy">Chiến Thuật</option>
+              <option value="adventure">Phiêu Lưu</option>
+              <option value="simulation">Mô Phỏng</option>
+              <option value="sports">Thể Thao</option>
+              <option value="horror">Kinh Dị</option>
+              <option value="racing">Đua Xe</option>
+              <option value="casual">Giải Trí Nhẹ</option>
+              <option value="fighting">Chiến Đấu</option>
+            </select>
+          </div>
+          
+          <div class="col-12 col-md-4">
+            <label class="form-label fw-black fw-bold text-dark small mb-2 d-flex align-items-center gap-1"><i data-lucide="circle-dollar-sign" width="16" height="16"></i> Khoảng Giá</label>
+            <select id="filterPrice" class="form-select gf-border fw-semibold text-dark bg-white">
+              <option value="all">Mọi mức giá</option>
+              <option value="under-100k">Dưới 100.000đ</option>
+              <option value="100k-500k">100.000đ - 500.000đ</option>
+              <option value="over-500k">Trên 500.000đ</option>
+            </select>
+          </div>
+          
+          <div class="col-12 col-md-4">
+            <label class="form-label fw-black fw-bold text-dark small mb-2 d-flex align-items-center gap-1"><i data-lucide="cpu" width="16" height="16"></i> Cấu Hình (RAM Tối Thiểu)</label>
+            <select id="filterRam" class="form-select gf-border fw-semibold text-dark bg-white">
+              <option value="all">Không yêu cầu RAM cụ thể</option>
+              <option value="ram-8">Yêu cầu RAM <= 8GB</option>
+              <option value="ram-16">Yêu cầu RAM <= 16GB</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div class="gf-slider-shell gf-slider-padding">
         <button id="salePrev" class="gf-side-nav-btn gf-side-left" type="button" aria-label="Sale trước"><i data-lucide="chevron-left" width="28" height="28"></i></button>
         <div class="gf-sale-grid-shell">
@@ -706,8 +822,10 @@
             <c:forEach var="game" items="${games}">
               <c:set var="isSoftware" value="false" />
               <c:set var="primaryCategory" value="Game" />
+              <c:set var="allCategoriesStr" value="" />
               <c:forEach var="cat" items="${game.categories}" varStatus="catStatus">
                 <c:if test="${catStatus.first}"><c:set var="primaryCategory" value="${cat.name}" /></c:if>
+                <c:set var="allCategoriesStr" value="${allCategoriesStr}${fn:toLowerCase(cat.name)} " />
                 <c:if test="${fn:toLowerCase(cat.name) == 'software' || fn:toLowerCase(cat.name) == 'phần mềm'}"><c:set var="isSoftware" value="true" /></c:if>
               </c:forEach>
 
@@ -744,19 +862,37 @@
                 </c:if>
               </c:forEach>
 
-              <div class="col sale-card-wrapper game-item" data-id="${game.id}" data-title="${fn:escapeXml(fn:toLowerCase(game.title))}" data-category="${fn:escapeXml(fn:toLowerCase(primaryCategory))}">
+              <div class="col sale-card-wrapper game-item" data-id="${game.id}" data-title="${fn:escapeXml(fn:toLowerCase(game.title))}" data-categories="${fn:escapeXml(allCategoriesStr)}" data-price="${game.price}" data-min-req="${fn:escapeXml(fn:toLowerCase(game.minimumRequirements))}" data-rec-req="${fn:escapeXml(fn:toLowerCase(game.recommendedRequirements))}">
                 <article class="gf-game-card gf-press">
                   <div class="gf-game-banner">
                     <a href="${pageContext.request.contextPath}/game/${game.slug}" class="d-block h-100">
+                      <c:set var="hasLocalImage" value="false" />
+                      <c:if test="${not empty game.mediaList}">
+                        <c:set var="imgUrl" value="${game.mediaList[0].mediaUrl}" />
+                        <c:if test="${not fn:startsWith(imgUrl, 'http') && not fn:startsWith(imgUrl, 'https') && not fn:startsWith(imgUrl, '//')}">
+                          <%
+                            com.gamestore.entity.Game g = (com.gamestore.entity.Game) pageContext.getAttribute("game");
+                            if (g != null && g.getMediaList() != null && !g.getMediaList().isEmpty()) {
+                                Object media = g.getMediaList().get(0);
+                                if (media instanceof com.gamestore.entity.GameMedia) {
+                                    String path = ((com.gamestore.entity.GameMedia) media).getMediaUrl();
+                                    String realPath = application.getRealPath(path);
+                                    if (realPath != null && new java.io.File(realPath).exists()) {
+                                        pageContext.setAttribute("hasLocalImage", "true");
+                                    }
+                                }
+                            }
+                          %>
+                        </c:if>
+                      </c:if>
                       <c:choose>
-                        <c:when test="${not empty game.mediaList && not fn:startsWith(game.mediaList[0].mediaUrl, 'http')}">
+                        <c:when test="${hasLocalImage == 'true'}">
                           <img src="${pageContext.request.contextPath}${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
                         </c:when>
-                        <c:when test="${not empty game.mediaList}">
-                          <img src="${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
-                        </c:when>
                         <c:otherwise>
-                          <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg" alt="Cover" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
+                          <div class="d-flex align-items-center justify-content-center text-secondary fw-black fw-bold text-center px-2" style="width: 100%; height: 180px; background: #e4e4e7; font-size: 14px; color: #71717a;">
+                            Chưa có ảnh
+                          </div>
                         </c:otherwise>
                       </c:choose>
                     </a>
@@ -891,7 +1027,7 @@
 </section>
   <footer id="support" class="bg-dark text-white border-top border-3 border-black py-5">
     <div class="container-xl text-center small fw-semibold text-secondary">
-      © 2026 GameForge. Bootstrap 5 Neo Brutalism + JSP Dynamic Store.
+      © 2026 GameForge - Nền Tảng Phân Phối Game Toàn Cầu
     </div>
   </footer>
 

@@ -657,16 +657,21 @@ public class PublisherController {
         file.transferTo(destination);
 
         // Cũng lưu vào thư mục source code (vĩnh viễn)
-        if (webappSourcePath != null && !webappSourcePath.trim().isEmpty()) {
-            try {
-                File srcDir = new File(webappSourcePath, "assets/images/games/" + gameSlug);
-                if (!srcDir.exists()) srcDir.mkdirs();
-                File srcDest = new File(srcDir, fileName);
-                java.nio.file.Files.copy(destination.toPath(), srcDest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                System.out.println("[Upload] Đã lưu vĩnh viễn: " + srcDest.getAbsolutePath());
-            } catch (Exception e) {
-                System.err.println("[Upload] Lỗi copy về source: " + e.getMessage());
+        String targetSourcePath = webappSourcePath;
+        if (targetSourcePath == null || targetSourcePath.trim().isEmpty()) {
+            targetSourcePath = "c:/Users/kitnef/Downloads/GameForce-main/GameForce-main/src/main/webapp";
+        }
+
+        try {
+            File srcDir = new File(targetSourcePath, "assets/images/games/" + gameSlug);
+            if (!srcDir.exists()) srcDir.mkdirs();
+            File srcDest = new File(srcDir, fileName);
+            try (java.io.InputStream in = file.getInputStream()) {
+                java.nio.file.Files.copy(in, srcDest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
+            System.out.println("[Upload] Đã lưu vĩnh viễn: " + srcDest.getAbsolutePath());
+        } catch (Exception e) {
+            System.err.println("[Upload] Lỗi copy về source: " + e.getMessage());
         }
 
         return "/assets/images/games/" + gameSlug + "/" + fileName;

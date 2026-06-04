@@ -53,6 +53,12 @@ public class CheckoutService {
             throw new IllegalArgumentException("Game không tồn tại hoặc không còn được bán.");
         }
 
+        if (game.getPublisher() != null && game.getPublisher().getUser() != null) {
+            if (game.getPublisher().getUser().getId().equals(buyer.getId())) {
+                throw new IllegalArgumentException("Nhà phát hành không thể mua game của chính mình.");
+            }
+        }
+
         if (libraryItemDAO.existsActiveByUserAndGame(buyer.getId(), gameId)) {
             throw new IllegalArgumentException("Bạn đã sở hữu game này trong thư viện.");
         }

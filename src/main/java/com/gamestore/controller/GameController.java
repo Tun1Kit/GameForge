@@ -41,16 +41,6 @@ public class GameController {
     public String index(ModelMap model, HttpSession session) {
         User currentUser = userContextService.getCurrentUser(session);
 
-        if (currentUser != null) {
-            if (currentUser.hasRole("ROLE_ADMIN")) {
-                return "redirect:/admin/dashboard";
-            }
-
-            if (currentUser.hasRole("ROLE_PUBLISHER")) {
-                return "redirect:/publisher/dashboard";
-            }
-        }
-
         List<Game> listGames = sessionFactory.getCurrentSession()
                 .createQuery("from Game where status = 'ACTIVE'", Game.class)
                 .list();

@@ -650,7 +650,7 @@
 
   <footer class="bg-dark text-white border-top border-3 border-black py-4 mt-5">
     <div class="container-xl text-center small fw-semibold text-secondary">
-      © 2026 GameForge Admin &mdash; Neo-Brutalism Dashboard
+      © 2026 GameForce Admin Dashboard
     </div>
   </footer>
 

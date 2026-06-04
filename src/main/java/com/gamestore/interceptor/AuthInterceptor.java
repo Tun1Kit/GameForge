@@ -76,8 +76,7 @@ public class AuthInterceptor implements HandlerInterceptor {
     }
 
     private boolean isUserOnlyPath(String uri, String contextPath) {
-        return uri.equals(contextPath + "/dashboard")
-                || uri.startsWith(contextPath + "/dashboard/")
+        return uri.startsWith(contextPath + "/dashboard/")
                 || uri.equals(contextPath + "/kyc")
                 || uri.startsWith(contextPath + "/kyc/")
                 || uri.equals(contextPath + "/cart")

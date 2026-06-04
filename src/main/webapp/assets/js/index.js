@@ -300,17 +300,69 @@ const contextPath = window.GAMEFORGE_CONTEXT_PATH || '';
       return 4;
     }
 
+    function parseRam(reqString) {
+      if (!reqString) return 0;
+      const match = reqString.match(/(\d+)\s*gb/i);
+      if (match) {
+        return parseInt(match[1], 10);
+      }
+      const numMatch = reqString.match(/(\d+)/);
+      if (numMatch) {
+        return parseInt(numMatch[1], 10);
+      }
+      return 0;
+    }
+
+    function matchesFilters(item) {
+      // 1. Search text filter
+      const title = norm(item.dataset.title);
+      const allCategories = item.dataset.categories || '';
+      const matchesSearch = !searchText || title.includes(norm(searchText)) || allCategories.includes(norm(searchText));
+      if (!matchesSearch) return false;
+
+      // 2. Category select filter
+      const filterCat = document.getElementById('filterCategory');
+      const catVal = filterCat ? filterCat.value : 'all';
+      if (catVal !== 'all') {
+        const categoriesStr = allCategories.trim().split(/\s+/); // Split by spaces into array
+        const searchCat = catVal.toLowerCase();
+        if (!categoriesStr.includes(searchCat)) {
+          return false;
+        }
+      }
+
+      // 3. Price select filter
+      const filterPrice = document.getElementById('filterPrice');
+      const priceVal = filterPrice ? filterPrice.value : 'all';
+      if (priceVal !== 'all') {
+        const price = parseFloat(item.dataset.price || '0');
+        if (priceVal === 'under-100k' && price >= 100000) return false;
+        if (priceVal === '100k-500k' && (price < 100000 || price > 500000)) return false;
+        if (priceVal === 'over-500k' && price <= 500000) return false;
+      }
+
+      // 4. RAM requirement filter
+      const filterRam = document.getElementById('filterRam');
+      const ramVal = filterRam ? filterRam.value : 'all';
+      if (ramVal !== 'all') {
+        const minReq = item.dataset.minReq || '';
+        const parsedRam = parseRam(minReq);
+        if (ramVal === 'ram-8' && parsedRam > 8) return false;
+        if (ramVal === 'ram-16' && parsedRam > 16) return false;
+      }
+
+      return true;
+    }
+
     function getHotItems() {
       if (!els.hotTrack) return [];
 
       return Array.from(els.hotTrack.querySelectorAll('.gf-hot-slide-card')).filter(function(item) {
-        const title = norm(item.dataset.title);
-        const category = norm(item.dataset.category);
         const id = String(item.dataset.id || '');
-        const matchesSearch = !searchText || title.includes(norm(searchText)) || category.includes(norm(searchText));
         const matchesFavorite = !favoriteOnlyHot || favorites.has(id);
-        item.style.display = matchesSearch && matchesFavorite ? '' : 'none';
-        return matchesSearch && matchesFavorite;
+        const matchesFilt = matchesFilters(item);
+        item.style.display = matchesFilt && matchesFavorite ? '' : 'none';
+        return matchesFilt && matchesFavorite;
       });
     }
 
@@ -368,12 +420,10 @@ const contextPath = window.GAMEFORGE_CONTEXT_PATH || '';
       if (!els.saleGrid) return [];
 
       return Array.from(els.saleGrid.querySelectorAll('.sale-card-wrapper')).filter(function(item) {
-        const title = norm(item.dataset.title);
-        const category = norm(item.dataset.category);
         const id = String(item.dataset.id || '');
-        const matchesSearch = !searchText || title.includes(norm(searchText)) || category.includes(norm(searchText));
         const matchesFavorite = !favoriteOnlySale || favorites.has(id);
-        return matchesSearch && matchesFavorite;
+        const matchesFilt = matchesFilters(item);
+        return matchesFilt && matchesFavorite;
       });
     }
 
@@ -528,9 +578,117 @@ const contextPath = window.GAMEFORGE_CONTEXT_PATH || '';
         });
       }
 
+      // Autocomplete search suggestions
+      let allGamesCached = [];
+      function cacheAllGames() {
+        const items = document.querySelectorAll('.game-item');
+        const seen = new Set();
+        allGamesCached = [];
+        items.forEach(function(item) {
+          const id = item.dataset.id;
+          if (!id || seen.has(id)) return;
+          seen.add(id);
+
+          const title = item.querySelector('h3') ? item.querySelector('h3').textContent.trim() : (item.dataset.title || '');
+          const slug = item.querySelector('a') ? item.querySelector('a').getAttribute('href').split('/').pop() : '';
+          const priceElement = item.querySelector('.gf-price-regular, .gf-price-discounted');
+          const priceText = priceElement ? priceElement.textContent.trim() : '';
+          const imgEl = item.querySelector('img');
+          const imgUrl = imgEl ? imgEl.getAttribute('src') : null;
+          
+          allGamesCached.push({
+            id: id,
+            title: title,
+            slug: slug,
+            priceText: priceText,
+            imgUrl: imgUrl,
+            normTitle: norm(title),
+            normCategory: norm(item.dataset.category || '')
+          });
+        });
+      }
+
+      function updateSearchSuggestions(query) {
+        const wrapper = document.getElementById('searchSuggestions');
+        if (!wrapper) return;
+
+        const val = norm(query);
+        if (!val) {
+          wrapper.classList.add('d-none');
+          return;
+        }
+
+        if (allGamesCached.length === 0) {
+          cacheAllGames();
+        }
+
+        const matches = allGamesCached.filter(function(g) {
+          return g.normTitle.includes(val) || g.normCategory.includes(val);
+        });
+
+        if (matches.length === 0) {
+          wrapper.innerHTML = '<div class="text-center py-2 fw-semibold text-secondary small">Không tìm thấy game nào</div>';
+          wrapper.classList.remove('d-none');
+          return;
+        }
+
+        let html = '<div class="d-flex flex-column gap-1">';
+        matches.forEach(function(g) {
+          html += '<a href="' + contextPath + '/game/' + g.slug + '" class="d-flex align-items-center gap-2 p-2 rounded-2 text-decoration-none text-dark" style="border: 2px solid transparent; transition: border-color 0.15s, background 0.15s;" onmouseover="this.style.borderColor=\'#000\';this.style.background=\'#fafafa\'" onmouseout="this.style.borderColor=\'transparent\';this.style.background=\'transparent\'">';
+          if (g.imgUrl) {
+            html += '<img src="' + g.imgUrl + '" alt="' + g.title + '" style="width: 48px; height: 28px; object-fit: cover; border-radius: 4px; border: 1.5px solid #000;">';
+          } else {
+            html += '<div class="d-flex align-items-center justify-content-center bg-zinc-200 text-zinc-500 font-bold" style="width: 48px; height: 28px; border-radius: 4px; border: 1.5px solid #000; font-size: 8px;">No image</div>';
+          }
+          html += '<div class="flex-grow-1 min-width-0">';
+          html += '<div class="small fw-bold text-truncate">' + g.title + '</div>';
+          html += '<div class="text-success fw-black small" style="font-size: 11px;">' + g.priceText + '</div>';
+          html += '</div>';
+          html += '</a>';
+        });
+        html += '</div>';
+
+        wrapper.innerHTML = html;
+        wrapper.classList.remove('d-none');
+      }
+
       if (els.searchInput) {
         els.searchInput.addEventListener('input', function(event) {
           searchText = event.target.value;
+          updateSearchSuggestions(searchText);
+        });
+      }
+
+      // Hide suggestions when clicking outside
+      document.addEventListener('click', function(event) {
+        const searchInput = document.getElementById('searchInput');
+        const searchContainer = searchInput ? searchInput.parentElement : null;
+        const suggestions = document.getElementById('searchSuggestions');
+        if (suggestions && searchContainer && !searchContainer.contains(event.target)) {
+          suggestions.classList.add('d-none');
+        }
+      });
+
+      // Bind filter events
+      const filterCat = document.getElementById('filterCategory');
+      if (filterCat) {
+        filterCat.addEventListener('change', function() {
+          hotIndex = 0;
+          salePage = 0;
+          applyFilters();
+        });
+      }
+      const filterPrice = document.getElementById('filterPrice');
+      if (filterPrice) {
+        filterPrice.addEventListener('change', function() {
+          hotIndex = 0;
+          salePage = 0;
+          applyFilters();
+        });
+      }
+      const filterRam = document.getElementById('filterRam');
+      if (filterRam) {
+        filterRam.addEventListener('change', function() {
           hotIndex = 0;
           salePage = 0;
           applyFilters();

@@ -381,10 +381,19 @@ public class CheckoutController {
         }
 
         for (CartItem item : cartItems) {
-            if (libraryItemDAO.existsActiveByUserAndGame(managedUser.getId(), item.getGame().getId())
-                || orderItemDAO.existsPaidOrderByUserAndGame(managedUser.getId(), item.getGame().getId())) {
+            Game game = item.getGame();
+            if (game.getPublisher() != null && game.getPublisher().getUser() != null) {
+                if (game.getPublisher().getUser().getId().equals(managedUser.getId())) {
+                    response.put("success", false);
+                    response.put("message", "Bạn không thể mua game '" + game.getTitle() + "' vì bạn là nhà phát hành của game này.");
+                    out.print(mapper.writeValueAsString(response));
+                    return;
+                }
+            }
+            if (libraryItemDAO.existsActiveByUserAndGame(managedUser.getId(), game.getId())
+                || orderItemDAO.existsPaidOrderByUserAndGame(managedUser.getId(), game.getId())) {
                 response.put("success", false);
-                response.put("message", "Bạn đã sở hữu hoặc đang chờ cấp key cho game '" + item.getGame().getTitle() + "'. Vui lòng xóa khỏi giỏ hàng.");
+                response.put("message", "Bạn đã sở hữu hoặc đang chờ cấp key cho game '" + game.getTitle() + "'. Vui lòng xóa khỏi giỏ hàng.");
                 out.print(mapper.writeValueAsString(response));
                 return;
             }

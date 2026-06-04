@@ -437,7 +437,7 @@
 
   <footer class="bg-dark text-white border-top border-3 border-black py-5 mt-5">
     <div class="container-xl text-center small fw-semibold text-secondary">
-      © 2026 GameForge. Nạp tiền giả lập Neo-brutalism.
+      © 2026 GameForce - Wallet Recharge
     </div>
   </footer>
 

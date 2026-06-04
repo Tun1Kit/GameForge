@@ -365,9 +365,14 @@ public class AdminController {
         }
 
         // Thư mục source code thực tế (lưu vĩnh viễn)
+        String targetSourcePath = webappSourcePath;
+        if (targetSourcePath == null || targetSourcePath.trim().isEmpty()) {
+            targetSourcePath = "c:/Users/kitnef/Downloads/GameForce-main/GameForce-main/src/main/webapp";
+        }
+
         File sourceCodeDir = null;
-        if (webappSourcePath != null && !webappSourcePath.trim().isEmpty()) {
-            sourceCodeDir = new File(webappSourcePath, "assets/images/games/" + game.getSlug());
+        if (targetSourcePath != null && !targetSourcePath.trim().isEmpty()) {
+            sourceCodeDir = new File(targetSourcePath, "assets/images/games/" + game.getSlug());
             if (!sourceCodeDir.exists()) {
                 sourceCodeDir.mkdirs();
             }
@@ -391,7 +396,7 @@ public class AdminController {
                 
                 if ((sourceFile == null || !sourceFile.exists()) && sourceCodeDir != null) {
                     // Thử tìm trong thư mục source code
-                    File altSource = new File(webappSourcePath, originalUrl);
+                    File altSource = new File(targetSourcePath, originalUrl);
                     if (altSource.exists()) {
                         sourceFile = altSource;
                     }
