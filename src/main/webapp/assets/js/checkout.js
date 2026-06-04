@@ -78,8 +78,23 @@
     }
     var html = '<div class="d-flex flex-column gap-3">';
     items.forEach(function (item) {
-      var formattedPrice = new Intl.NumberFormat("vi-VN").format(item.price);
-      var formattedOriginal = new Intl.NumberFormat("vi-VN").format(item.originalPrice);
+      var priceVal = parseFloat(item.price) || 0;
+      var originalVal = parseFloat(item.originalPrice) || 0;
+      var hasDiscount = originalVal > priceVal;
+      
+      var formattedPrice = new Intl.NumberFormat("vi-VN").format(priceVal);
+      
+      var priceBlock = '';
+      if (hasDiscount) {
+        var formattedOriginal = new Intl.NumberFormat("vi-VN").format(originalVal);
+        var discountPercent = Math.round((originalVal - priceVal) / originalVal * 100);
+        priceBlock = '<div class="small" style="text-decoration: line-through; color: var(--gf-muted);">' + formattedOriginal + ' VND</div>' +
+                     '<div class="fw-black fw-bold" style="color: var(--gf-green); font-size: 18px;">' + formattedPrice + ' VND</div>' +
+                     '<span class="badge bg-danger border-2 rounded-pill fw-black text-white" style="font-size:10px;">-' + discountPercent + '%</span>';
+      } else {
+        priceBlock = '<div class="fw-black fw-bold" style="color: var(--gf-green); font-size: 18px;">' + formattedPrice + ' VND</div>';
+      }
+
       html += '<div class="gf-cart-item" data-item-id="' + item.id + '" data-price="' + item.price + '">' +
         '<div class="d-flex align-items-center justify-content-between flex-wrap gap-3 w-100">' +
         '<div class="d-flex align-items-center gap-3 flex-grow-1">' +
@@ -91,16 +106,15 @@
         '<div class="d-flex flex-wrap gap-1 align-items-center">' +
         '<span class="gf-item-badge gf-badge-rpg">Hanh dong RPG</span>' +
         '</div>' +
+        (hasDiscount ? 
         '<div class="small fw-bold mt-1 d-flex align-items-center gap-1" style="color: var(--gf-pink);">' +
         '<span class="gf-item-badge gf-badge-promo"><i data-lucide="gift" width="12" height="12"></i> Dang co khuyen mai</span>' +
-        '</div>' +
+        '</div>' : '') +
         '</div>' +
         '</div>' +
         '<div class="d-flex align-items-center gap-3 flex-shrink-0">' +
         '<div class="text-end">' +
-        '<div class="small" style="text-decoration: line-through; color: var(--gf-muted);">' + formattedOriginal + ' VND</div>' +
-        '<div class="fw-black fw-bold" style="color: var(--gf-green); font-size: 18px;">' + formattedPrice + ' VND</div>' +
-        '<span class="badge bg-danger border-2 rounded-pill fw-black text-white" style="font-size:10px;">-25%</span>' +
+        priceBlock +
         '</div>' +
         '<div class="d-flex align-items-center">' +
         '<div class="gf-qty-box">' +

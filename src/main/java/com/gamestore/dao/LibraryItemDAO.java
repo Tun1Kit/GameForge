@@ -75,4 +75,39 @@ public class LibraryItemDAO extends BaseDAO<LibraryItem> {
                 .setParameter("userId", userId)
                 .getResultList();
     }
+
+    @Transactional(readOnly = true)
+    public long countDownloadsByGameId(Long gameId) {
+        Long count = sessionFactory.getCurrentSession()
+                .createQuery("SELECT COUNT(li) FROM LibraryItem li WHERE li.game.id = :gameId", Long.class)
+                .setParameter("gameId", gameId)
+                .uniqueResult();
+        return count != null ? count : 0L;
+    }
+
+    @Transactional(readOnly = true)
+    public LibraryItem findByUserAndGame(Long userId, Long gameId) {
+        String libHql = "FROM LibraryItem WHERE user.id = :userId AND game.id = :gameId";
+        List<LibraryItem> existingLibs = sessionFactory.getCurrentSession()
+                .createQuery(libHql, LibraryItem.class)
+                .setParameter("userId", userId)
+                .setParameter("gameId", gameId)
+                .getResultList();
+        return existingLibs.isEmpty() ? null : existingLibs.get(0);
+    }
+
+    @Transactional(readOnly = true)
+    public List<LibraryItem> findNonRefundedByGameIdWithDetails(Long gameId) {
+        return sessionFactory.getCurrentSession()
+                .createQuery("FROM LibraryItem li JOIN FETCH li.user u LEFT JOIN FETCH li.orderItem oi WHERE li.game.id = :gameId AND li.status != 'REFUNDED'", LibraryItem.class)
+                .setParameter("gameId", gameId)
+                .list();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Object[]> getSalesCountGroupByGame() {
+        return sessionFactory.getCurrentSession()
+                .createQuery("SELECT li.game.id, COUNT(li) FROM LibraryItem li WHERE li.status != 'REFUNDED' GROUP BY li.game.id", Object[].class)
+                .list();
+    }
 }

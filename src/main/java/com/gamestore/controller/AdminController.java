@@ -1,6 +1,13 @@
 package com.gamestore.controller;
 
 import com.gamestore.dao.UserDAO;
+import com.gamestore.dao.GameDAO;
+import com.gamestore.dao.NotificationDAO;
+import com.gamestore.dao.PatchNoteDAO;
+import com.gamestore.dao.LibraryItemDAO;
+import com.gamestore.dao.WalletTransactionDAO;
+import com.gamestore.dao.GameMediaDAO;
+import com.gamestore.dao.LicenseKeyDAO;
 import com.gamestore.dto.AdminStatsDTO;
 import com.gamestore.entity.KycRequest;
 import com.gamestore.entity.PayoutRequest;
@@ -40,12 +47,31 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
+@Transactional
 public class AdminController {
 
     private static final int PAGE_SIZE = 10;
 
     @Autowired
-    private SessionFactory sessionFactory;
+    private GameDAO gameDAO;
+
+    @Autowired
+    private NotificationDAO notificationDAO;
+
+    @Autowired
+    private PatchNoteDAO patchNoteDAO;
+
+    @Autowired
+    private LibraryItemDAO libraryItemDAO;
+
+    @Autowired
+    private WalletTransactionDAO walletTransactionDAO;
+
+    @Autowired
+    private GameMediaDAO gameMediaDAO;
+
+    @Autowired
+    private LicenseKeyDAO licenseKeyDAO;
 
     @Autowired
     private AdminDashboardService adminDashboardService;
@@ -309,31 +335,13 @@ public class AdminController {
     @GetMapping("/admin/games")
     @Transactional
     public String games(Model model) {
-        org.hibernate.Session session = sessionFactory.getCurrentSession();
-        
-        List<Game> pendingGames = session
-                .createQuery("FROM Game g LEFT JOIN FETCH g.publisher p WHERE g.status = 'PENDING' ORDER BY g.id DESC", Game.class)
-                .list();
-                
-        List<Game> pendingDeleteGames = session
-                .createQuery("FROM Game g LEFT JOIN FETCH g.publisher p WHERE g.status = 'PENDING_DELETE' ORDER BY g.id DESC", Game.class)
-                .list();
-                
-        List<PatchNote> pendingPatchNotes = session
-                .createQuery("FROM PatchNote pn JOIN FETCH pn.game g LEFT JOIN FETCH g.publisher p WHERE pn.status = 'PENDING' ORDER BY pn.publishedAt DESC", PatchNote.class)
-                .list();
-                
-        List<Game> allGames = session
-                .createQuery("FROM Game g LEFT JOIN FETCH g.publisher p ORDER BY g.id DESC", Game.class)
-                .list();
+        List<Game> pendingGames = gameDAO.findPendingGames();
+        List<Game> pendingDeleteGames = gameDAO.findPendingDeleteGames();
+        List<PatchNote> pendingPatchNotes = patchNoteDAO.findPendingPatchNotes();
+        List<Game> allGames = gameDAO.findAllGamesWithPublisher();
+        List<com.gamestore.entity.WalletTransaction> walletTransactions = walletTransactionDAO.findAllTransactionsWithDetails();
+        List<Object[]> salesData = libraryItemDAO.getSalesCountGroupByGame();
 
-        List<com.gamestore.entity.WalletTransaction> walletTransactions = session
-                .createQuery("FROM WalletTransaction wt JOIN FETCH wt.wallet w JOIN FETCH w.user u ORDER BY wt.id DESC", com.gamestore.entity.WalletTransaction.class)
-                .list();
-
-        List<Object[]> salesData = session
-                .createQuery("SELECT li.game.id, COUNT(li) FROM LibraryItem li WHERE li.status != 'REFUNDED' GROUP BY li.game.id", Object[].class)
-                .list();
         java.util.Map<Long, Long> salesCountMap = new java.util.HashMap<>();
         for (Object[] row : salesData) {
             Long gameId = (Long) row[0];
@@ -386,7 +394,7 @@ public class AdminController {
                 String originalUrl = media.getMediaUrl();
                 if (originalUrl == null || originalUrl.trim().isEmpty()) {
                     game.getMediaList().remove(media);
-                    sessionFactory.getCurrentSession().delete(media);
+                    gameMediaDAO.deleteById(media.getId());
                     continue;
                 }
                 
@@ -404,7 +412,7 @@ public class AdminController {
                 
                 if (sourceFile == null || !sourceFile.exists()) {
                     game.getMediaList().remove(media);
-                    sessionFactory.getCurrentSession().delete(media);
+                    gameMediaDAO.deleteById(media.getId());
                     continue;
                 }
                 
@@ -447,17 +455,16 @@ public class AdminController {
                 }
                 
                 media.setMediaUrl(newUrl);
-                sessionFactory.getCurrentSession().update(media);
+                gameMediaDAO.update(media);
             }
         }
-        sessionFactory.getCurrentSession().flush();
+        gameMediaDAO.flush();
     }
 
     @PostMapping("/admin/games/approve")
     @Transactional
     public String approveGame(@RequestParam("gameId") Long gameId, HttpSession session) {
-        org.hibernate.Session hqSession = sessionFactory.getCurrentSession();
-        Game game = hqSession.get(Game.class, gameId);
+        Game game = gameDAO.findById(gameId);
         if (game != null) {
             User currentUser = userContextService.getCurrentUser(session);
             String approvedBy = "Admin";
@@ -473,14 +480,10 @@ public class AdminController {
                 game.setStatus("DELETED");
                 game.setApprovedAt(java.time.LocalDateTime.now());
                 game.setApprovedBy(approvedBy);
-                hqSession.update(game);
+                gameDAO.update(game);
 
                 // Tìm tất cả các LibraryItem của game này mà chưa bị REFUNDED để hoàn tiền
-                List<LibraryItem> items = hqSession.createQuery(
-                        "FROM LibraryItem li JOIN FETCH li.user u LEFT JOIN FETCH li.orderItem oi WHERE li.game.id = :gameId AND li.status != 'REFUNDED'", 
-                        LibraryItem.class)
-                        .setParameter("gameId", gameId)
-                        .list();
+                List<LibraryItem> items = libraryItemDAO.findNonRefundedByGameIdWithDetails(gameId);
 
                 for (LibraryItem item : items) {
                     BigDecimal refundAmount = BigDecimal.ZERO;
@@ -495,7 +498,7 @@ public class AdminController {
                     
                     // Cập nhật trạng thái thư viện game
                     item.setStatus("REFUNDED");
-                    hqSession.update(item);
+                    libraryItemDAO.update(item);
 
                     // Gửi email thông báo hoàn tiền cho người dùng
                     try {
@@ -511,7 +514,7 @@ public class AdminController {
                     notif.setType("WALLET");
                     notif.setTargetUrl("/library");
                     notif.setUser(item.getUser());
-                    hqSession.save(notif);
+                    notificationDAO.save(notif);
                 }
 
                 // Notify Publisher User
@@ -522,7 +525,7 @@ public class AdminController {
                     notif.setType("GAME_APPROVAL");
                     notif.setTargetUrl("/publisher/games");
                     notif.setUser(game.getPublisher().getUser());
-                    hqSession.save(notif);
+                    notificationDAO.save(notif);
                 }
                 return "redirect:/admin/games?success=deleted-approved";
             } else {
@@ -534,7 +537,7 @@ public class AdminController {
                 // Tổ chức lại các file ảnh vật lý
                 organizeGameMediaFiles(game, servletContext);
 
-                hqSession.update(game);
+                gameDAO.update(game);
 
                 // Tự động tạo 100 license key cho game vừa được duyệt
                 for (int i = 0; i < 100; i++) {
@@ -545,7 +548,7 @@ public class AdminController {
                     key.setKeyString(keyString);
                     key.setStatus("AVAILABLE");
                     key.setCreatedAt(java.time.LocalDateTime.now());
-                    hqSession.save(key);
+                    licenseKeyDAO.save(key);
                 }
 
                 // Notify Publisher User
@@ -556,7 +559,7 @@ public class AdminController {
                     notif.setType("GAME_APPROVAL");
                     notif.setTargetUrl("/" + game.getSlug());
                     notif.setUser(game.getPublisher().getUser());
-                    hqSession.save(notif);
+                    notificationDAO.save(notif);
                 }
                 return "redirect:/admin/games?success=approved";
             }
@@ -567,13 +570,12 @@ public class AdminController {
     @PostMapping("/admin/games/reject")
     @Transactional
     public String rejectGame(@RequestParam("gameId") Long gameId) {
-        org.hibernate.Session session = sessionFactory.getCurrentSession();
-        Game game = session.get(Game.class, gameId);
+        Game game = gameDAO.findById(gameId);
         if (game != null) {
             if ("PENDING_DELETE".equals(game.getStatus())) {
                 // Từ chối xóa game, khôi phục lại trạng thái ACTIVE
                 game.setStatus("ACTIVE");
-                session.update(game);
+                gameDAO.update(game);
 
                 // Notify Publisher User
                 if (game.getPublisher() != null && game.getPublisher().getUser() != null) {
@@ -583,13 +585,13 @@ public class AdminController {
                     notif.setType("GAME_APPROVAL");
                     notif.setTargetUrl("/publisher/games");
                     notif.setUser(game.getPublisher().getUser());
-                    session.save(notif);
+                    notificationDAO.save(notif);
                 }
                 return "redirect:/admin/games?success=delete-rejected";
             } else {
                 // Từ chối đăng game mới
                 game.setStatus("REJECTED");
-                session.update(game);
+                gameDAO.update(game);
 
                 // Notify Publisher User
                 if (game.getPublisher() != null && game.getPublisher().getUser() != null) {
@@ -599,7 +601,7 @@ public class AdminController {
                     notif.setType("GAME_APPROVAL");
                     notif.setTargetUrl("/publisher/games");
                     notif.setUser(game.getPublisher().getUser());
-                    session.save(notif);
+                    notificationDAO.save(notif);
                 }
                 return "redirect:/admin/games?success=rejected";
             }
@@ -610,18 +612,14 @@ public class AdminController {
     @PostMapping("/admin/patchnotes/approve")
     @Transactional
     public String approvePatchNote(@RequestParam("patchNoteId") Long patchNoteId) {
-        org.hibernate.Session session = sessionFactory.getCurrentSession();
-        PatchNote note = session.get(PatchNote.class, patchNoteId);
+        PatchNote note = patchNoteDAO.findById(patchNoteId);
         if (note != null) {
             note.setStatus("ACTIVE");
-            session.update(note);
+            patchNoteDAO.update(note);
 
             // Tự động từ chối (REJECTED) tất cả các patch note PENDING khác cũ hơn (ID nhỏ hơn) của cùng game này
             if (note.getGame() != null) {
-                session.createQuery("UPDATE PatchNote pn SET pn.status = 'REJECTED' WHERE pn.game.id = :gameId AND pn.status = 'PENDING' AND pn.id < :noteId")
-                        .setParameter("gameId", note.getGame().getId())
-                        .setParameter("noteId", note.getId())
-                        .executeUpdate();
+                patchNoteDAO.rejectOlderPendingPatchNotes(note.getGame().getId(), note.getId());
             }
             
             // Notify Publisher
@@ -632,7 +630,7 @@ public class AdminController {
                 notif.setType("PATCH_NOTE_APPROVAL");
                 notif.setTargetUrl("/publisher/games/patch-notes/" + note.getGame().getId());
                 notif.setUser(note.getGame().getPublisher().getUser());
-                session.save(notif);
+                notificationDAO.save(notif);
             }
         }
         return "redirect:/admin/games?success=pn-approved";
@@ -641,11 +639,10 @@ public class AdminController {
     @PostMapping("/admin/patchnotes/reject")
     @Transactional
     public String rejectPatchNote(@RequestParam("patchNoteId") Long patchNoteId) {
-        org.hibernate.Session session = sessionFactory.getCurrentSession();
-        PatchNote note = session.get(PatchNote.class, patchNoteId);
+        PatchNote note = patchNoteDAO.findById(patchNoteId);
         if (note != null) {
             note.setStatus("REJECTED");
-            session.update(note);
+            patchNoteDAO.update(note);
             
             // Notify Publisher
             if (note.getGame() != null && note.getGame().getPublisher() != null && note.getGame().getPublisher().getUser() != null) {
@@ -655,7 +652,7 @@ public class AdminController {
                 notif.setType("PATCH_NOTE_APPROVAL");
                 notif.setTargetUrl("/publisher/games/patch-notes/" + note.getGame().getId());
                 notif.setUser(note.getGame().getPublisher().getUser());
-                session.save(notif);
+                notificationDAO.save(notif);
             }
         }
         return "redirect:/admin/games?success=pn-rejected";
@@ -684,10 +681,7 @@ public class AdminController {
     @GetMapping("/admin/badges")
     @Transactional
     public String badges(Model model) {
-        org.hibernate.Session session = sessionFactory.getCurrentSession();
-        List<Game> games = session
-                .createQuery("FROM Game g WHERE g.status != 'DELETED' ORDER BY g.id DESC", Game.class)
-                .list();
+        List<Game> games = gameDAO.findNonDeletedGames();
         List<Badge> allBadges = loadAvailableBadges();
         model.addAttribute("games", games);
         model.addAttribute("allBadges", allBadges);
@@ -699,9 +693,7 @@ public class AdminController {
     @Transactional
     public String viewNotifications(HttpSession session, Model model) {
         User currentUser = userContextService.getCurrentUser(session);
-        List<Notification> list = sessionFactory.getCurrentSession()
-                .createQuery("FROM Notification n WHERE n.user IS NULL ORDER BY n.createdAt DESC", Notification.class)
-                .list();
+        List<Notification> list = notificationDAO.findAdmins();
         model.addAttribute("notifications", list);
         model.addAttribute("currentUser", currentUser);
         return "admin/notifications";
@@ -710,11 +702,10 @@ public class AdminController {
     @PostMapping("/admin/notifications/mark-read")
     @Transactional
     public String markNotificationsAsRead(HttpSession session) {
-        sessionFactory.getCurrentSession()
-                .createQuery("UPDATE Notification n SET n.read = true WHERE n.user IS NULL")
-                .executeUpdate();
+        notificationDAO.markAllAsReadForAdmins();
         return "redirect:/admin/notifications";
     }
+
 
     private List<User> filterUsers(List<User> users, String search, String status, String role) {
         List<User> result = new ArrayList<>();

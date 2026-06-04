@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.gamestore.dao.KycRequestDAO;
 import com.gamestore.dao.PublisherProfileDAO;
+import com.gamestore.dao.NotificationDAO;
 import com.gamestore.entity.KycRequest;
 import com.gamestore.entity.PublisherProfile;
 
@@ -60,6 +61,9 @@ public class PublisherController {
 
     @Autowired
     private PatchNoteDAO patchNoteDAO;
+
+    @Autowired
+    private NotificationDAO notificationDAO;
 
     @Autowired
     private SessionFactory sessionFactory;
@@ -203,10 +207,7 @@ public class PublisherController {
             return "redirect:/kyc?error=need-kyc";
         }
 
-        List<Game> games = sessionFactory.getCurrentSession()
-                .createQuery("FROM Game g WHERE g.publisher.id = :pubId AND g.status != 'DELETED' ORDER BY g.id DESC", Game.class)
-                .setParameter("pubId", profile.getId())
-                .list();
+        List<Game> games = gameDAO.findByPublisherId(profile.getId());
 
         model.addAttribute("games", games);
         model.addAttribute("currentUser", currentUser);
@@ -361,7 +362,7 @@ public class PublisherController {
             notif.setType("GAME_APPROVAL");
             notif.setTargetUrl("/admin/games");
             notif.setUser(null); // Admin wide
-            sessionFactory.getCurrentSession().save(notif);
+            notificationDAO.save(notif);
 
             return "redirect:/publisher/games?success=added";
         } catch (Exception e) {
@@ -510,7 +511,7 @@ public class PublisherController {
             notif.setType("GAME_APPROVAL");
             notif.setTargetUrl("/admin/games");
             notif.setUser(null);
-            sessionFactory.getCurrentSession().save(notif);
+            notificationDAO.save(notif);
 
             return "redirect:/publisher/games?success=edited";
         } catch (Exception e) {
@@ -536,10 +537,7 @@ public class PublisherController {
         }
 
         // Đổi sang PENDING_DELETE bằng HQL UPDATE trực tiếp để tránh các lỗi Hibernate validate/cascade
-        sessionFactory.getCurrentSession()
-            .createQuery("UPDATE Game g SET g.status = 'PENDING_DELETE' WHERE g.id = :id")
-            .setParameter("id", id)
-            .executeUpdate();
+        gameDAO.updateStatus(id, "PENDING_DELETE");
 
         // Gửi thông báo cho Admin
         Notification notif = new Notification();
@@ -548,7 +546,7 @@ public class PublisherController {
         notif.setType("GAME_APPROVAL");
         notif.setTargetUrl("/admin/games");
         notif.setUser(null);
-        sessionFactory.getCurrentSession().save(notif);
+        notificationDAO.save(notif);
 
         return "redirect:/publisher/games?success=delete-requested";
     }
@@ -613,7 +611,7 @@ public class PublisherController {
         notif.setType("PATCH_NOTE_APPROVAL");
         notif.setTargetUrl("/admin/games");
         notif.setUser(null);
-        sessionFactory.getCurrentSession().save(notif);
+        notificationDAO.save(notif);
 
         return "redirect:/publisher/games/patch-notes/" + id + "?success=added";
     }
@@ -695,10 +693,7 @@ public class PublisherController {
         User currentUser = userContextService.getCurrentUser(session);
         if (currentUser == null) return "redirect:/login";
 
-        List<Notification> list = sessionFactory.getCurrentSession()
-                .createQuery("FROM Notification n WHERE n.user.id = :userId ORDER BY n.createdAt DESC", Notification.class)
-                .setParameter("userId", currentUser.getId())
-                .list();
+        List<Notification> list = notificationDAO.findByUser(currentUser.getId());
         model.addAttribute("notifications", list);
         model.addAttribute("currentUser", currentUser);
         return "publisher/notifications";
@@ -709,10 +704,7 @@ public class PublisherController {
         User currentUser = userContextService.getCurrentUser(session);
         if (currentUser == null) return "redirect:/login";
 
-        sessionFactory.getCurrentSession()
-                .createQuery("UPDATE Notification n SET n.read = true WHERE n.user.id = :userId")
-                .setParameter("userId", currentUser.getId())
-                .executeUpdate();
+        notificationDAO.markAllAsRead(currentUser.getId());
         return "redirect:/publisher/notifications";
     }
 

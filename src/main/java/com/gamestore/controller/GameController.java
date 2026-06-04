@@ -1,12 +1,13 @@
 package com.gamestore.controller;
 
+import com.gamestore.dao.GameDAO;
+import com.gamestore.dao.LicenseKeyDAO;
 import com.gamestore.dao.LibraryItemDAO;
 import com.gamestore.dao.OrderItemDAO;
 import com.gamestore.entity.Game;
 import com.gamestore.entity.User;
 import com.gamestore.service.UserContextService;
 import com.gamestore.service.WalletService;
-import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +24,10 @@ import java.util.List;
 public class GameController {
 
     @Autowired
-    private SessionFactory sessionFactory;
+    private GameDAO gameDAO;
+
+    @Autowired
+    private LicenseKeyDAO licenseKeyDAO;
 
     @Autowired
     private WalletService walletService;
@@ -41,9 +45,7 @@ public class GameController {
     public String index(ModelMap model, HttpSession session) {
         User currentUser = userContextService.getCurrentUser(session);
 
-        List<Game> listGames = sessionFactory.getCurrentSession()
-                .createQuery("from Game where status = 'ACTIVE'", Game.class)
-                .list();
+        List<Game> listGames = gameDAO.findActiveGames();
 
         model.addAttribute("games", listGames);
         model.addAttribute("currentUser", currentUser);
@@ -61,11 +63,11 @@ public class GameController {
 
         return "index";
     }
+
     @RequestMapping(value = "/api/admin/generate-keys", method = RequestMethod.GET, produces = "text/plain;charset=UTF-8")
     @org.springframework.web.bind.annotation.ResponseBody
     public String generateKeys() {
-        org.hibernate.Session hqSession = sessionFactory.getCurrentSession();
-        List<Game> games = hqSession.createQuery("from Game", Game.class).list();
+        List<Game> games = gameDAO.findAll();
         int totalGenerated = 0;
         for (Game game : games) {
             for (int i = 0; i < 500; i++) {
@@ -76,7 +78,7 @@ public class GameController {
                 key.setKeyString(keyString);
                 key.setStatus("AVAILABLE");
                 key.setCreatedAt(java.time.LocalDateTime.now());
-                hqSession.save(key);
+                licenseKeyDAO.save(key);
                 totalGenerated++;
             }
         }

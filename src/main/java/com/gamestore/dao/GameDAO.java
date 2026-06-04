@@ -50,4 +50,49 @@ public class GameDAO extends BaseDAO<Game> {
             return null;
         }
     }
+
+    @Transactional(readOnly = true)
+    public List<Game> findByPublisherId(Long publisherId) {
+        return sessionFactory.getCurrentSession()
+                .createQuery("FROM Game g WHERE g.publisher.id = :pubId AND g.status != 'DELETED' ORDER BY g.id DESC", Game.class)
+                .setParameter("pubId", publisherId)
+                .list();
+    }
+
+    @Transactional
+    public void updateStatus(Long id, String status) {
+        sessionFactory.getCurrentSession()
+                .createQuery("UPDATE Game g SET g.status = :status WHERE g.id = :id")
+                .setParameter("status", status)
+                .setParameter("id", id)
+                .executeUpdate();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Game> findPendingGames() {
+        return sessionFactory.getCurrentSession()
+                .createQuery("FROM Game g LEFT JOIN FETCH g.publisher p WHERE g.status = 'PENDING' ORDER BY g.id DESC", Game.class)
+                .list();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Game> findPendingDeleteGames() {
+        return sessionFactory.getCurrentSession()
+                .createQuery("FROM Game g LEFT JOIN FETCH g.publisher p WHERE g.status = 'PENDING_DELETE' ORDER BY g.id DESC", Game.class)
+                .list();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Game> findNonDeletedGames() {
+        return sessionFactory.getCurrentSession()
+                .createQuery("FROM Game g WHERE g.status != 'DELETED' ORDER BY g.id DESC", Game.class)
+                .list();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Game> findAllGamesWithPublisher() {
+        return sessionFactory.getCurrentSession()
+                .createQuery("FROM Game g LEFT JOIN FETCH g.publisher p ORDER BY g.id DESC", Game.class)
+                .list();
+    }
 }

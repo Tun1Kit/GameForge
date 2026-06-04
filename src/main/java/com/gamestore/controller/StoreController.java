@@ -5,6 +5,8 @@ import com.gamestore.dao.ReviewDAO;
 import com.gamestore.dao.WishlistItemDAO;
 import com.gamestore.dao.LibraryItemDAO;
 import com.gamestore.dao.OrderItemDAO;
+import com.gamestore.dao.NotificationDAO;
+import com.gamestore.dao.PatchNoteDAO;
 import com.gamestore.entity.Game;
 import com.gamestore.entity.Review;
 import com.gamestore.entity.User;
@@ -49,6 +51,12 @@ public class StoreController implements InitializingBean {
 
     @Autowired
     private OrderItemDAO orderItemDAO;
+
+    @Autowired
+    private NotificationDAO notificationDAO;
+
+    @Autowired
+    private PatchNoteDAO patchNoteDAO;
 
     @Autowired
     private UserContextService userContextService;
@@ -180,11 +188,7 @@ public class StoreController implements InitializingBean {
         model.addAttribute("activeBadgeIds", activeBadgeIds);
 
         // Đếm số lượng tải thực tế từ DB để gán cho các huy hiệu dynamic
-        Long downloadCount = (Long) sessionFactory.getCurrentSession()
-                .createQuery("SELECT COUNT(li) FROM LibraryItem li WHERE li.game.id = :gameId")
-                .setParameter("gameId", game.getId())
-                .uniqueResult();
-        if (downloadCount == null) downloadCount = 0L;
+        Long downloadCount = libraryItemDAO.countDownloadsByGameId(game.getId());
 
         for (Badge badge : allBadges) {
             if (activeBadgeIds.contains(badge.getId())) {
@@ -230,10 +234,7 @@ public class StoreController implements InitializingBean {
         }
 
         // Nạp danh sách các patch note đã được phê duyệt (ACTIVE) của game
-        List<com.gamestore.entity.PatchNote> patchNotes = sessionFactory.getCurrentSession()
-                .createQuery("FROM PatchNote pn WHERE pn.game.id = :gameId AND pn.status = 'ACTIVE' ORDER BY pn.publishedAt DESC", com.gamestore.entity.PatchNote.class)
-                .setParameter("gameId", game.getId())
-                .list();
+        List<com.gamestore.entity.PatchNote> patchNotes = patchNoteDAO.findActiveByGameId(game.getId());
         model.addAttribute("patchNotes", patchNotes);
 
         return "store/detail";
@@ -270,7 +271,7 @@ public class StoreController implements InitializingBean {
 
         WishlistItem existing = wishlistItemDAO.findByUserAndGame(currentUser.getId(), gameId);
         if (existing != null) {
-            sessionFactory.getCurrentSession().delete(existing);
+            wishlistItemDAO.deleteById(existing.getId());
             long count = wishlistItemDAO.getWishlistCount(currentUser.getId());
             out.print("STATUS=REMOVED&COUNT=" + count);
         } else {
@@ -283,7 +284,7 @@ public class StoreController implements InitializingBean {
             WishlistItem newItem = new WishlistItem();
             newItem.setUser(currentUser);
             newItem.setGame(game);
-            sessionFactory.getCurrentSession().save(newItem);
+            wishlistItemDAO.save(newItem);
 
             long count = wishlistItemDAO.getWishlistCount(currentUser.getId());
             out.print("STATUS=ADDED&COUNT=" + count);
@@ -353,7 +354,7 @@ public class StoreController implements InitializingBean {
         newReview.setGame(game);
         newReview.setRating(rating);
         newReview.setComment(comment);
-        sessionFactory.getCurrentSession().save(newReview);
+        reviewDAO.save(newReview);
 
         // Notify Publisher
         if (game.getPublisher() != null && game.getPublisher().getUser() != null) {
@@ -363,7 +364,7 @@ public class StoreController implements InitializingBean {
             notif.setType("REVIEW");
             notif.setTargetUrl("/" + game.getSlug());
             notif.setUser(game.getPublisher().getUser());
-            sessionFactory.getCurrentSession().save(notif);
+            notificationDAO.save(notif);
         }
 
         return "redirect:/" + game.getSlug();
@@ -379,7 +380,7 @@ public class StoreController implements InitializingBean {
             return "redirect:/login";
         }
 
-        Review review = (Review) sessionFactory.getCurrentSession().get(Review.class, reviewId);
+        Review review = reviewDAO.findById(reviewId);
         if (review == null) {
             return "redirect:/";
         }
@@ -397,8 +398,11 @@ public class StoreController implements InitializingBean {
         }
 
         if (isAdmin || isPublisher) {
-            review.setPublisherReply(replyText);
-            sessionFactory.getCurrentSession().update(review);
+            sessionFactory.getCurrentSession()
+                .createQuery("UPDATE Review r SET r.publisherReply = :replyText WHERE r.id = :reviewId")
+                .setParameter("replyText", replyText)
+                .setParameter("reviewId", reviewId)
+                .executeUpdate();
         }
 
         return "redirect:/" + review.getGame().getSlug();
@@ -413,7 +417,7 @@ public class StoreController implements InitializingBean {
             return "redirect:/login";
         }
 
-        Review review = (Review) sessionFactory.getCurrentSession().get(Review.class, reviewId);
+        Review review = reviewDAO.findById(reviewId);
         if (review == null) {
             return "redirect:/";
         }
@@ -426,8 +430,10 @@ public class StoreController implements InitializingBean {
         }
 
         if (isAdmin || isPublisher) {
-            review.setPublisherReply(null);
-            sessionFactory.getCurrentSession().update(review);
+            sessionFactory.getCurrentSession()
+                .createQuery("UPDATE Review r SET r.publisherReply = NULL WHERE r.id = :reviewId")
+                .setParameter("reviewId", reviewId)
+                .executeUpdate();
         }
 
         return "redirect:/" + review.getGame().getSlug();
@@ -444,7 +450,7 @@ public class StoreController implements InitializingBean {
             return "redirect:/login";
         }
 
-        Review review = (Review) sessionFactory.getCurrentSession().get(Review.class, reviewId);
+        Review review = reviewDAO.findById(reviewId);
         if (review == null) {
             return "redirect:/";
         }
@@ -469,9 +475,12 @@ public class StoreController implements InitializingBean {
 
         // Kiểm tra quyền: Chỉ chính chủ nhân của review mới được bổ sung
         if (review.getUser().getId().equals(currentUser.getId())) {
-            review.setUserFollowUp(followUpText);
-            review.setUserFollowUpRating(followUpRating);
-            sessionFactory.getCurrentSession().update(review);
+            sessionFactory.getCurrentSession()
+                .createQuery("UPDATE Review r SET r.userFollowUp = :text, r.userFollowUpRating = :rating WHERE r.id = :reviewId")
+                .setParameter("text", followUpText)
+                .setParameter("rating", followUpRating)
+                .setParameter("reviewId", reviewId)
+                .executeUpdate();
 
             // Notify Publisher
             if (review.getGame().getPublisher() != null && review.getGame().getPublisher().getUser() != null) {
@@ -481,7 +490,7 @@ public class StoreController implements InitializingBean {
                 notif.setType("REVIEW");
                 notif.setTargetUrl("/" + review.getGame().getSlug());
                 notif.setUser(review.getGame().getPublisher().getUser());
-                sessionFactory.getCurrentSession().save(notif);
+                notificationDAO.save(notif);
             }
         }
 

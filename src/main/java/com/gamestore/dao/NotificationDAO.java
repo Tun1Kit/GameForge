@@ -37,4 +37,17 @@ public class NotificationDAO extends BaseDAO<Notification> {
                 .createQuery("SELECT COUNT(n.id) FROM Notification n WHERE n.user IS NULL AND n.read = false", Long.class)
                 .uniqueResult();
     }
+
+    public void markAllAsRead(Long userId) {
+        sessionFactory.getCurrentSession()
+                .createQuery("UPDATE Notification n SET n.read = true WHERE n.user.id = :userId")
+                .setParameter("userId", userId)
+                .executeUpdate();
+    }
+
+    public void markAllAsReadForAdmins() {
+        sessionFactory.getCurrentSession()
+                .createQuery("UPDATE Notification n SET n.read = true WHERE n.user IS NULL")
+                .executeUpdate();
+    }
 }

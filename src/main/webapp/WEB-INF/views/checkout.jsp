@@ -452,12 +452,12 @@
         price: ${item.game.price},
         title: "${fn:escapeXml(item.game.title)}",
         image: "<c:choose><c:when test='${not empty item.game.mediaList}'>${fn:startsWith(item.game.mediaList[0].mediaUrl, 'http') ? item.game.mediaList[0].mediaUrl : pageContext.request.contextPath.concat(item.game.mediaList[0].mediaUrl)}</c:when><c:otherwise>https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg</c:otherwise></c:choose>",
-        originalPrice: ${item.game.originalPrice}
+        originalPrice: ${not empty item.game.originalPrice ? item.game.originalPrice : 'null'}
       }<c:if test="${not vs.last}">,</c:if>
     </c:forEach>
     ];
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="${pageContext.request.contextPath}/assets/js/checkout.js?v=20250529b"></script>
+  <script src="${pageContext.request.contextPath}/assets/js/checkout.js?v=20260604"></script>
 </body>
 </html>

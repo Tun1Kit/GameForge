@@ -22,7 +22,10 @@ public abstract class BaseDAO<T> {
     }
 
     public T findById(Long id) {
-        return sessionFactory.getCurrentSession().get(clazz, id);
+        return sessionFactory.getCurrentSession()
+                             .createQuery("from " + clazz.getName() + " where id = :id", clazz)
+                             .setParameter("id", id)
+                             .uniqueResult();
     }
     
     public void save(T entity) {
@@ -35,5 +38,16 @@ public abstract class BaseDAO<T> {
 
     public void saveOrUpdate(T entity) {
         sessionFactory.getCurrentSession().saveOrUpdate(entity);
+    }
+
+    public void deleteById(Long id) {
+        sessionFactory.getCurrentSession()
+                      .createQuery("delete from " + clazz.getName() + " where id = :id")
+                      .setParameter("id", id)
+                      .executeUpdate();
+    }
+
+    public void flush() {
+        sessionFactory.getCurrentSession().flush();
     }
 }

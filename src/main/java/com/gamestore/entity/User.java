@@ -34,6 +34,7 @@ public class User {
 
     @Column(length = 100)
     @Size(max = 100, message = "Họ tên không được vượt quá 100 ký tự")
+    @org.hibernate.annotations.Nationalized
     private String fullName;
 
     @Column(length = 500)

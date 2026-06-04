@@ -90,4 +90,14 @@ public class WalletTransactionDAO extends BaseDAO<WalletTransaction> {
                 .setParameter("userId", userId)
                 .getResultList();
     }
+
+    @Transactional(readOnly = true)
+    public List<WalletTransaction> findAllTransactionsWithDetails() {
+        return sessionFactory.getCurrentSession()
+                .createQuery(
+                        "FROM WalletTransaction wt JOIN FETCH wt.wallet w JOIN FETCH w.user u ORDER BY wt.id DESC",
+                        WalletTransaction.class)
+                .list();
+    }
 }
+

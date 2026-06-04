@@ -13,10 +13,12 @@ public class Game {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @org.hibernate.annotations.Nationalized
     private String title;
     private String slug;
     
     @Column(columnDefinition = "NVARCHAR(MAX)")
+    @org.hibernate.annotations.Nationalized
     private String description;
 
     private BigDecimal price;
@@ -24,6 +26,7 @@ public class Game {
     @Column(name = "original_price")
     private BigDecimal originalPrice;
 
+    @org.hibernate.annotations.Nationalized
     private String developer;
 
     @Column(name = "releaseDate")
@@ -31,9 +34,11 @@ public class Game {
     private java.time.LocalDate releaseDate;
 
     @Column(name = "minimumRequirements", columnDefinition = "NVARCHAR(MAX)")
+    @org.hibernate.annotations.Nationalized
     private String minimumRequirements;
 
     @Column(name = "recommendedRequirements", columnDefinition = "NVARCHAR(MAX)")
+    @org.hibernate.annotations.Nationalized
     private String recommendedRequirements;
 
     @Column(name = "createdAt", nullable = false)
@@ -52,6 +57,7 @@ public class Game {
     private java.time.LocalDateTime approvedAt;
 
     @Column(name = "approvedBy")
+    @org.hibernate.annotations.Nationalized
     private String approvedBy;
 
     // Sửa lại: Dùng List<GameMedia> và thêm FetchType.EAGER để load ảnh nhanh
