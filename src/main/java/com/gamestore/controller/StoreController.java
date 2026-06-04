@@ -332,21 +332,21 @@ public class StoreController implements InitializingBean {
         // --- Kiểm tra sở hữu game ---
         boolean owned = libraryItemDAO.existsActiveByUserAndGame(currentUser.getId(), gameId);
         if (!owned) {
-            return "redirect:/" + game.getSlug() + "?error=not-owned";
+            return "redirect:/game/" + game.getSlug() + "?error=not-owned";
         }
 
         // --- Server-side validation ---
         if (rating == null || rating < 1 || rating > 5) {
-            return "redirect:/" + game.getSlug();
+            return "redirect:/game/" + game.getSlug();
         }
         if (comment == null || comment.trim().isEmpty() || comment.length() > 2000) {
-            return "redirect:/" + game.getSlug();
+            return "redirect:/game/" + game.getSlug();
         }
 
         // Chặn không cho cập nhật đánh giá cũ (Đánh giá gốc là lưu cứng)
         Review existing = reviewDAO.findByUserAndGame(currentUser.getId(), gameId);
         if (existing != null) {
-            return "redirect:/" + game.getSlug() + "?error=already-reviewed";
+            return "redirect:/game/" + game.getSlug() + "?error=already-reviewed";
         }
 
         Review newReview = new Review();
@@ -362,12 +362,12 @@ public class StoreController implements InitializingBean {
             notif.setTitle("Đánh giá game mới");
             notif.setContent("Game '" + game.getTitle() + "' đã nhận được đánh giá " + rating + "★ từ @" + currentUser.getUsername());
             notif.setType("REVIEW");
-            notif.setTargetUrl("/" + game.getSlug());
+            notif.setTargetUrl("/game/" + game.getSlug());
             notif.setUser(game.getPublisher().getUser());
             notificationDAO.save(notif);
         }
 
-        return "redirect:/" + game.getSlug();
+        return "redirect:/game/" + game.getSlug();
     }
 
     // 5b. API Nhà phát triển/Admin Phản hồi Đánh giá
@@ -387,7 +387,7 @@ public class StoreController implements InitializingBean {
 
         // --- Server-side validation ---
         if (replyText == null || replyText.trim().isEmpty() || replyText.length() > 1000) {
-            return "redirect:/" + review.getGame().getSlug();
+            return "redirect:/game/" + review.getGame().getSlug();
         }
 
         // Kiểm tra quyền: Chỉ Admin hoặc chính Publisher sở hữu game này mới được phản hồi
@@ -405,7 +405,7 @@ public class StoreController implements InitializingBean {
                 .executeUpdate();
         }
 
-        return "redirect:/" + review.getGame().getSlug();
+        return "redirect:/game/" + review.getGame().getSlug();
     }
 
     // 5d. API Xóa phản hồi đánh giá
@@ -436,7 +436,7 @@ public class StoreController implements InitializingBean {
                 .executeUpdate();
         }
 
-        return "redirect:/" + review.getGame().getSlug();
+        return "redirect:/game/" + review.getGame().getSlug();
     }
 
     // 5c. API Người dùng Bổ sung Đánh giá kèm số sao (Chỉ 1 lần sau khi được phản hồi)
@@ -457,20 +457,20 @@ public class StoreController implements InitializingBean {
 
         // --- Server-side validation ---
         if (followUpRating == null || followUpRating < 1 || followUpRating > 5) {
-            return "redirect:/" + review.getGame().getSlug();
+            return "redirect:/game/" + review.getGame().getSlug();
         }
         if (followUpText == null || followUpText.trim().isEmpty() || followUpText.length() > 1000) {
-            return "redirect:/" + review.getGame().getSlug();
+            return "redirect:/game/" + review.getGame().getSlug();
         }
 
         // Phải có phản hồi từ Admin/Publisher mới được bổ sung
         if (review.getPublisherReply() == null || review.getPublisherReply().trim().isEmpty()) {
-            return "redirect:/" + review.getGame().getSlug() + "?error=no-reply-yet";
+            return "redirect:/game/" + review.getGame().getSlug() + "?error=no-reply-yet";
         }
 
         // Chỉ được bổ sung duy nhất 1 lần
         if ((review.getUserFollowUp() != null && !review.getUserFollowUp().trim().isEmpty()) || review.getUserFollowUpRating() != null) {
-            return "redirect:/" + review.getGame().getSlug() + "?error=already-followed-up";
+            return "redirect:/game/" + review.getGame().getSlug() + "?error=already-followed-up";
         }
 
         // Kiểm tra quyền: Chỉ chính chủ nhân của review mới được bổ sung
@@ -488,13 +488,13 @@ public class StoreController implements InitializingBean {
                 notif.setTitle("Đánh giá bổ sung");
                 notif.setContent("Người dùng @" + currentUser.getUsername() + " đã thêm ý kiến bổ sung " + followUpRating + "★ cho game '" + review.getGame().getTitle() + "'");
                 notif.setType("REVIEW");
-                notif.setTargetUrl("/" + review.getGame().getSlug());
+                notif.setTargetUrl("/game/" + review.getGame().getSlug());
                 notif.setUser(review.getGame().getPublisher().getUser());
                 notificationDAO.save(notif);
             }
         }
 
-        return "redirect:/" + review.getGame().getSlug();
+        return "redirect:/game/" + review.getGame().getSlug();
     }
 
     // 6. ADMIN API: LƯU HUY HIỆU TÍCH CHỌN CHO GAME
