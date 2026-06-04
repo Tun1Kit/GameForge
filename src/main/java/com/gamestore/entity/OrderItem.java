@@ -58,4 +58,9 @@ public class OrderItem {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getFormattedPaidAt() {
+        if (order == null || order.getPaidAt() == null) return "";
+        return order.getPaidAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    }
 }

@@ -4,6 +4,7 @@ import com.gamestore.dao.GameDAO;
 import com.gamestore.dao.ReviewDAO;
 import com.gamestore.dao.WishlistItemDAO;
 import com.gamestore.dao.LibraryItemDAO;
+import com.gamestore.dao.OrderItemDAO;
 import com.gamestore.entity.Game;
 import com.gamestore.entity.Review;
 import com.gamestore.entity.User;
@@ -45,6 +46,9 @@ public class StoreController implements InitializingBean {
 
     @Autowired
     private LibraryItemDAO libraryItemDAO;
+
+    @Autowired
+    private OrderItemDAO orderItemDAO;
 
     @Autowired
     private UserContextService userContextService;
@@ -216,7 +220,8 @@ public class StoreController implements InitializingBean {
             WishlistItem wishItem = wishlistItemDAO.findByUserAndGame(currentUser.getId(), game.getId());
             model.addAttribute("isFavorited", wishItem != null);
 
-            boolean owned = libraryItemDAO.existsActiveByUserAndGame(currentUser.getId(), game.getId());
+            boolean owned = libraryItemDAO.existsActiveByUserAndGame(currentUser.getId(), game.getId())
+                         || orderItemDAO.existsPaidOrderByUserAndGame(currentUser.getId(), game.getId());
             model.addAttribute("isOwned", owned);
         } else {
             model.addAttribute("hasReviewed", false);

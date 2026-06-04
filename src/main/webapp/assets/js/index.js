@@ -271,6 +271,7 @@ const contextPath = window.GAMEFORGE_CONTEXT_PATH || '';
           if (params.ERROR) {
             cart.delete(gameId);
             saveState();
+            alert(params.ERROR);
           }
           updateCounts();
         }).catch(function() {});
@@ -346,7 +347,15 @@ const contextPath = window.GAMEFORGE_CONTEXT_PATH || '';
     }
 
     function changeHot(step) {
-      hotIndex += step;
+      const visibleItems = getHotItems();
+      const visibleCount = visibleHot();
+      const max = Math.max(0, visibleItems.length - visibleCount);
+
+      if (max > 0) {
+        hotIndex = (hotIndex + step + max + 1) % (max + 1);
+      } else {
+        hotIndex = 0;
+      }
       updateHot();
     }
 

@@ -56,6 +56,11 @@ public class LibraryItem {
     public LocalDateTime getAcquiredAt() { return acquiredAt; }
     public void setAcquiredAt(LocalDateTime acquiredAt) { this.acquiredAt = acquiredAt; }
 
+    public String getFormattedAcquiredAt() {
+        if (acquiredAt == null) return "";
+        return acquiredAt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    }
+
     public OrderItem getOrderItem() { return orderItem; }
     public void setOrderItem(OrderItem orderItem) { this.orderItem = orderItem; }
 }

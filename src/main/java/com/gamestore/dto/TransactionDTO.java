@@ -13,6 +13,7 @@ public class TransactionDTO {
     private BigDecimal amount;
     private BigDecimal runningBalance;
     private String status;
+    private String paymentMethod;
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -32,4 +33,6 @@ public class TransactionDTO {
     public void setRunningBalance(BigDecimal runningBalance) { this.runningBalance = runningBalance; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 }

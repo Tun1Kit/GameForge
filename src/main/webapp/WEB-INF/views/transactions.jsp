@@ -301,7 +301,16 @@
                             <strong class="text-dark text-truncate d-block" style="font-size: 14px; max-width: 300px;" title="${fn:escapeXml(tx.description)}">
                               ${tx.description}
                             </strong>
-                            <span class="d-block small text-secondary" style="font-size: 11px;">Thanh toán bằng ví điện tử</span>
+                            <span class="d-block small text-secondary" style="font-size: 11px;">
+                              <c:choose>
+                                <c:when test="${tx.paymentMethod == 'GAMEFORGE' || tx.paymentMethod == 'WALLET'}">Thanh toán bằng ví GameForge</c:when>
+                                <c:when test="${tx.paymentMethod == 'CARD'}">Thanh toán bằng thẻ Visa/Mastercard</c:when>
+                                <c:when test="${tx.paymentMethod == 'BANK'}">Thanh toán bằng chuyển khoản ngân hàng</c:when>
+                                <c:when test="${tx.paymentMethod == 'MOMO'}">Thanh toán bằng ví MoMo</c:when>
+                                <c:when test="${tx.paymentMethod == 'ZALOPAY'}">Thanh toán bằng ví ZaloPay</c:when>
+                                <c:otherwise>Thanh toán qua ${tx.paymentMethod}</c:otherwise>
+                              </c:choose>
+                            </span>
                           </div>
                         </c:otherwise>
                       </c:choose>

@@ -2,6 +2,7 @@ package com.gamestore.controller;
 
 import com.gamestore.dao.CartItemDAO;
 import com.gamestore.dao.LibraryItemDAO;
+import com.gamestore.dao.OrderItemDAO;
 import com.gamestore.entity.CartItem;
 import com.gamestore.entity.Game;
 import com.gamestore.entity.User;
@@ -32,6 +33,9 @@ public class CartApiController {
     private LibraryItemDAO libraryItemDAO;
 
     @Autowired
+    private OrderItemDAO orderItemDAO;
+
+    @Autowired
     private UserContextService userContextService;
 
     private void setJsonContentType(HttpServletResponse response) throws IOException {
@@ -59,8 +63,9 @@ public class CartApiController {
             return;
         }
 
-        if (libraryItemDAO.existsActiveByUserAndGame(currentUser.getId(), gameId)) {
-            out.print("ERROR=Bạn đã sở hữu game này rồi. Hãy vào thư viện để tải về!");
+        if (libraryItemDAO.existsActiveByUserAndGame(currentUser.getId(), gameId)
+            || orderItemDAO.existsPaidOrderByUserAndGame(currentUser.getId(), gameId)) {
+            out.print("ERROR=Bạn đã sở hữu hoặc thanh toán game này rồi. Hãy vào thư viện để tải về hoặc chờ cấp key!");
             return;
         }
 

@@ -19,7 +19,7 @@ import java.util.Map;
 @Service
 public class EmailService {
 
-    @Autowired(required = false)
+    @Autowired
     private JavaMailSender mailSender;
 
     @Value("${email.enabled:false}")
@@ -121,7 +121,19 @@ public class EmailService {
         sb.append("<div style='border: 2px solid #000000; background-color: #ffffff; padding: 15px; margin-bottom: 20px; box-shadow: 3px 3px 0px #000000;'>");
         sb.append("<p style='margin: 0 0 8px 0;'><strong>Mã đơn hàng:</strong> #").append(order.getId()).append("</p>");
         sb.append("<p style='margin: 0 0 8px 0;'><strong>Thời gian:</strong> ").append(order.getCreatedAt().format(dtf)).append("</p>");
-        sb.append("<p style='margin: 0 0 8px 0;'><strong>Phương thức thanh toán:</strong> ").append(order.getPaymentMethod()).append("</p>");
+        String methodDisplay = order.getPaymentMethod();
+        if ("GAMEFORGE".equals(methodDisplay) || "WALLET".equals(methodDisplay)) {
+            methodDisplay = "Ví GameForge";
+        } else if ("MOMO".equals(methodDisplay)) {
+            methodDisplay = "Ví MoMo";
+        } else if ("ZALOPAY".equals(methodDisplay)) {
+            methodDisplay = "Ví ZaloPay";
+        } else if ("CARD".equals(methodDisplay)) {
+            methodDisplay = "Thẻ Visa/Mastercard";
+        } else if ("BANK".equals(methodDisplay)) {
+            methodDisplay = "Chuyển khoản ngân hàng";
+        }
+        sb.append("<p style='margin: 0 0 8px 0;'><strong>Phương thức thanh toán:</strong> ").append(methodDisplay).append("</p>");
         sb.append("<p style='margin: 0;'><strong>Trạng thái:</strong> <span style='background-color: #2ECC71; color: #000000; padding: 2px 8px; border: 1.5px solid #000000; font-weight: bold; font-size: 12px; border-radius: 4px;'>ĐÃ THANH TOÁN</span></p>");
         sb.append("</div>");
         

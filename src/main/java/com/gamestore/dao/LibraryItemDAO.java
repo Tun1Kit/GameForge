@@ -42,7 +42,7 @@ public class LibraryItemDAO extends BaseDAO<LibraryItem> {
      */
     @Transactional(readOnly = true)
     public List<LibraryItem> findActiveByUserIdWithDetails(Long userId) {
-        return sessionFactory.getCurrentSession()
+        List<LibraryItem> items = sessionFactory.getCurrentSession()
                 .createQuery(
                         "SELECT li FROM LibraryItem li " +
                         "JOIN FETCH li.game g " +
@@ -52,6 +52,13 @@ public class LibraryItemDAO extends BaseDAO<LibraryItem> {
                         LibraryItem.class)
                 .setParameter("userId", userId)
                 .getResultList();
+
+        for (LibraryItem item : items) {
+            if (item.getGame() != null && item.getGame().getCategories() != null) {
+                item.getGame().getCategories().size();
+            }
+        }
+        return items;
     }
 
     /**
