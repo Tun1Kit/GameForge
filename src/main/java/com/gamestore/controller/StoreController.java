@@ -469,7 +469,7 @@ public class StoreController implements InitializingBean {
         }
 
         // Chỉ được bổ sung duy nhất 1 lần
-        if (review.getUserFollowUp() != null || review.getUserFollowUpRating() != null) {
+        if ((review.getUserFollowUp() != null && !review.getUserFollowUp().trim().isEmpty()) || review.getUserFollowUpRating() != null) {
             return "redirect:/" + review.getGame().getSlug() + "?error=already-followed-up";
         }
 
