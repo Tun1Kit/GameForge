@@ -55,3 +55,6 @@ GGGG.sql
 
 # Harness documentation (lived in templates/ — directory is gitignored)
 templates/
+
+# Frontend Lead documentation
+FRONTEND_LEAD_DOCUMENTATION.md
