@@ -40,7 +40,7 @@
           <div class="gf-logo-box gf-press">
             <i data-lucide="gamepad-2" width="20" height="20"></i>
           </div>
-          <span class="fs-5 fw-black tracking-tight d-none d-sm-inline">GAME<span style="color:var(--gf-green)">FORGE</span></span>
+          <span class="fs-5 fw-black tracking-tight d-none d-sm-inline text-dark">GAME<span style="color:var(--gf-green)">FORGE</span></span>
         </a>
 
 		<div class="d-flex align-items-center gap-2 gap-sm-3">

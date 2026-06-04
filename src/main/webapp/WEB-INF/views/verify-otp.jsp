@@ -56,9 +56,9 @@
           <div class="gf-logo-box gf-press">
             <i data-lucide="gamepad-2" width="20" height="20"></i>
           </div>
-          <span class="fs-5 fw-black fw-bold">GAME<span style="color:var(--gf-green)">FORGE</span></span>
+          <span class="fs-5 fw-black fw-bold text-dark">GAME<span style="color:var(--gf-green)">FORGE</span></span>
         </a>
-        <a href="${pageContext.request.contextPath}/" class="btn gf-border-2 gf-shadow-sm gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3">
+        <a href="${pageContext.request.contextPath}/" class="btn gf-border-2 gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3">
           <i data-lucide="arrow-left" width="16" height="16"></i> Trang chủ
         </a>
       </div>

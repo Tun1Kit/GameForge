@@ -49,7 +49,7 @@ public class ReviewDAO extends BaseDAO<Review> {
     public Object[] getAverageRatingAndCount(Long gameId) {
         try {
             return (Object[]) sessionFactory.getCurrentSession()
-                    .createQuery("SELECT AVG(CAST(r.rating as double)), COUNT(r) FROM Review r WHERE r.game.id = :gameId")
+                    .createQuery("SELECT AVG(CAST(coalesce(r.userFollowUpRating, r.rating) as double)), COUNT(r) FROM Review r WHERE r.game.id = :gameId")
                     .setParameter("gameId", gameId)
                     .uniqueResult();
         } catch (Exception e) {

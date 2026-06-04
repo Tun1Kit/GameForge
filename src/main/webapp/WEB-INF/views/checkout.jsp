@@ -41,11 +41,11 @@
           <div class="gf-logo-box gf-press">
             <i data-lucide="gamepad-2" width="20" height="20"></i>
           </div>
-          <span class="fs-5 fw-black fw-bold d-none d-sm-inline">GAME<span style="color:var(--gf-green)">FORGE</span></span>
+          <span class="fs-5 fw-black fw-bold d-none d-sm-inline text-dark">GAME<span style="color:var(--gf-green)">FORGE</span></span>
         </a>
 
         <div class="d-flex align-items-center gap-2 gap-sm-3">
-          <a href="${pageContext.request.contextPath}/" class="btn gf-border-2 gf-shadow-sm gf-press fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3" style="background: var(--gf-card-bg); color: var(--gf-text-main);">
+          <a href="${pageContext.request.contextPath}/" class="btn gf-border-2 gf-press fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3" style="background: var(--gf-card-bg); color: var(--gf-text-main);">
             <i data-lucide="home" width="16" height="16"></i> <span class="d-none d-sm-inline">Trang chủ</span>
           </a>
 
@@ -451,7 +451,7 @@
         gameId: ${item.game.id},
         price: ${item.game.price},
         title: "${fn:escapeXml(item.game.title)}",
-        image: "<c:choose><c:when test='${not empty item.game.mediaList}'>${item.game.mediaList[0].mediaUrl}</c:when><c:otherwise>https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg</c:otherwise></c:choose>",
+        image: "<c:choose><c:when test='${not empty item.game.mediaList}'>${fn:startsWith(item.game.mediaList[0].mediaUrl, 'http') ? item.game.mediaList[0].mediaUrl : pageContext.request.contextPath.concat(item.game.mediaList[0].mediaUrl)}</c:when><c:otherwise>https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg</c:otherwise></c:choose>",
         originalPrice: ${item.game.originalPrice}
       }<c:if test="${not vs.last}">,</c:if>
     </c:forEach>

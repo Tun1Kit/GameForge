@@ -77,7 +77,7 @@
           <div class="gf-logo-box gf-press">
             <i data-lucide="gamepad-2" width="20" height="20"></i>
           </div>
-          <span class="fs-5 fw-black fw-bold d-none d-sm-inline">GAME<span style="color:var(--gf-green)">FORGE</span></span>
+          <span class="fs-5 fw-black fw-bold d-none d-sm-inline text-dark">GAME<span style="color:var(--gf-green)">FORGE</span></span>
         </a>
 
         <div class="d-none d-lg-flex align-items-center gap-2">
@@ -108,10 +108,10 @@
               <li><a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/orders"><i data-lucide="shopping-bag" width="14" height="14"></i> Đơn hàng</a></li>
               <li><a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/library"><i data-lucide="library" width="14" height="14"></i> Thư viện</a></li>
               <c:if test="${currentUser.hasRole('ROLE_PUBLISHER')}">
-                <li><a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/publisher/dashboard"><i data-lucide="layout-dashboard" width="14" height="14"></i> Publisher</a></li>
+                <li><a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/publisher/dashboard"><i data-lucide="layout-dashboard" width="14" height="14"></i> Nhà Phát Hành</a></li>
               </c:if>
               <c:if test="${currentUser.hasRole('ROLE_ADMIN')}">
-                <li><a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/admin/dashboard"><i data-lucide="shield-check" width="14" height="14"></i> Quản trị</a></li>
+                <li><a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/admin/dashboard"><i data-lucide="shield-check" width="14" height="14"></i> Quản Trị Viên</a></li>
               </c:if>
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2 text-danger" href="${pageContext.request.contextPath}/logout"><i data-lucide="log-out" width="14" height="14"></i> Đăng xuất</a></li>
@@ -147,7 +147,7 @@
                     <c:set var="gameImg" value="" />
                     <c:forEach var="media" items="${game.mediaList}">
                       <c:if test="${empty gameImg && media.mediaType == 'IMAGE'}">
-                        <c:set var="gameImg" value="${pageContext.request.contextPath}${media.mediaUrl}" />
+                        <c:set var="gameImg" value="${not fn:startsWith(media.mediaUrl, 'http') ? pageContext.request.contextPath.concat(media.mediaUrl) : ''}" />
                       </c:if>
                     </c:forEach>
                     <c:choose>

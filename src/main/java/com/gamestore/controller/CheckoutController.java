@@ -6,6 +6,7 @@ import com.gamestore.entity.*;
 import com.gamestore.service.EmailService;
 import com.gamestore.service.UserContextService;
 import com.gamestore.service.WalletService;
+import com.gamestore.service.SystemSettingService;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +57,9 @@ public class CheckoutController {
 
     @Autowired
     private UserContextService userContextService;
+
+    @Autowired
+    private SystemSettingService systemSettingService;
 
     @GetMapping("/checkout")
     public String showCheckoutPage(
@@ -215,6 +219,18 @@ public class CheckoutController {
 
             hqSession.save(orderItem);
             hqSession.flush();
+
+            // Cộng tiền doanh thu cho Publisher (khấu trừ hoa hồng platform)
+            Game game = item.getGame();
+            PublisherProfile pubProfile = game.getPublisher();
+            if (pubProfile != null && pubProfile.getUser() != null) {
+                BigDecimal paidAmount = orderItem.getPaidAmount();
+                BigDecimal commissionRate = systemSettingService.getPlatformCommissionRate();
+                BigDecimal commissionPercent = commissionRate.divide(new BigDecimal("100"), 4, java.math.RoundingMode.HALF_UP);
+                BigDecimal multiplier = BigDecimal.ONE.subtract(commissionPercent);
+                BigDecimal publisherRevenue = paidAmount.multiply(multiplier).setScale(2, java.math.RoundingMode.HALF_UP);
+                walletService.creditPublisherRevenue(pubProfile.getUser(), publisherRevenue, "ORDER_ITEM_" + orderItem.getId());
+            }
 
             LicenseKey assignedKey = assignLicenseKey(hqSession, managedUser.getId(), item.getGame().getId(), orderItem.getId());
 
@@ -411,6 +427,18 @@ public class CheckoutController {
                 hqSession.save(orderItem);
                 hqSession.flush();
 
+                // Cộng tiền doanh thu cho Publisher (khấu trừ hoa hồng platform)
+                Game game = item.getGame();
+                PublisherProfile pubProfile = game.getPublisher();
+                if (pubProfile != null && pubProfile.getUser() != null) {
+                    BigDecimal paidAmount = orderItem.getPaidAmount();
+                    BigDecimal commissionRate = systemSettingService.getPlatformCommissionRate();
+                    BigDecimal commissionPercent = commissionRate.divide(new BigDecimal("100"), 4, java.math.RoundingMode.HALF_UP);
+                    BigDecimal multiplier = BigDecimal.ONE.subtract(commissionPercent);
+                    BigDecimal publisherRevenue = paidAmount.multiply(multiplier).setScale(2, java.math.RoundingMode.HALF_UP);
+                    walletService.creditPublisherRevenue(pubProfile.getUser(), publisherRevenue, "ORDER_ITEM_" + orderItem.getId());
+                }
+
                 LicenseKey assignedKey = assignLicenseKey(hqSession, managedUser.getId(), item.getGame().getId(), orderItem.getId());
 
                 Map<String, Object> keyInfo = new HashMap<>();
@@ -536,33 +564,50 @@ public class CheckoutController {
 
         LicenseKey assignedKey = (!keys.isEmpty()) ? keys.get(0) : null;
 
-        if (assignedKey != null) {
-            assignedKey.setStatus("SOLD");
-            assignedKey.setOrderItemId(orderItemId);
-            assignedKey.setOwner(hqSession.get(User.class, userId));
-            assignedKey.setAssignedAt(LocalDateTime.now());
-            hqSession.update(assignedKey);
+        // Nếu hết key available, tự động tạo 1 key mới
+        if (assignedKey == null) {
+            assignedKey = new LicenseKey();
+            assignedKey.setGame(hqSession.get(Game.class, gameId));
+            String uuid = java.util.UUID.randomUUID().toString().toUpperCase().replace("-", "");
+            String keyString = uuid.substring(0, 5) + "-" + uuid.substring(5, 10) + "-" + uuid.substring(10, 15);
+            assignedKey.setKeyString(keyString);
+            assignedKey.setStatus("AVAILABLE");
+            assignedKey.setCreatedAt(LocalDateTime.now());
+            hqSession.save(assignedKey);
+        }
 
-            String libHql = "FROM LibraryItem WHERE user.id = :userId AND game.id = :gameId";
-            List<LibraryItem> existingLibs = hqSession.createQuery(libHql, LibraryItem.class)
-                    .setParameter("userId", userId)
-                    .setParameter("gameId", gameId)
-                    .getResultList();
-            LibraryItem existingLib = !existingLibs.isEmpty() ? existingLibs.get(0) : null;
+        assignedKey.setStatus("SOLD");
+        assignedKey.setOrderItemId(orderItemId);
+        assignedKey.setOwner(hqSession.get(User.class, userId));
+        assignedKey.setAssignedAt(LocalDateTime.now());
+        hqSession.update(assignedKey);
 
-            if (existingLib == null) {
-                LibraryItem libItem = new LibraryItem();
-                libItem.setUser(hqSession.get(User.class, userId));
-                libItem.setGame(hqSession.get(com.gamestore.entity.Game.class, gameId));
-                libItem.setLicenseKey(assignedKey);
-                libItem.setStatus("ACTIVE");
-                libItem.setAcquiredAt(LocalDateTime.now());
-                hqSession.save(libItem);
-            } else {
+        String libHql = "FROM LibraryItem WHERE user.id = :userId AND game.id = :gameId";
+        List<LibraryItem> existingLibs = hqSession.createQuery(libHql, LibraryItem.class)
+                .setParameter("userId", userId)
+                .setParameter("gameId", gameId)
+                .getResultList();
+        LibraryItem existingLib = !existingLibs.isEmpty() ? existingLibs.get(0) : null;
+
+        OrderItem oi = hqSession.get(OrderItem.class, orderItemId);
+
+        if (existingLib == null) {
+            LibraryItem libItem = new LibraryItem();
+            libItem.setUser(hqSession.get(User.class, userId));
+            libItem.setGame(hqSession.get(com.gamestore.entity.Game.class, gameId));
+            libItem.setLicenseKey(assignedKey);
+            libItem.setOrderItem(oi);
+            libItem.setStatus("ACTIVE");
+            libItem.setAcquiredAt(LocalDateTime.now());
+            hqSession.save(libItem);
+        } else {
+            if (assignedKey != null) {
                 existingLib.setLicenseKey(assignedKey);
-                existingLib.setAcquiredAt(LocalDateTime.now());
-                hqSession.update(existingLib);
             }
+            existingLib.setOrderItem(oi);
+            existingLib.setStatus("ACTIVE");
+            existingLib.setAcquiredAt(LocalDateTime.now());
+            hqSession.update(existingLib);
         }
 
         return assignedKey;

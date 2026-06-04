@@ -26,6 +26,27 @@ import java.util.Random;
 @Controller
 public class AuthController {
 
+    public static final String[] PRESET_AVATARS = {
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Aiden",
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Buster",
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Coco",
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Duke",
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Ella",
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Felix",
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Ginger",
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Harley",
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Izzy",
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Jax",
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Kiki",
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Loki",
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Milo",
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Nala",
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Oscar",
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Penny",
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Rusty",
+        "https://api.dicebear.com/7.x/pixel-art/svg?seed=Shadow"
+    };
+
     @Autowired
     private UserDAO userDAO;
 
@@ -241,7 +262,7 @@ public class AuthController {
         newUser.setPassword(pendingRegister.getEncodedPassword());
         newUser.getRoles().add(userRole);
         newUser.setStatus("ACTIVE");
-        newUser.setAvatar("default-avatar.png");
+        newUser.setAvatar(PRESET_AVATARS[new Random().nextInt(PRESET_AVATARS.length)]);
 
         userDAO.save(newUser);
 

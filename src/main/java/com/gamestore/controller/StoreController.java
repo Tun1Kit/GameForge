@@ -8,6 +8,7 @@ import com.gamestore.entity.Game;
 import com.gamestore.entity.Review;
 import com.gamestore.entity.User;
 import com.gamestore.entity.WishlistItem;
+import com.gamestore.entity.Notification;
 import com.gamestore.service.UserContextService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -82,9 +83,13 @@ public class StoreController implements InitializingBean {
                 "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('reviews') AND name = 'userFollowUp') " +
                 "ALTER TABLE reviews ADD userFollowUp NVARCHAR(MAX) NULL;"
             ).executeUpdate();
+            hqSession.createNativeQuery(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('reviews') AND name = 'userFollowUpRating') " +
+                "ALTER TABLE reviews ADD userFollowUpRating INT NULL;"
+            ).executeUpdate();
             hqSession.getTransaction().commit();
             hqSession.close();
-            System.out.println(">>> GameForge Schema: Các cột [badges], [publisherReply], [userFollowUp] đã được kiểm tra/khởi tạo thành công!");
+            System.out.println(">>> GameForge Schema: Các cột [badges], [publisherReply], [userFollowUp], [userFollowUpRating] đã được kiểm tra/khởi tạo thành công!");
         } catch (Exception e) {
             System.err.println(">>> GameForge Schema Warning: " + e.getMessage());
         }
@@ -200,6 +205,9 @@ public class StoreController implements InitializingBean {
         }
         model.addAttribute("isGamePublisher", isGamePublisher);
 
+        boolean isFutureRelease = game.getReleaseDate() != null && game.getReleaseDate().isAfter(java.time.LocalDate.now());
+        model.addAttribute("isFutureRelease", isFutureRelease);
+
         if (currentUser != null) {
             Review userReview = reviewDAO.findByUserAndGame(currentUser.getId(), game.getId());
             model.addAttribute("userReview", userReview);
@@ -215,6 +223,13 @@ public class StoreController implements InitializingBean {
             model.addAttribute("isFavorited", false);
             model.addAttribute("isOwned", false);
         }
+
+        // Nạp danh sách các patch note đã được phê duyệt (ACTIVE) của game
+        List<com.gamestore.entity.PatchNote> patchNotes = sessionFactory.getCurrentSession()
+                .createQuery("FROM PatchNote pn WHERE pn.game.id = :gameId AND pn.status = 'ACTIVE' ORDER BY pn.publishedAt DESC", com.gamestore.entity.PatchNote.class)
+                .setParameter("gameId", game.getId())
+                .list();
+        model.addAttribute("patchNotes", patchNotes);
 
         return "store/detail";
     }
@@ -292,7 +307,7 @@ public class StoreController implements InitializingBean {
         out.print("COUNT=" + gameIds.size() + "&IDS=" + idsStr.toString());
     }
 
-    // 5. Thêm/Cập nhật đánh giá thực tế của người dùng
+    // 5. Thêm đánh giá thực tế của người dùng (Lưu cứng - Chỉ được đánh giá khi sở hữu game)
     @RequestMapping(value = "/api/reviews/add", method = RequestMethod.POST)
     public String addOrUpdateReview(@RequestParam("gameId") Long gameId,
                                     @RequestParam("rating") Integer rating,
@@ -308,6 +323,12 @@ public class StoreController implements InitializingBean {
             return "redirect:/";
         }
 
+        // --- Kiểm tra sở hữu game ---
+        boolean owned = libraryItemDAO.existsActiveByUserAndGame(currentUser.getId(), gameId);
+        if (!owned) {
+            return "redirect:/" + game.getSlug() + "?error=not-owned";
+        }
+
         // --- Server-side validation ---
         if (rating == null || rating < 1 || rating > 5) {
             return "redirect:/" + game.getSlug();
@@ -316,19 +337,28 @@ public class StoreController implements InitializingBean {
             return "redirect:/" + game.getSlug();
         }
 
+        // Chặn không cho cập nhật đánh giá cũ (Đánh giá gốc là lưu cứng)
         Review existing = reviewDAO.findByUserAndGame(currentUser.getId(), gameId);
         if (existing != null) {
-            existing.setRating(rating);
-            existing.setComment(comment);
-            existing.setCreatedAt(java.time.LocalDateTime.now());
-            sessionFactory.getCurrentSession().update(existing);
-        } else {
-            Review newReview = new Review();
-            newReview.setUser(currentUser);
-            newReview.setGame(game);
-            newReview.setRating(rating);
-            newReview.setComment(comment);
-            sessionFactory.getCurrentSession().save(newReview);
+            return "redirect:/" + game.getSlug() + "?error=already-reviewed";
+        }
+
+        Review newReview = new Review();
+        newReview.setUser(currentUser);
+        newReview.setGame(game);
+        newReview.setRating(rating);
+        newReview.setComment(comment);
+        sessionFactory.getCurrentSession().save(newReview);
+
+        // Notify Publisher
+        if (game.getPublisher() != null && game.getPublisher().getUser() != null) {
+            Notification notif = new Notification();
+            notif.setTitle("Đánh giá game mới");
+            notif.setContent("Game '" + game.getTitle() + "' đã nhận được đánh giá " + rating + "★ từ @" + currentUser.getUsername());
+            notif.setType("REVIEW");
+            notif.setTargetUrl("/" + game.getSlug());
+            notif.setUser(game.getPublisher().getUser());
+            sessionFactory.getCurrentSession().save(notif);
         }
 
         return "redirect:/" + game.getSlug();
@@ -369,10 +399,40 @@ public class StoreController implements InitializingBean {
         return "redirect:/" + review.getGame().getSlug();
     }
 
-    // 5c. API Người dùng Bổ sung Đánh giá (sau khi được phản hồi)
+    // 5d. API Xóa phản hồi đánh giá
+    @RequestMapping(value = "/api/reviews/reply/delete", method = RequestMethod.POST)
+    public String deleteReply(@RequestParam("reviewId") Long reviewId,
+                              HttpSession session) {
+        User currentUser = userContextService.getCurrentUser(session);
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+
+        Review review = (Review) sessionFactory.getCurrentSession().get(Review.class, reviewId);
+        if (review == null) {
+            return "redirect:/";
+        }
+
+        // Kiểm tra quyền: Chỉ Admin hoặc chính Publisher sở hữu game này mới được xóa phản hồi
+        boolean isAdmin = currentUser.hasRole("ROLE_ADMIN");
+        boolean isPublisher = false;
+        if (review.getGame().getPublisher() != null && review.getGame().getPublisher().getUser() != null) {
+            isPublisher = review.getGame().getPublisher().getUser().getId().equals(currentUser.getId());
+        }
+
+        if (isAdmin || isPublisher) {
+            review.setPublisherReply(null);
+            sessionFactory.getCurrentSession().update(review);
+        }
+
+        return "redirect:/" + review.getGame().getSlug();
+    }
+
+    // 5c. API Người dùng Bổ sung Đánh giá kèm số sao (Chỉ 1 lần sau khi được phản hồi)
     @RequestMapping(value = "/api/reviews/followup", method = RequestMethod.POST)
     public String addFollowUp(@RequestParam("reviewId") Long reviewId,
                               @RequestParam("followUpText") String followUpText,
+                              @RequestParam("followUpRating") Integer followUpRating,
                               HttpSession session) {
         User currentUser = userContextService.getCurrentUser(session);
         if (currentUser == null) {
@@ -385,14 +445,39 @@ public class StoreController implements InitializingBean {
         }
 
         // --- Server-side validation ---
+        if (followUpRating == null || followUpRating < 1 || followUpRating > 5) {
+            return "redirect:/" + review.getGame().getSlug();
+        }
         if (followUpText == null || followUpText.trim().isEmpty() || followUpText.length() > 1000) {
             return "redirect:/" + review.getGame().getSlug();
+        }
+
+        // Phải có phản hồi từ Admin/Publisher mới được bổ sung
+        if (review.getPublisherReply() == null || review.getPublisherReply().trim().isEmpty()) {
+            return "redirect:/" + review.getGame().getSlug() + "?error=no-reply-yet";
+        }
+
+        // Chỉ được bổ sung duy nhất 1 lần
+        if (review.getUserFollowUp() != null || review.getUserFollowUpRating() != null) {
+            return "redirect:/" + review.getGame().getSlug() + "?error=already-followed-up";
         }
 
         // Kiểm tra quyền: Chỉ chính chủ nhân của review mới được bổ sung
         if (review.getUser().getId().equals(currentUser.getId())) {
             review.setUserFollowUp(followUpText);
+            review.setUserFollowUpRating(followUpRating);
             sessionFactory.getCurrentSession().update(review);
+
+            // Notify Publisher
+            if (review.getGame().getPublisher() != null && review.getGame().getPublisher().getUser() != null) {
+                Notification notif = new Notification();
+                notif.setTitle("Đánh giá bổ sung");
+                notif.setContent("Người dùng @" + currentUser.getUsername() + " đã thêm ý kiến bổ sung " + followUpRating + "★ cho game '" + review.getGame().getTitle() + "'");
+                notif.setType("REVIEW");
+                notif.setTargetUrl("/" + review.getGame().getSlug());
+                notif.setUser(review.getGame().getPublisher().getUser());
+                sessionFactory.getCurrentSession().save(notif);
+            }
         }
 
         return "redirect:/" + review.getGame().getSlug();
@@ -441,8 +526,18 @@ public class StoreController implements InitializingBean {
             return;
         }
 
+        // Chuẩn hóa tiêu đề dựa theo tính chất huy hiệu
+        String finalTitle = title;
+        if ("static".equals(type)) {
+            finalTitle = title.replaceAll("(?i)%COUNT%", "").trim();
+        } else if ("dynamic_downloads".equals(type)) {
+            if (!title.toUpperCase().contains("%COUNT%")) {
+                finalTitle = title + " (%COUNT%)";
+            }
+        }
+
         // Tạo an toàn ID bằng cách chuyển sang viết thường và bỏ khoảng cách
-        String safeId = title.toLowerCase()
+        String safeId = finalTitle.toLowerCase()
                 .replaceAll("[^a-zA-Z0-9\\s]", "")
                 .replaceAll("\\s+", "-");
         
@@ -456,10 +551,94 @@ public class StoreController implements InitializingBean {
             }
         }
 
-        Badge newBadge = new Badge(safeId, title, icon, color, type);
+        Badge newBadge = new Badge(safeId, finalTitle, icon, color, type);
         currentBadges.add(newBadge);
         saveAvailableBadges(currentBadges);
 
+        out.print("OK");
+    }
+
+    // 7b. ADMIN API: CẬP NHẬT HUY HIỆU ĐÃ CÓ
+    @RequestMapping(value = "/api/admin/edit-badge", method = RequestMethod.POST)
+    public void editBadge(@RequestParam("id") String id,
+                           @RequestParam("title") String title,
+                           @RequestParam("icon") String icon,
+                           @RequestParam("color") String color,
+                           @RequestParam("type") String type,
+                           HttpSession session,
+                           HttpServletResponse response) throws IOException {
+        response.setContentType("text/plain;charset=UTF-8");
+        PrintWriter out = response.getWriter();
+
+        User currentUser = userContextService.getCurrentUser(session);
+        if (currentUser == null || !currentUser.hasRole("ROLE_ADMIN")) {
+            out.print("ERROR=Từ chối truy cập. Chỉ dành cho quản trị viên.");
+            return;
+        }
+
+        List<Badge> currentBadges = loadAvailableBadges();
+        boolean found = false;
+        
+        // Chuẩn hóa tiêu đề dựa theo tính chất huy hiệu
+        String finalTitle = title;
+        if ("static".equals(type)) {
+            finalTitle = title.replaceAll("(?i)%COUNT%", "").trim();
+        } else if ("dynamic_downloads".equals(type)) {
+            if (!title.toUpperCase().contains("%COUNT%")) {
+                finalTitle = title + " (%COUNT%)";
+            }
+        }
+
+        for (Badge b : currentBadges) {
+            if (b.getId().equals(id)) {
+                b.setTitle(finalTitle);
+                b.setIcon(icon);
+                b.setColor(color);
+                b.setType(type);
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            out.print("ERROR=Huy hiệu không tồn tại.");
+            return;
+        }
+
+        saveAvailableBadges(currentBadges);
+        out.print("OK");
+    }
+
+    // 7c. ADMIN API: XÓA HUY HIỆU KHỎI HỆ THỐNG
+    @RequestMapping(value = "/api/admin/delete-badge", method = RequestMethod.POST)
+    public void deleteBadge(@RequestParam("id") String id,
+                             HttpSession session,
+                             HttpServletResponse response) throws IOException {
+        response.setContentType("text/plain;charset=UTF-8");
+        PrintWriter out = response.getWriter();
+
+        User currentUser = userContextService.getCurrentUser(session);
+        if (currentUser == null || !currentUser.hasRole("ROLE_ADMIN")) {
+            out.print("ERROR=Từ chối truy cập. Chỉ dành cho quản trị viên.");
+            return;
+        }
+
+        List<Badge> currentBadges = loadAvailableBadges();
+        Badge toRemove = null;
+        for (Badge b : currentBadges) {
+            if (b.getId().equals(id)) {
+                toRemove = b;
+                break;
+            }
+        }
+
+        if (toRemove == null) {
+            out.print("ERROR=Huy hiệu không tồn tại.");
+            return;
+        }
+
+        currentBadges.remove(toRemove);
+        saveAvailableBadges(currentBadges);
         out.print("OK");
     }
 

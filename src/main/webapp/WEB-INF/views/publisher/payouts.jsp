@@ -24,31 +24,49 @@
   <div class="gf-decor-pill" style="top:15%;right:3%;background:var(--gf-yellow);transform:rotate(16deg);"></div>
   <div class="gf-decor-pill" style="top:55%;left:2%;background:var(--gf-lavender);transform:rotate(-12deg);"></div>
 
-  <!-- PUBLISHER NAVBAR -->
-  <nav class="gf-navbar" style="background:#18181b;border-bottom:3px solid #000;">
-    <div class="container-xl py-3">
+  <!-- NAVBAR -->
+  <nav class="gf-navbar" style="background:#fff;border-bottom:3px solid #000;">
+    <div class="container-xl py-2">
       <div class="d-flex align-items-center justify-content-between gap-3">
         <a href="${pageContext.request.contextPath}/" class="d-flex align-items-center gap-2 text-decoration-none flex-shrink-0">
           <div class="gf-logo-box gf-press" style="background:var(--gf-green);">
             <i data-lucide="gamepad-2" width="20" height="20"></i>
           </div>
-          <span class="fs-5 fw-black fw-bold text-white">GAME<span style="color:var(--gf-green)">FORGE</span> <span class="badge ms-1" style="font-size:9px;border-radius:999px;padding:2px 6px;background:var(--gf-yellow);color:#000;">PUBLISHER</span></span>
+          <span class="fs-5 fw-black fw-bold text-dark">GAME<span style="color:var(--gf-green)">FORGE</span> <span class="badge ms-1" style="font-size:9px;border-radius:999px;padding:2px 6px;background:var(--gf-yellow);color:#000;">PUBLISHER</span></span>
         </a>
-        <div class="d-flex align-items-center gap-2">
-          <a href="${pageContext.request.contextPath}/publisher" class="btn btn-sm gf-border-2 gf-shadow-sm gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3">
+        
+        <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-end flex-wrap">
+          <a href="${pageContext.request.contextPath}/publisher/dashboard" class="btn btn-sm gf-border-2 gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 px-3" style="height:38px;border-color:#000;line-height:1;flex-shrink:0;">
             <i data-lucide="layout-dashboard" width="14" height="14"></i> Dashboard
           </a>
-          <a href="${pageContext.request.contextPath}/publisher/payouts" class="btn btn-sm gf-border-2 gf-press text-white fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3" style="background:var(--gf-green);border-color:#000;">
+          <a href="${pageContext.request.contextPath}/publisher/games" class="btn btn-sm gf-border-2 gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 px-3" style="height:38px;border-color:#000;line-height:1;flex-shrink:0;">
+            <i data-lucide="package" width="14" height="14"></i> Game đã đăng
+          </a>
+          <a href="${pageContext.request.contextPath}/publisher/payouts" class="btn btn-sm gf-border-2 gf-press text-white fw-bold rounded-3 d-flex align-items-center gap-2 px-3" style="height:38px;background:var(--gf-green);border-color:#000;color:#fff !important;line-height:1;flex-shrink:0;">
             <i data-lucide="banknote" width="14" height="14"></i> Payout
           </a>
-          <a href="${pageContext.request.contextPath}/kyc" class="btn btn-sm gf-border-2 gf-shadow-sm gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3">
+          <a href="${pageContext.request.contextPath}/kyc" class="btn btn-sm gf-border-2 gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 px-3" style="height:38px;border-color:#000;line-height:1;flex-shrink:0;">
             <i data-lucide="id-card" width="14" height="14"></i> KYC
           </a>
-          <div class="dropdown">
-            <button class="btn dropdown-toggle gf-press d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown"
-                    style="background:#18181b;border:3px solid var(--gf-green);border-radius:999px;height:40px;padding:4px 14px 4px 6px;color:#fff;box-shadow:3px 3px 0 0 #000;">
-              <img src="${not empty currentUser.avatar ? currentUser.avatar : 'https://api.dicebear.com/7.x/pixel-art/svg?seed=Publisher'}" alt="Avatar" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid var(--gf-green);">
-              <span class="d-none d-sm-inline fw-black text-white" style="font-size:12px;">${fn:escapeXml(currentUser.username)}</span>
+          <a href="${pageContext.request.contextPath}/publisher/games/add" class="btn btn-sm gf-border-2 gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 px-3" style="height:38px;border-color:#000;line-height:1;flex-shrink:0;">
+            <i data-lucide="gamepad-2" width="14" height="14"></i> Đăng game
+          </a>
+          
+          <!-- Notification Bell -->
+          <a href="${pageContext.request.contextPath}/publisher/notifications" class="btn btn-sm gf-border-2 gf-press bg-white text-dark rounded-3 d-flex align-items-center justify-content-center p-0 position-relative" style="width:38px; height:38px; border-color:#000; flex-shrink:0;">
+            <i data-lucide="bell" width="16" height="16"></i>
+            <c:if test="${unreadNotificationCount > 0}">
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light" style="font-size:9px; padding: 3px 6px;">
+                ${unreadNotificationCount}
+              </span>
+            </c:if>
+          </a>
+
+          <!-- Dropdown User -->
+          <div class="dropdown" style="flex-shrink: 0;">
+            <button class="btn btn-sm gf-border-2 gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" style="height:38px;border-color:#000;padding:4px 12px 4px 6px;flex-shrink:0;line-height:1;">
+              <img src="${(not empty currentUser.avatar && currentUser.avatar != 'default-avatar.png') ? currentUser.avatar : 'https://api.dicebear.com/7.x/pixel-art/svg?seed=Publisher'}" alt="Avatar" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:1.5px solid #000;">
+              <span class="d-none d-sm-inline fw-black text-dark" style="font-size:12px;">${fn:escapeXml(currentUser.username)}</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end gf-border-2 gf-shadow-sm p-2" style="border-radius:12px;min-width:180px;">
               <li><a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/logout"><i data-lucide="log-out" width="14" height="14"></i> Đăng xuất</a></li>

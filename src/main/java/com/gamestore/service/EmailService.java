@@ -161,4 +161,59 @@ public class EmailService {
         
         return sb.toString();
     }
+
+    // ===== REFUND EMAIL =====
+    public void sendRefundEmail(User user, com.gamestore.entity.Game game, BigDecimal refundAmount) {
+        String html = buildRefundEmailHTML(user, game, refundAmount);
+        
+        if (!emailEnabled || mailSender == null) {
+            System.out.println("==================================================");
+            System.out.println("=== EMAIL MOCK SENT TO: " + user.getEmail() + " ===");
+            System.out.println("Subject: [GameForge] Thông báo hoàn tiền game " + game.getTitle());
+            System.out.println("Content:\n" + html);
+            System.out.println("==================================================");
+            return;
+        }
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(user.getEmail());
+            helper.setSubject("GameForge - Thông báo hoàn tiền game: " + game.getTitle());
+            helper.setText(html, true);
+            helper.setFrom("noreply@gamestore.com");
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("Gửi email hoàn tiền thất bại: " + e.getMessage());
+        }
+    }
+
+    private String buildRefundEmailHTML(User user, com.gamestore.entity.Game game, BigDecimal refundAmount) {
+        NumberFormat nf = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
+        StringBuilder sb = new StringBuilder();
+        sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 3px solid #000000; padding: 20px; box-shadow: 6px 6px 0px #000000; background-color: #FFFDF8;'>");
+        sb.append("<div style='background-color: #FDE047; border-bottom: 3px solid #000000; padding: 15px; text-align: center;'>");
+        sb.append("<h1 style='margin: 0; font-size: 24px; color: #000000; font-weight: 900; letter-spacing: 1px;'>GAMEFORGE REFUND</h1>");
+        sb.append("</div>");
+        
+        sb.append("<div style='padding: 20px 0;'>");
+        sb.append("<p style='font-size: 16px; font-weight: bold;'>Chào ").append(user.getFullName()).append(",</p>");
+        sb.append("<p>Chúng tôi xin thông báo rằng tựa game <strong>").append(game.getTitle()).append("</strong> đã bị gỡ bỏ khỏi hệ thống GameForge.</p>");
+        sb.append("<p>Theo chính sách bảo vệ người tiêu dùng, chúng tôi đã hoàn lại số tiền mua game vào ví GameForge của bạn.</p>");
+        sb.append("</div>");
+        
+        sb.append("<div style='border: 2px solid #000000; background-color: #ffffff; padding: 15px; margin-bottom: 20px; box-shadow: 3px 3px 0px #000000;'>");
+        sb.append("<p style='margin: 0 0 8px 0;'><strong>Tên game bị xóa:</strong> ").append(game.getTitle()).append("</p>");
+        sb.append("<p style='margin: 0 0 8px 0;'><strong>Số tiền hoàn trả:</strong> <span style='color: #2ECC71; font-weight: bold;'>").append(nf.format(refundAmount)).append("đ</span></p>");
+        sb.append("<p style='margin: 0;'><strong>Trạng thái giao dịch:</strong> <span style='background-color: #94FFB4; color: #000000; padding: 2px 8px; border: 1.5px solid #000000; font-weight: bold; font-size: 12px; border-radius: 4px;'>ĐÃ HOÀN TIỀN VÀO VÍ</span></p>");
+        sb.append("</div>");
+        
+        sb.append("<div style='margin-top: 30px; border-top: 2px solid #000000; padding-top: 15px; font-size: 12px; color: #71717A; text-align: center;'>");
+        sb.append("<p>Số dư ví của bạn đã được cập nhật tự động. Bạn có thể sử dụng số dư này để mua các sản phẩm khác trên cửa hàng.</p>");
+        sb.append("<p>© 2026 GameForge. Hóa đơn hoàn tiền tự động.</p>");
+        sb.append("</div>");
+        sb.append("</div>");
+        
+        return sb.toString();
+    }
 }

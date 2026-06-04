@@ -36,7 +36,7 @@
           <span class="fs-5 fw-black fw-bold text-white">GAME<span style="color:var(--gf-green)">FORGE</span></span>
         </a>
         <div class="d-flex align-items-center gap-2">
-          <a href="${pageContext.request.contextPath}/publisher" class="btn btn-sm gf-border-2 gf-shadow-sm gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3">
+          <a href="${pageContext.request.contextPath}/publisher" class="btn btn-sm gf-border-2 gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3">
             <i data-lucide="layout-dashboard" width="14" height="14"></i> Dashboard
           </a>
           <div class="dropdown">

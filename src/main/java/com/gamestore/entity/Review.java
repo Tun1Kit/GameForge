@@ -39,6 +39,10 @@ public class Review {
     @Size(max = 1000, message = "Ý kiến bổ sung không được vượt quá 1000 ký tự")
     private String userFollowUp;
 
+    @Column(name = "userFollowUpRating")
+    @Max(value = 5, message = "Rating không được vượt quá 5 sao")
+    private Integer userFollowUpRating;
+
     @Column(name = "createdAt", nullable = false)
     private LocalDateTime createdAt;
 
@@ -72,6 +76,9 @@ public class Review {
 
     public String getUserFollowUp() { return userFollowUp; }
     public void setUserFollowUp(String userFollowUp) { this.userFollowUp = userFollowUp; }
+
+    public Integer getUserFollowUpRating() { return userFollowUpRating; }
+    public void setUserFollowUpRating(Integer userFollowUpRating) { this.userFollowUpRating = userFollowUpRating; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

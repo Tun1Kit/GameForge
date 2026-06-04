@@ -82,14 +82,23 @@ html.gf-dark-mode {
       will-change: transform, box-shadow;
     }
 
+    .btn:hover, .btn:focus, .btn:active, .btn.active,
+    .gf-press:hover, .gf-press:focus, .gf-press:active,
+    .gf-border:hover, .gf-border:focus, .gf-border:active,
+    .gf-border-2:hover, .gf-border-2:focus, .gf-border-2:active {
+      border-color: var(--gf-ink) !important;
+    }
+
     .gf-press:hover {
-      transform: translate(-2px, -2px);
-      box-shadow: 8px 8px 0 0 #000;
+      transform: translate(-2px, -2px) !important;
+      box-shadow: 6px 6px 0 0 var(--gf-ink) !important;
+      border-color: var(--gf-ink) !important;
     }
 
     .gf-press:active {
-      transform: translate(2px, 2px);
-      box-shadow: 0 0 0 0 #000;
+      transform: translate(2px, 2px) !important;
+      box-shadow: 0 0 0 0 var(--gf-ink) !important;
+      border-color: var(--gf-ink) !important;
     }
 
 	.gf-border {
@@ -124,6 +133,8 @@ html.gf-dark-mode {
 	  position: relative;
 	  z-index: 1050;
 	}
+
+
 
     body.gf-dark-mode .gf-navbar {
       background: rgba(24, 24, 27, .92);
@@ -746,6 +757,31 @@ html.gf-dark-mode {
         min-height: 1680px;
       }
     }
+
+/* Sửa lỗi lệch icon so với viền tròn/vuông trên hệ thống */
+.place-items-center {
+  place-items: center !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.d-grid.place-items-center,
+.d-inline-grid.place-items-center {
+  display: grid !important;
+  place-items: center !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.d-grid.place-items-center > i,
+.d-grid.place-items-center > svg,
+.d-inline-grid.place-items-center > i,
+.d-inline-grid.place-items-center > svg,
+.d-flex.align-items-center.justify-content-center > i,
+.d-flex.align-items-center.justify-content-center > svg {
+  display: block !important;
+  margin: 0 !important;
+}
     
     
     

@@ -236,7 +236,7 @@
           <div class="gf-logo-box gf-press">
             <i data-lucide="gamepad-2" width="20" height="20"></i>
           </div>
-          <span class="fs-5 fw-black fw-bold d-none d-sm-inline">GAME<span style="color:var(--gf-green)">FORGE</span></span>
+          <span class="fs-5 fw-black fw-bold d-none d-sm-inline text-dark">GAME<span style="color:var(--gf-green)">FORGE</span></span>
         </a>
 
         <div class="d-none d-lg-flex align-items-center gap-2">
@@ -265,17 +265,56 @@
                   <img src="${not empty currentUser.avatar ? currentUser.avatar : 'https://api.dicebear.com/7.x/pixel-art/svg?seed=Kiet'}" alt="Avatar" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid #000;">
                   <span class="d-none d-sm-inline fw-black text-dark" style="font-size:13px;">${fn:escapeXml(currentUser.fullName)}</span>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end gf-border-2 gf-shadow-sm p-2" style="border-radius:12px;min-width:180px;">
-                  <li><a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/orders"><i data-lucide="shopping-bag" width="14" height="14"></i> Đơn hàng</a></li>
-                  <li><a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/library"><i data-lucide="library" width="14" height="14"></i> Thư viện</a></li>
-                  <c:if test="${currentUser.hasRole('ROLE_PUBLISHER')}">
-                    <li><a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/publisher/dashboard"><i data-lucide="layout-dashboard" width="14" height="14"></i> Publisher</a></li>
-                  </c:if>
+                <ul class="dropdown-menu dropdown-menu-end gf-border-2 gf-shadow-sm p-2" style="border-radius:12px;min-width:210px;">
                   <c:if test="${currentUser.hasRole('ROLE_ADMIN')}">
-                    <li><a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/admin/dashboard"><i data-lucide="shield-check" width="14" height="14"></i> Quản trị</a></li>
+                    <li>
+                      <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/admin/dashboard">
+                        <i data-lucide="shield-check" width="14" height="14"></i> Quản Trị Viên
+                      </a>
+                    </li>
                   </c:if>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2 text-danger" href="${pageContext.request.contextPath}/logout"><i data-lucide="log-out" width="14" height="14"></i> Đăng xuất</a></li>
+                  <c:if test="${currentUser.hasRole('ROLE_PUBLISHER')}">
+                    <li>
+                      <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/publisher/dashboard">
+                        <i data-lucide="layout-dashboard" width="14" height="14"></i> Nhà Phát Hành
+                      </a>
+                    </li>
+                  </c:if>
+                  <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/library">
+                      <i data-lucide="library" width="14" height="14"></i> Thư viện game
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/transactions">
+                      <i data-lucide="history" width="14" height="14"></i> Lịch sử giao dịch
+                    </a>
+                  </li>
+                  <li class="dropdown-divider my-2" style="border-top: 2px solid #000;"></li>
+                  <li>
+                    <div class="px-3 py-1.5 d-flex align-items-center justify-content-between gap-2 bg-light rounded-3 gf-border">
+                      <span class="small fw-black text-secondary" style="font-size: 11px;">Số dư ví:</span>
+                      <span class="fw-black text-success" id="detailWalletBalance" style="font-size: 14px; font-weight: 900 !important;">
+                        <c:choose>
+                          <c:when test="${not empty walletBalance}">
+                            <fmt:formatNumber value="${walletBalance}" type="number" maxFractionDigits="0" />đ
+                          </c:when>
+                          <c:otherwise>0đ</c:otherwise>
+                        </c:choose>
+                      </span>
+                    </div>
+                  </li>
+                  <li class="px-2 mt-2">
+                    <a class="btn btn-sm w-100 gf-border gf-shadow-sm gf-press fw-bold text-dark py-1.5" href="${pageContext.request.contextPath}/recharge" style="background:var(--gf-yellow); border-radius: 8px; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+                      <i data-lucide="wallet" width="14" height="14"></i> Nạp tiền
+                    </a>
+                  </li>
+                  <li class="dropdown-divider my-2" style="border-top: 2px solid #000;"></li>
+                  <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2 text-danger" href="${pageContext.request.contextPath}/logout" onclick="localStorage.removeItem('gameforge_favorite_games_bootstrap_jsp');localStorage.removeItem('gameforge_cart_games_bootstrap_jsp');localStorage.removeItem('gameforge_cart_user_id');">
+                      <i data-lucide="log-out" width="14" height="14"></i> Đăng xuất
+                    </a>
+                  </li>
                 </ul>
               </div>
             </c:when>
@@ -307,118 +346,30 @@
         
         <h1 class="display-6 fw-black fw-bold text-dark m-0 mt-1">${game.title}</h1>
         <p class="fw-semibold text-secondary gf-muted m-0 mt-2">Nhà phát triển: <span class="text-dark fw-bold">${not empty game.developer ? game.developer : 'Đang cập nhật'}</span></p>
+        <p class="fw-semibold text-secondary gf-muted m-0 mt-1">
+          <c:choose>
+            <c:when test="${isFutureRelease}">
+              Ngày phát hành dự kiến: <span class="text-primary fw-bold">${game.releaseDate}</span>
+            </c:when>
+            <c:otherwise>
+              Ngày phát hành: <span class="text-dark fw-bold">${game.releaseDate}</span>
+            </c:otherwise>
+          </c:choose>
+        </p>
       </div>
 
       <!-- GRID HUY HIỆU ĐỘNG DO ADMIN QUẢN LÝ -->
       <div class="d-flex flex-column gap-2 flex-shrink-0" style="min-width: 280px;">
         <div class="d-grid gap-2 text-start" style="grid-template-columns: repeat(2, 1fr);">
           <c:forEach var="badge" items="${resolvedBadges}">
-            <div class="bg-white gf-border rounded-3 p-2 gf-shadow-sm d-flex flex-column align-items-center text-center justify-content-center" style="min-height:75px; background: ${badge.color};">
+            <div class="gf-border rounded-3 p-2 gf-shadow-sm d-flex flex-column align-items-center text-center justify-content-center" style="min-height:75px; background: ${badge.color};">
               <i data-lucide="${badge.icon}" class="text-dark" width="18" height="18"></i>
               <span class="fw-bold text-dark small mt-1" style="font-size: 11px;">${badge.title}</span>
             </div>
           </c:forEach>
         </div>
-        
-        <c:if test="${currentUser.hasRole('ROLE_ADMIN')}">
-          <button type="button" class="btn btn-sm w-100 gf-border-2 gf-shadow-sm gf-press mt-1 text-white fw-bold py-2 rounded-3" style="background:#C084FC; box-shadow: 2px 2px 0 #000; border-color:#000;" onclick="toggleAdminBadgePanel()">
-            <i data-lucide="settings-2" class="d-inline mb-0.5 me-1" width="14" height="14"></i> QUẢN TRỊ HUY HIỆU
-          </button>
-        </c:if>
       </div>
     </div>
-
-    <!-- KHU VỰC THAY ĐỔI HUY HIỆU ĐỘNG IN-PLACE (DÀNH CHO ADMIN) -->
-    <c:if test="${currentUser.hasRole('ROLE_ADMIN')}">
-      <div id="gfAdminBadgePanel" class="bg-white gf-border gf-shadow rounded-4 p-4 mb-4" style="display:none; border-color:#C084FC !important;">
-        <h4 class="fs-6 fw-black fw-bold mb-3 text-dark d-flex align-items-center gap-2">
-          <i data-lucide="shield-check" width="18" height="18" class="text-primary"></i>
-          QUẢN TRỊ HUY HIỆU ĐỘNG (ADMIN PORTAL IN-PLACE)
-        </h4>
-        
-        <form id="gfSaveBadgesForm" onsubmit="adminSaveGameBadges(event)">
-          <div class="mb-3">
-            <label class="fw-bold text-dark small d-block mb-2">Tích chọn huy hiệu hiển thị cho game này:</label>
-            <div class="d-flex flex-wrap gap-3">
-              <c:forEach var="badge" items="${allBadges}">
-                <div class="form-check border border-2 border-dark rounded px-3 py-1.5 bg-light d-flex align-items-center gap-2" style="cursor:pointer; box-shadow:2px 2px 0 #000;">
-                  <input class="form-check-input border-dark" type="checkbox" name="activeBadges" value="${badge.id}" id="chk-${badge.id}" 
-                         ${fn:contains(activeBadgeIds, badge.id) ? 'checked' : ''} style="cursor:pointer; width:18px; height:18px;">
-                  <label class="form-check-label fw-bold text-dark small mb-0" for="chk-${badge.id}" style="cursor:pointer;">
-                    <i data-lucide="${badge.icon}" class="d-inline-block me-1" width="14" height="14"></i>
-                    ${badge.title}
-                  </label>
-                </div>
-              </c:forEach>
-            </div>
-          </div>
-          
-          <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-sm gf-border-2 gf-shadow-sm gf-press fw-bold px-4 py-2" style="background:var(--gf-green); color:#000;">
-              LƯU HUY HIỆU GAME
-             </button>
-             <button type="button" class="btn btn-sm gf-border-2 gf-shadow-sm gf-press bg-white text-dark fw-bold px-4 py-2" onclick="toggleCreateBadgeForm()">
-               ĐỊNH NGHĨA HUY HIỆU MỚI +
-             </button>
-          </div>
-        </form>
-
-        <!-- Form Tạo Huy hiệu Mới -->
-        <div id="gfCreateBadgeBlock" class="mt-4 p-3 rounded border border-2 border-dark" style="display:none; background:#fafafa; box-shadow: inset 2px 2px 0 rgba(0,0,0,0.05);">
-          <h5 class="fs-6 fw-black fw-bold mb-3 d-flex align-items-center gap-2">
-            <i data-lucide="plus-circle" width="16" height="16" class="text-success"></i>
-            ĐỊNH NGHĨA HUY HIỆU MỚI TRONG HỆ THỐNG
-          </h5>
-          <form id="gfCreateBadgeForm" onsubmit="adminCreateBadge(event)">
-            <div class="row g-3">
-              <div class="col-sm-6">
-                <label class="fw-bold text-dark small d-block mb-1">Tên Huy hiệu (dùng %COUNT% nếu là động):</label>
-                <input type="text" id="newBadgeTitle" class="form-control border border-2 border-dark fw-bold text-dark" placeholder="Ví dụ: %COUNT% Lượt Tải" required>
-              </div>
-              <div class="col-sm-6">
-                <label class="fw-bold text-dark small d-block mb-1">Lucide Icon (Tên icon):</label>
-                <select id="newBadgeIcon" class="form-select border border-2 border-dark fw-bold text-dark" required>
-                  <option value="trophy">Trophy (Cúp Vàng)</option>
-                  <option value="award">Award (Huy chương)</option>
-                  <option value="star">Star (Ngôi sao)</option>
-                  <option value="download">Download (Tải xuống)</option>
-                  <option value="thumbs-up">Thumbs Up (Like)</option>
-                  <option value="crown">Crown (Vương miện)</option>
-                  <option value="flame">Flame (Lửa)</option>
-                  <option value="shield-check">Shield Check (Bảo vệ)</option>
-                </select>
-              </div>
-              <div class="col-sm-6">
-                <label class="fw-bold text-dark small d-block mb-1">Màu nền CSS (Vibrant HSL):</label>
-                <select id="newBadgeColor" class="form-select border border-2 border-dark fw-bold text-dark" required>
-                  <option value="#94FFB4">Xanh lục sáng (#94FFB4)</option>
-                  <option value="var(--gf-pink)">Hồng GameForge (var(--gf-pink))</option>
-                  <option value="#FFFEE4">Vàng chanh sáng (#FFFEE4)</option>
-                  <option value="var(--gf-yellow)">Vàng Neobrutalism (var(--gf-yellow))</option>
-                  <option value="var(--gf-lavender)">Tím oải hương (var(--gf-lavender))</option>
-                  <option value="#C084FC">Tím sáng (#C084FC)</option>
-                </select>
-              </div>
-              <div class="col-sm-6">
-                <label class="fw-bold text-dark small d-block mb-1">Tính chất huy hiệu:</label>
-                <select id="newBadgeType" class="form-select border border-2 border-dark fw-bold text-dark" required>
-                  <option value="static">Cố định (Tên sao hiện vậy)</option>
-                  <option value="dynamic_downloads">Động (Tự đếm lượt mua từ Database)</option>
-                </select>
-              </div>
-            </div>
-            <div class="mt-3 d-flex gap-2">
-              <button type="submit" class="btn btn-sm gf-border-2 gf-shadow-sm gf-press text-white fw-bold px-3 py-1.5" style="background:#000;">
-                XÁC NHẬN THÊM
-              </button>
-              <button type="button" class="btn btn-sm gf-border-2 gf-shadow-sm gf-press bg-white text-dark fw-bold px-3 py-1.5" onclick="toggleCreateBadgeForm()">
-                HỦY BỎ
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </c:if>
 
     <div class="row g-5">
       <div class="col-lg-8">
@@ -455,10 +406,9 @@
           <div class="row g-3">
             <c:set var="imgCount" value="0" />
             <c:forEach var="media" items="${game.mediaList}">
-              <c:if test="${media.mediaType == 'IMAGE'}">
+              <c:if test="${media.mediaType == 'IMAGE' && not fn:startsWith(media.mediaUrl, 'http')}">
                 <div class="col-4">
-                  <!-- GIẢI QUYẾT BẢO VỆ ĐƯỜNG DẪN ẢNH CDN KHÔNG BỊ TRÙNG LẶP CONTEXT PATH -->
-                  <c:set var="resolvedUrl" value="${fn:startsWith(media.mediaUrl, 'http') ? media.mediaUrl : pageContext.request.contextPath.concat(media.mediaUrl)}" />
+                  <c:set var="resolvedUrl" value="${pageContext.request.contextPath}${media.mediaUrl}" />
                   <img src="${resolvedUrl}" 
                        class="img-fluid gf-gallery-thumb ${imgCount == 0 ? 'active' : ''}" 
                        alt="Screenshot" 
@@ -530,9 +480,6 @@
                   <i data-lucide="award" width="16" height="16" style="color:var(--gf-pink)"></i>
                   ĐÁNH GIÁ CỦA BẠN
                 </h4>
-                <button type="button" class="btn btn-xs btn-outline-dark fw-bold px-2 py-1" onclick="toggleEditOriginalReviewForm()" style="font-size:11px; border-radius:4px; border:2px solid #000; box-shadow: 2px 2px 0 #000; background: #fff;">
-                  <i data-lucide="edit-3" class="d-inline mb-0.5 me-1" width="12" height="12"></i> Chỉnh sửa đánh giá gốc
-                </button>
               </div>
 
               <!-- Chi tiết đánh giá của tôi -->
@@ -569,6 +516,17 @@
                         <i data-lucide="reply" class="text-white" width="10" height="10"></i>
                       </div>
                       <span class="fw-black text-dark small" style="font-size:11px;">Phản hồi từ Nhà phát triển / Admin</span>
+                      <c:if test="${isAdmin || isGamePublisher}">
+                        <form action="${pageContext.request.contextPath}/api/reviews/reply/delete" method="POST" class="ms-auto d-inline mb-0">
+                          <input type="hidden" name="reviewId" value="${userReview.id}">
+                          <c:if test="${not empty _csrf.token}">
+                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                          </c:if>
+                          <button type="submit" class="btn btn-link p-0 text-danger fw-bold text-decoration-none small d-flex align-items-center gap-1" style="font-size: 11px;" onclick="return confirm('Bạn có chắc chắn muốn xóa phản hồi này?')">
+                            <i data-lucide="trash-2" width="12" height="12"></i> Xóa
+                          </button>
+                        </form>
+                      </c:if>
                     </div>
                     <p class="m-0 small fw-semibold text-secondary">${fn:escapeXml(userReview.publisherReply)}</p>
                   </div>
@@ -578,11 +536,19 @@
                 <c:choose>
                   <c:when test="${not empty userReview.userFollowUp}">
                     <div class="mt-3 p-3 rounded-2 border border-2 border-dark" style="background:#F2EAFF; border-color:var(--gf-lavender) !important; margin-left: 40px;">
-                      <div class="d-flex align-items-center gap-2 mb-1">
-                        <div class="gf-border-2 rounded-circle bg-dark d-grid place-items-center" style="width:20px; height:20px; background:var(--gf-pink) !important;">
-                          <i data-lucide="plus" class="text-white" width="10" height="10"></i>
+                      <div class="d-flex align-items-center justify-content-between mb-1">
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="gf-border-2 rounded-circle bg-dark d-grid place-items-center" style="width:20px; height:20px; background:var(--gf-pink) !important;">
+                            <i data-lucide="plus" class="text-white" width="10" height="10"></i>
+                          </div>
+                          <span class="fw-black text-dark small" style="font-size:11px;">Ý kiến bổ sung của bạn</span>
                         </div>
-                        <span class="fw-black text-dark small" style="font-size:11px;">Ý kiến bổ sung của bạn</span>
+                        <c:if test="${not empty userReview.userFollowUpRating}">
+                          <div class="text-warning fw-black small" style="font-size: 11px;">
+                            <c:forEach begin="1" end="${userReview.userFollowUpRating}">★</c:forEach>
+                            <c:forEach begin="${userReview.userFollowUpRating + 1}" end="5">☆</c:forEach>
+                          </div>
+                        </c:if>
                       </div>
                       <p class="m-0 small fw-semibold text-secondary">${fn:escapeXml(userReview.userFollowUp)}</p>
                     </div>
@@ -597,6 +563,29 @@
                           <c:if test="${not empty _csrf.token}">
                             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
                           </c:if>
+                          
+                          <div class="mb-2">
+                            <label class="fw-bold text-dark small d-block mb-1" style="font-size:11px;">Chọn số sao bổ sung:</label>
+                            <div class="d-flex align-items-center gap-2">
+                              <div class="star-rating-selector d-flex flex-row-reverse justify-content-end gap-1">
+                                <input type="radio" id="followStar5" name="followUpRating" value="5" class="d-none" required />
+                                <label for="followStar5" class="star-label cursor-pointer" title="5 sao" style="font-size:24px;">★</label>
+                                
+                                <input type="radio" id="followStar4" name="followUpRating" value="4" class="d-none" />
+                                <label for="followStar4" class="star-label cursor-pointer" title="4 sao" style="font-size:24px;">★</label>
+                                
+                                <input type="radio" id="followStar3" name="followUpRating" value="3" class="d-none" />
+                                <label for="followStar3" class="star-label cursor-pointer" title="3 sao" style="font-size:24px;">★</label>
+                                
+                                <input type="radio" id="followStar2" name="followUpRating" value="2" class="d-none" />
+                                <label for="followStar2" class="star-label cursor-pointer" title="2 sao" style="font-size:24px;">★</label>
+                                
+                                <input type="radio" id="followStar1" name="followUpRating" value="1" class="d-none" />
+                                <label for="followStar1" class="star-label cursor-pointer" title="1 sao" style="font-size:24px;">★</label>
+                              </div>
+                            </div>
+                          </div>
+
                           <textarea name="followUpText" rows="2" class="form-control border border-2 border-dark fw-semibold mb-2" placeholder="Nhập ý kiến bổ sung của bạn sau khi nhà phát hành phản hồi..." required maxlength="1000" style="font-size:12px; border-radius: 6px;"></textarea>
                           <button type="submit" class="btn btn-xs gf-border-2 gf-press fw-bold text-dark px-3 py-1" style="background:var(--gf-pink); font-size:11px;">
                             Gửi ý kiến bổ sung
@@ -610,59 +599,65 @@
             </div>
           </c:if>
 
-          <!-- Form viết Đánh giá (nếu đã đăng nhập) -->
+          <!-- Form viết Đánh giá (nếu đã đăng nhập và đã sở hữu sản phẩm) -->
           <div id="gfOriginalReviewFormContainer" class="p-4 rounded-3 border border-3 border-dark mb-4" style="background:#fafafa; box-shadow: 4px 4px 0 #000; ${hasReviewed ? 'display: none;' : ''}">
             <c:choose>
               <c:when test="${not empty currentUser}">
-                <h4 class="fs-6 fw-black fw-bold mb-3 text-dark d-flex align-items-center gap-2">
-                  <i data-lucide="pen-tool" width="16" height="16"></i>
-                  ${hasReviewed ? 'CẬP NHẬT ĐÁNH GIÁ CỦA BẠN' : 'VIẾT ĐÁNH GIÁ THỰC TẾ'}
-                </h4>
-                
-                <form action="${pageContext.request.contextPath}/api/reviews/add" method="POST">
-                  <input type="hidden" name="gameId" value="${game.id}">
-                  <c:if test="${not empty _csrf.token}">
-                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
-                  </c:if>
-                  
-                  <div class="mb-3">
-                    <label class="fw-bold text-dark small d-block mb-1">Chọn số sao đánh giá:</label>
-                    <div class="d-flex align-items-center gap-2">
-                      <div class="star-rating-selector d-flex flex-row-reverse justify-content-end gap-1">
-                        <input type="radio" id="star5" name="rating" value="5" class="d-none" ${userReview.rating == 5 ? 'checked' : ''} required />
-                        <label for="star5" class="star-label cursor-pointer" title="5 sao">★</label>
-                        
-                        <input type="radio" id="star4" name="rating" value="4" class="d-none" ${userReview.rating == 4 ? 'checked' : ''} />
-                        <label for="star4" class="star-label cursor-pointer" title="4 sao">★</label>
-                        
-                        <input type="radio" id="star3" name="rating" value="3" class="d-none" ${userReview.rating == 3 ? 'checked' : ''} />
-                        <label for="star3" class="star-label cursor-pointer" title="3 sao">★</label>
-                        
-                        <input type="radio" id="star2" name="rating" value="2" class="d-none" ${userReview.rating == 2 ? 'checked' : ''} />
-                        <label for="star2" class="star-label cursor-pointer" title="2 sao">★</label>
-                        
-                        <input type="radio" id="star1" name="rating" value="1" class="d-none" ${userReview.rating == 1 ? 'checked' : ''} />
-                        <label for="star1" class="star-label cursor-pointer" title="1 sao">★</label>
+                <c:choose>
+                  <c:when test="${isOwned}">
+                    <h4 class="fs-6 fw-black fw-bold mb-3 text-dark d-flex align-items-center gap-2">
+                      <i data-lucide="pen-tool" width="16" height="16"></i>
+                      VIẾT ĐÁNH GIÁ THỰC TẾ
+                    </h4>
+                    
+                    <form action="${pageContext.request.contextPath}/api/reviews/add" method="POST">
+                      <input type="hidden" name="gameId" value="${game.id}">
+                      <c:if test="${not empty _csrf.token}">
+                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                      </c:if>
+                      
+                      <div class="mb-3">
+                        <label class="fw-bold text-dark small d-block mb-1">Chọn số sao đánh giá:</label>
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="star-rating-selector d-flex flex-row-reverse justify-content-end gap-1">
+                            <input type="radio" id="star5" name="rating" value="5" class="d-none" required />
+                            <label for="star5" class="star-label cursor-pointer" title="5 sao">★</label>
+                            
+                            <input type="radio" id="star4" name="rating" value="4" class="d-none" />
+                            <label for="star4" class="star-label cursor-pointer" title="4 sao">★</label>
+                            
+                            <input type="radio" id="star3" name="rating" value="3" class="d-none" />
+                            <label for="star3" class="star-label cursor-pointer" title="3 sao">★</label>
+                            
+                            <input type="radio" id="star2" name="rating" value="2" class="d-none" />
+                            <label for="star2" class="star-label cursor-pointer" title="2 sao">★</label>
+                            
+                            <input type="radio" id="star1" name="rating" value="1" class="d-none" />
+                            <label for="star1" class="star-label cursor-pointer" title="1 sao">★</label>
+                          </div>
+                        </div>
                       </div>
+
+                      <div class="mb-3">
+                        <label for="commentArea" class="fw-bold text-dark small d-block mb-1">Nội dung bình luận:</label>
+                        <textarea id="commentArea" name="comment" rows="3" class="form-control border border-2 border-dark fw-semibold" placeholder="Nhập cảm nhận chân thực của bạn về tựa game này..." required maxlength="2000" style="box-shadow: 2px 2px 0 #000; border-radius: 8px;"></textarea>
+                      </div>
+
+                      <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-sm gf-border-2 gf-shadow-sm gf-press fw-black fw-bold px-4 py-2" style="background:var(--gf-green); color:#000;">
+                          <i data-lucide="send" class="d-inline mb-0.5 me-1" width="14" height="14"></i> GỬI ĐÁNH GIÁ
+                        </button>
+                      </div>
+                    </form>
+                  </c:when>
+                  <c:otherwise>
+                    <div class="text-center py-3 text-muted">
+                      <i data-lucide="shopping-bag" class="mb-2" width="32" height="32" style="color:var(--gf-pink) !important;"></i>
+                      <h5 class="fw-bold text-dark fs-6">Chưa sở hữu sản phẩm</h5>
+                      <p class="small fw-semibold mb-0">Bạn phải mua hoặc sở hữu trò chơi này để có thể gửi đánh giá thực tế.</p>
                     </div>
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="commentArea" class="fw-bold text-dark small d-block mb-1">Nội dung bình luận:</label>
-                    <textarea id="commentArea" name="comment" rows="3" class="form-control border border-2 border-dark fw-semibold" placeholder="Nhập cảm nhận chân thực của bạn về tựa game này..." required maxlength="2000" style="box-shadow: 2px 2px 0 #000; border-radius: 8px;">${userReview.comment}</textarea>
-                  </div>
-
-                  <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-sm gf-border-2 gf-shadow-sm gf-press fw-black fw-bold px-4 py-2" style="background:var(--gf-green); color:#000;">
-                      <i data-lucide="send" class="d-inline mb-0.5 me-1" width="14" height="14"></i> GỬI ĐÁNH GIÁ
-                    </button>
-                    <c:if test="${hasReviewed}">
-                      <button type="button" class="btn btn-sm btn-outline-dark fw-bold px-3 py-2" onclick="toggleEditOriginalReviewForm()">
-                        HỦY
-                      </button>
-                    </c:if>
-                  </div>
-                </form>
+                  </c:otherwise>
+                </c:choose>
               </c:when>
               <c:otherwise>
                 <div class="text-center py-2 text-muted">
@@ -718,6 +713,17 @@
                               <i data-lucide="reply" class="text-white" width="10" height="10"></i>
                             </div>
                             <span class="fw-black text-dark small" style="font-size:11px;">Phản hồi từ Nhà phát triển / Admin</span>
+                            <c:if test="${isAdmin || isGamePublisher}">
+                              <form action="${pageContext.request.contextPath}/api/reviews/reply/delete" method="POST" class="ms-auto d-inline mb-0">
+                                <input type="hidden" name="reviewId" value="${rev.id}">
+                                <c:if test="${not empty _csrf.token}">
+                                  <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                                </c:if>
+                                <button type="submit" class="btn btn-link p-0 text-danger fw-bold text-decoration-none small d-flex align-items-center gap-1" style="font-size: 11px;" onclick="return confirm('Bạn có chắc chắn muốn xóa phản hồi này?')">
+                                  <i data-lucide="trash-2" width="12" height="12"></i> Xóa
+                                </button>
+                              </form>
+                            </c:if>
                           </div>
                           <p class="m-0 small fw-semibold text-secondary">${fn:escapeXml(rev.publisherReply)}</p>
                         </div>
@@ -726,11 +732,19 @@
                       <!-- Ý kiến bổ sung từ người dùng -->
                       <c:if test="${not empty rev.userFollowUp}">
                         <div class="mt-3 p-3 rounded-2 border border-2 border-dark" style="background:#F2EAFF; border-color:var(--gf-lavender) !important; margin-left: 40px;">
-                          <div class="d-flex align-items-center gap-2 mb-1">
-                            <div class="gf-border-2 rounded-circle bg-dark d-grid place-items-center" style="width:20px; height:20px; background:var(--gf-pink) !important;">
-                              <i data-lucide="plus" class="text-white" width="10" height="10"></i>
+                          <div class="d-flex align-items-center justify-content-between mb-1">
+                            <div class="d-flex align-items-center gap-2">
+                              <div class="gf-border-2 rounded-circle bg-dark d-grid place-items-center" style="width:20px; height:20px; background:var(--gf-pink) !important;">
+                                <i data-lucide="plus" class="text-white" width="10" height="10"></i>
+                              </div>
+                              <span class="fw-black text-dark small" style="font-size:11px;">Ý kiến bổ sung từ người dùng</span>
                             </div>
-                            <span class="fw-black text-dark small" style="font-size:11px;">Ý kiến bổ sung từ người dùng</span>
+                            <c:if test="${not empty rev.userFollowUpRating}">
+                              <div class="text-warning fw-black small" style="font-size: 11px;">
+                                <c:forEach begin="1" end="${rev.userFollowUpRating}">★</c:forEach>
+                                <c:forEach begin="${rev.userFollowUpRating + 1}" end="5">☆</c:forEach>
+                              </div>
+                            </c:if>
                           </div>
                           <p class="m-0 small fw-semibold text-secondary">${fn:escapeXml(rev.userFollowUp)}</p>
                         </div>
@@ -791,16 +805,16 @@
               <c:set var="mainBanner" value="" />
               <c:catch var="mediaError">
                 <c:forEach var="media" items="${game.mediaList}">
-                  <c:if test="${media.isPrimary || (empty mainBanner && media.mediaType == 'IMAGE')}">
-                    <c:set var="mainBanner" value="${fn:startsWith(media.mediaUrl, 'http') ? media.mediaUrl : pageContext.request.contextPath.concat(media.mediaUrl)}" />
+                  <c:if test="${(media.isPrimary || (empty mainBanner && media.mediaType == 'IMAGE')) && not fn:startsWith(media.mediaUrl, 'http')}">
+                    <c:set var="mainBanner" value="${pageContext.request.contextPath}${media.mediaUrl}" />
                   </c:if>
                 </c:forEach>
               </c:catch>
               
               <c:if test="${not empty mediaError || empty mainBanner}">
                 <c:forEach var="media" items="${game.mediaList}">
-                  <c:if test="${empty mainBanner && (fn:contains(media.mediaUrl, 'thumb') || media.mediaType == 'IMAGE')}">
-                    <c:set var="mainBanner" value="${fn:startsWith(media.mediaUrl, 'http') ? media.mediaUrl : pageContext.request.contextPath.concat(media.mediaUrl)}" />
+                  <c:if test="${empty mainBanner && media.mediaType == 'IMAGE' && not fn:startsWith(media.mediaUrl, 'http')}">
+                    <c:set var="mainBanner" value="${pageContext.request.contextPath}${media.mediaUrl}" />
                   </c:if>
                 </c:forEach>
               </c:if>
@@ -810,9 +824,8 @@
                   <img id="gfMainProductBanner" src="${mainBanner}" class="img-fluid w-100" alt="${game.title}" style="object-fit: cover; max-height: 220px;">
                 </c:when>
                 <c:otherwise>
-                  <div class="bg-light py-5 border-bottom border-dark text-muted">
-                    <i data-lucide="image" width="36" height="36"></i>
-                    <div class="small fw-bold mt-1">No Image Available</div>
+                  <div class="d-flex align-items-center justify-content-center fw-bold text-center bg-light text-dark py-5 border-bottom border-dark" style="min-height: 220px; font-size: 16px;">
+                    <i data-lucide="image-off" width="24" height="24" class="me-2"></i> Chưa có hình ảnh
                   </div>
                 </c:otherwise>
               </c:choose>
@@ -826,8 +839,13 @@
               <i data-lucide="shopping-cart" width="20" height="20"></i> THÊM VÀO GIỎ HÀNG
             </button>
 
-            <button type="button" onclick="toggleFavorite(event, '${game.id}')" class="btn w-100 gf-border gf-shadow-sm gf-press fw-black fw-bold py-2.5 rounded-3 d-flex align-items-center justify-content-center gap-2 bg-white text-dark favorite-button" data-game-id="${game.id}">
+            <button type="button" onclick="toggleFavorite(event, '${game.id}')" class="btn w-100 gf-border gf-shadow-sm gf-press fw-black fw-bold py-2.5 rounded-3 d-flex align-items-center justify-content-center gap-2 bg-white text-dark favorite-button mb-3" data-game-id="${game.id}">
               <i data-lucide="heart" width="18" height="18" style="color:var(--gf-pink);"></i> YÊU THÍCH
+            </button>
+
+            <button type="button" class="btn w-100 gf-border gf-shadow-sm gf-press fw-black fw-bold py-2.5 rounded-3 d-flex align-items-center justify-content-center gap-2 text-dark" 
+                    style="background:var(--gf-lavender); color:#000;" data-bs-toggle="modal" data-bs-target="#gfGamePatchNotesModal">
+              <i data-lucide="scroll" width="18" height="18"></i> LỊCH SỬ BẢN VÁ (${fn:length(patchNotes)})
             </button>
           </div>
 
@@ -835,6 +853,56 @@
       </div>
     </div>
   </main>
+
+  <!-- Modal Lịch Sử Bản Vá (Patch Notes) -->
+  <div class="modal fade" id="gfGamePatchNotesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content bg-white border border-3 border-dark gf-shadow" style="border-radius: 16px;">
+        <div class="modal-header bg-warning border-bottom border-3 border-dark py-3" style="border-radius: 13px 13px 0 0;">
+          <h5 class="modal-title fw-black text-dark d-flex align-items-center">
+            <i data-lucide="scroll" class="me-2" width="22" height="22"></i> 
+            LỊCH SỬ BẢN VÁ & CẬP NHẬT
+          </h5>
+          <button type="button" class="btn-close modal-close-brutal" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4" style="max-height: 60vh; overflow-y: auto;">
+          <c:choose>
+            <c:when test="${not empty patchNotes}">
+              <div class="d-flex flex-column gap-4">
+                <c:forEach var="note" items="${patchNotes}" varStatus="status">
+                  <div class="p-3 bg-light border border-2 border-dark rounded-3 position-relative" style="box-shadow: 3px 3px 0px #000;">
+                    <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom border-1 border-dark flex-wrap gap-2">
+                      <span class="badge border border-2 border-black text-dark fw-bold px-3 py-1.5" style="background:var(--gf-yellow); border-radius: 8px; font-size: 13px;">
+                        Phiên bản ${note.version}
+                      </span>
+                      <span class="small fw-bold text-secondary gf-muted">
+                        Ngày cập nhật: <fmt:parseDate value="${note.publishedAt}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedNoteDate" type="both" /><fmt:formatDate value="${parsedNoteDate}" pattern="dd/MM/yyyy HH:mm" />
+                      </span>
+                    </div>
+                    <div class="fw-semibold text-secondary description-text" style="white-space: pre-wrap; font-size: 14px; color: #333 !important;">
+                      ${fn:escapeXml(note.content)}
+                    </div>
+                  </div>
+                </c:forEach>
+              </div>
+            </c:when>
+            <c:otherwise>
+              <div class="text-center py-5 text-muted">
+                <div class="mx-auto mb-3 gf-border rounded-circle d-grid place-items-center bg-light" style="width:64px;height:64px;">
+                  <i data-lucide="scroll" width="30" height="30" class="text-secondary"></i>
+                </div>
+                <h5 class="fw-black fw-bold mb-1 text-dark">Chưa có thông tin cập nhật</h5>
+                <p class="small text-secondary gf-muted mb-0">Trò chơi hiện chưa có bản vá hoặc ghi chú cập nhật nào được công bố.</p>
+              </div>
+            </c:otherwise>
+          </c:choose>
+        </div>
+        <div class="modal-footer border-top border-3 border-dark bg-light py-2" style="border-radius: 0 0 13px 13px;">
+          <button type="button" class="btn btn-sm btn-dark gf-border gf-shadow-sm gf-press fw-bold px-3 py-2" data-bs-dismiss="modal" style="border-radius: 8px;">Đóng</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Lightbox Modal Phóng To Sáng Tạo Mở Rộng & Nút Tắt Lơ Lửng -->
   <div class="modal fade" id="gfGlobalImageLightbox" tabindex="-1" aria-hidden="true">
@@ -1100,11 +1168,12 @@
         const recContainer = document.getElementById('recSpecsContainer');
 
         const labelMap = {
-            os: "Hệ điều hành",
+            os: "Hệ điều hành (OS)",
             cpu: "Bộ vi xử lý (CPU)",
             ram: "Bộ nhớ RAM",
             gpu: "Card đồ họa (GPU)",
-            storage: "Ổ cứng trống"
+            dx: "Phiên bản DirectX",
+            storage: "Lưu trữ (Storage)"
         };
 
         // CẤU HÌNH THỜI THƯỢNG MẶC ĐỊNH NẾU DỮ LIỆU CỦA GAME TRỐNG
@@ -1113,21 +1182,25 @@
             cpu: "Intel Core i5-4460 / AMD FX-6300",
             ram: "8 GB RAM",
             gpu: "NVIDIA GeForce GTX 960 / AMD Radeon R9 280",
-            storage: "5 GB dung lượng khả dụng"
+            dx: "DirectX 11",
+            storage: "5 GB dung lượng khả dụng (Khuyến khích SSD)"
         };
         const defaultRecSpecs = {
             os: "Windows 10/11 (64-bit)",
             cpu: "Intel Core i7-4770 / AMD Ryzen 5 1600",
             ram: "16 GB RAM",
             gpu: "NVIDIA GeForce GTX 1060 / AMD Radeon RX 580",
-            storage: "5 GB dung lượng khả dụng"
+            dx: "DirectX 12",
+            storage: "5 GB dung lượng khả dụng (Khuyến khích SSD)"
         };
 
-        function buildHtml(rawJson, defaultData) {
+        function buildHtml(rawJson, defaultData, isRecommended) {
             try {
                 let data = defaultData;
+                let parsed = false;
                 if (rawJson && rawJson.trim() !== "" && rawJson.trim() !== "false" && rawJson.trim().startsWith('{')) {
                     data = JSON.parse(rawJson);
+                    parsed = true;
                 }
                 
                 let htmlResult = "";
@@ -1136,6 +1209,17 @@
                         htmlResult += '<li><strong class="text-secondary">' + labelMap[key] + ':</strong> ' + data[key] + '</li>';
                     }
                 }
+
+                if (parsed && data.notes && data.notes.trim() !== "") {
+                    htmlResult += '<li><strong class="text-secondary">Ghi chú bổ sung:</strong> ' + data.notes + '</li>';
+                }
+
+                if (isRecommended) {
+                    htmlResult += '<li class="mt-2" style="color:var(--gf-green); font-size:12px;"><strong style="color:var(--gf-green);">Ghi chú thêm:</strong> Nhắm tới hiệu năng 1080p/60fps ở mức cài đặt High Graphics.</li>';
+                } else {
+                    htmlResult += '<li class="mt-2 text-muted" style="font-size:12px;"><strong class="text-muted">Ghi chú thêm:</strong> Nhắm tới hiệu năng 1080p/30fps ở mức cài đặt Low Graphics.</li>';
+                }
+
                 return htmlResult;
             } catch (e) {
                 // Fallback cứu hộ
@@ -1145,21 +1229,20 @@
                         htmlResult += '<li><strong class="text-secondary">' + labelMap[key] + ':</strong> ' + defaultData[key] + '</li>';
                     }
                 }
+                if (isRecommended) {
+                    htmlResult += '<li class="mt-2" style="color:var(--gf-green); font-size:12px;"><strong style="color:var(--gf-green);">Ghi chú thêm:</strong> Nhắm tới hiệu năng 1080p/60fps ở mức cài đặt High Graphics.</li>';
+                } else {
+                    htmlResult += '<li class="mt-2 text-muted" style="font-size:12px;"><strong class="text-muted">Ghi chú thêm:</strong> Nhắm tới hiệu năng 1080p/30fps ở mức cài đặt Low Graphics.</li>';
+                }
                 return htmlResult;
             }
         }
 
-        minContainer.innerHTML = buildHtml(rawMinJson, defaultMinSpecs);
-        recContainer.innerHTML = buildHtml(rawRecJson, defaultRecSpecs);
+        minContainer.innerHTML = buildHtml(rawMinJson, defaultMinSpecs, false);
+        recContainer.innerHTML = buildHtml(rawRecJson, defaultRecSpecs, true);
     }
 
     // COMMUNITY REVIEWS JAVASCRIPT LOGIC
-    function toggleEditOriginalReviewForm() {
-        const formContainer = document.getElementById('gfOriginalReviewFormContainer');
-        if (formContainer) {
-            formContainer.style.display = (formContainer.style.display === 'none') ? 'block' : 'none';
-        }
-    }
 
     function toggleReplyForm(reviewId) {
         const replyForm = document.getElementById('replyForm_' + reviewId);
@@ -1168,95 +1251,7 @@
         }
     }
 
-    // ADMIN JAVASCRIPT LOGIC
-    function toggleAdminBadgePanel() {
-        const panel = document.getElementById('gfAdminBadgePanel');
-        if (panel) {
-            panel.style.display = (panel.style.display === 'none') ? 'block' : 'none';
-        }
-    }
-
-    function toggleCreateBadgeForm() {
-        const formBlock = document.getElementById('gfCreateBadgeBlock');
-        if (formBlock) {
-            formBlock.style.display = (formBlock.style.display === 'none') ? 'block' : 'none';
-        }
-    }
-
-    // Admin API: Lưu các tích chọn badges cho game
-    function adminSaveGameBadges(event) {
-        event.preventDefault();
-        const checkedBoxes = document.querySelectorAll("input[name='activeBadges']:checked");
-        const badgeIds = Array.from(checkedBoxes).map(cb => cb.value).join(",");
-        
-        const csrfToken = window.GAMEFORGE_CSRF_TOKEN || "";
-        const csrfHeader = window.GAMEFORGE_CSRF_HEADER || "_csrf";
-
-        let body = "gameId=" + encodeURIComponent('${game.id}') + "&badges=" + encodeURIComponent(badgeIds);
-        if (csrfToken) body += "&" + encodeURIComponent(csrfHeader) + "=" + encodeURIComponent(csrfToken);
-
-        fetch(window.GAMEFORGE_CONTEXT_PATH + '/api/admin/save-game-badges', {
-            method: 'POST',
-            headers: (function() {
-                var h = { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' };
-                if (csrfToken) h[csrfHeader] = csrfToken;
-                return h;
-            })(),
-            body: body
-        })
-        .then(res => res.text())
-        .then(text => {
-            if (text.startsWith("ERROR")) {
-                alert(text);
-            } else {
-                alert("Đã lưu các tích chọn huy hiệu của game thành công!");
-                window.location.reload();
-            }
-        })
-        .catch(err => {
-            alert("Lỗi mạng khi lưu: " + err);
-        });
-    }
-
-    // Admin API: Khởi tạo huy hiệu mới tinh vào hệ thống
-    function adminCreateBadge(event) {
-        event.preventDefault();
-        const title = document.getElementById('newBadgeTitle').value;
-        const icon = document.getElementById('newBadgeIcon').value;
-        const color = document.getElementById('newBadgeColor').value;
-        const type = document.getElementById('newBadgeType').value;
-
-        const csrfToken = window.GAMEFORGE_CSRF_TOKEN || "";
-        const csrfHeader = window.GAMEFORGE_CSRF_HEADER || "_csrf";
-
-        let body = "title=" + encodeURIComponent(title) + 
-                   "&icon=" + encodeURIComponent(icon) + 
-                   "&color=" + encodeURIComponent(color) + 
-                   "&type=" + encodeURIComponent(type);
-        if (csrfToken) body += "&" + encodeURIComponent(csrfHeader) + "=" + encodeURIComponent(csrfToken);
-
-        fetch(window.GAMEFORGE_CONTEXT_PATH + '/api/admin/create-badge', {
-            method: 'POST',
-            headers: (function() {
-                var h = { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' };
-                if (csrfToken) h[csrfHeader] = csrfToken;
-                return h;
-            })(),
-            body: body
-        })
-        .then(res => res.text())
-        .then(text => {
-            if (text.startsWith("ERROR")) {
-                alert(text);
-            } else {
-                alert("Chúc mừng! Đã định nghĩa huy hiệu mới thành công. Hãy tích chọn nó cho game!");
-                window.location.reload();
-            }
-        })
-        .catch(err => {
-            alert("Lỗi mạng khi thêm: " + err);
-        });
-    }
+    // ADMIN JAVASCRIPT LOGIC (Badge management has been moved entirely to Admin central panel)
 
     document.addEventListener("DOMContentLoaded", function() {
         renderSystemSpecifications();

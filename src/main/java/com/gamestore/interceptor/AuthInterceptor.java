@@ -1,12 +1,17 @@
 package com.gamestore.interceptor;
 
 import com.gamestore.entity.User;
+import com.gamestore.dao.NotificationDAO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class AuthInterceptor implements HandlerInterceptor {
+
+    @Autowired
+    private NotificationDAO notificationDAO;
 
     @Override
     public boolean preHandle(HttpServletRequest request,
@@ -17,6 +22,15 @@ public class AuthInterceptor implements HandlerInterceptor {
         String uri = request.getRequestURI();
 
         User currentUser = (User) request.getSession().getAttribute("currentUser");
+        if (currentUser != null) {
+            long unreadCount = 0;
+            if (currentUser.hasRole("ROLE_ADMIN")) {
+                unreadCount = notificationDAO.countUnreadForAdmins();
+            } else if (currentUser.hasRole("ROLE_PUBLISHER")) {
+                unreadCount = notificationDAO.countUnreadByUser(currentUser.getId());
+            }
+            request.setAttribute("unreadNotificationCount", unreadCount);
+        }
 
         if (isLoginRequired(uri, contextPath)) {
             if (currentUser == null) {

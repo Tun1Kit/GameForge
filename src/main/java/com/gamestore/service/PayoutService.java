@@ -6,6 +6,8 @@ import com.gamestore.entity.PayoutRequest;
 import com.gamestore.entity.PublisherProfile;
 import com.gamestore.entity.User;
 import com.gamestore.entity.Wallet;
+import com.gamestore.entity.Notification;
+import com.gamestore.dao.NotificationDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,9 @@ public class PayoutService {
 
     @Autowired
     private WalletService walletService;
+
+    @Autowired
+    private NotificationDAO notificationDAO;
 
     public List<PayoutRequest> getAllRequests() {
         return payoutRequestDAO.findAllOrderByNewest();
@@ -60,6 +65,15 @@ public class PayoutService {
         request.setStatus("PENDING");
 
         payoutRequestDAO.save(request);
+
+        // Notify Admins
+        Notification notif = new Notification();
+        notif.setTitle("Yêu cầu Payout mới");
+        notif.setContent("Nhà phát hành '" + profile.getCompanyName() + "' đã gửi yêu cầu rút tiền " + amount + "đ.");
+        notif.setType("PAYOUT");
+        notif.setTargetUrl("/admin/payouts");
+        notif.setUser(null); // Admin wide
+        notificationDAO.save(notif);
     }
 
     public void approvePayout(Long requestId) {
@@ -73,6 +87,15 @@ public class PayoutService {
         request.setStatus("PAID");
         request.setProcessedAt(LocalDateTime.now());
         payoutRequestDAO.update(request);
+
+        // Notify Publisher User
+        Notification notif = new Notification();
+        notif.setTitle("Yêu cầu Payout được duyệt");
+        notif.setContent("Yêu cầu rút tiền " + request.getAmount() + "đ của bạn đã được phê duyệt và chuyển khoản thành công.");
+        notif.setType("PAYOUT");
+        notif.setTargetUrl("/publisher/payouts");
+        notif.setUser(publisherUser);
+        notificationDAO.save(notif);
     }
 
     public void rejectPayout(Long requestId) {
@@ -83,6 +106,15 @@ public class PayoutService {
         request.setStatus("REJECTED");
         request.setProcessedAt(LocalDateTime.now());
         payoutRequestDAO.update(request);
+
+        // Notify Publisher User
+        Notification notif = new Notification();
+        notif.setTitle("Yêu cầu Payout bị từ chối");
+        notif.setContent("Yêu cầu rút tiền " + request.getAmount() + "đ của bạn đã bị từ chối. Vui lòng liên hệ hỗ trợ hoặc thử lại.");
+        notif.setType("PAYOUT");
+        notif.setTargetUrl("/publisher/payouts");
+        notif.setUser(request.getPublisher().getUser());
+        notificationDAO.save(notif);
     }
 
     private void validateAmount(BigDecimal amount) {

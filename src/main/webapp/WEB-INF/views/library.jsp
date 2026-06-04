@@ -62,50 +62,64 @@
   <div class="gf-decor-pill" style="top: 68%; right: 3%; background: #94FFB4; transform: rotate(-10deg);"></div>
 
   <!-- NAVBAR -->
-  <nav class="gf-navbar">
-    <div class="container-xl py-3">
+  <!-- NAVBAR -->
+  <nav class="gf-navbar" style="background:#fff;border-bottom:3px solid #000;">
+    <div class="container-xl py-2">
       <div class="d-flex align-items-center justify-content-between gap-3">
         <a href="${pageContext.request.contextPath}/" class="d-flex align-items-center gap-2 text-decoration-none text-reset flex-shrink-0">
           <div class="gf-logo-box gf-press">
             <i data-lucide="gamepad-2" width="20" height="20"></i>
           </div>
-          <span class="fs-5 fw-black fw-bold">GAME<span style="color:var(--gf-green)">FORGE</span></span>
+          <span class="fs-5 fw-black fw-bold text-dark">GAME<span style="color:var(--gf-green)">FORGE</span></span>
         </a>
-
-        <div class="d-flex align-items-center gap-2 gap-sm-3">
-          <a href="${pageContext.request.contextPath}/dashboard" class="btn gf-border-2 gf-shadow-sm gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3">
-            <i data-lucide="layout-dashboard" width="16" height="16"></i> Bảng điều khiển
-          </a>
+        <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-end flex-wrap">
+          <c:if test="${currentUser.hasRole('ROLE_ADMIN')}">
+            <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn btn-sm gf-border-2 gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 px-3" style="height:38px;border-color:#000;line-height:1;flex-shrink:0;">
+              <i data-lucide="shield-check" width="14" height="14"></i> Quản Trị Viên
+            </a>
+          </c:if>
+          <c:if test="${currentUser.hasRole('ROLE_PUBLISHER')}">
+            <a href="${pageContext.request.contextPath}/publisher/dashboard" class="btn btn-sm gf-border-2 gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 px-3" style="height:38px;border-color:#000;line-height:1;flex-shrink:0;">
+              <i data-lucide="layout-dashboard" width="14" height="14"></i> Nhà Phát Hành
+            </a>
+          </c:if>
           
-          <a href="${pageContext.request.contextPath}/" class="btn gf-border-2 gf-shadow-sm gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3">
-            <i data-lucide="arrow-left" width="16" height="16"></i> Cửa hàng
+          <a href="${pageContext.request.contextPath}/" class="btn btn-sm gf-border-2 gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 px-3" style="height:38px;border-color:#000;line-height:1;flex-shrink:0;">
+            <i data-lucide="arrow-left" width="14" height="14"></i> Cửa hàng
           </a>
 
           <!-- DROPDOWN USER -->
-          <div class="dropdown">
-            <button class="btn dropdown-toggle d-flex align-items-center gap-2 gf-press"
-                    data-bs-toggle="dropdown" type="button"
-                    style="background: #18181b; border: 3px solid #000; border-radius: 999px; height: 42px; padding: 4px 16px 4px 6px; color: #fff; box-shadow: 3px 3px 0 0 #000;">
+          <div class="dropdown" style="flex-shrink: 0;">
+            <button class="btn btn-sm gf-border-2 gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" style="height:38px;border-color:#000;padding:4px 12px 4px 6px;flex-shrink:0;line-height:1;">
               <img src="${not empty currentUser.avatar ? currentUser.avatar : 'https://api.dicebear.com/7.x/pixel-art/svg?seed=Vinh'}" 
                    alt="Avatar" 
-                   style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 2px solid #fff;">
-              <span class="d-none d-sm-inline fw-black text-white" style="font-size:13px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${fn:escapeXml(currentUser.fullName)}</span>
-              <i data-lucide="chevron-down" width="16" height="16" class="text-white"></i>
+                   style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1.5px solid #000;">
+              <span class="d-none d-sm-inline fw-black text-dark" style="font-size:12px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${fn:escapeXml(currentUser.fullName)}</span>
+              <i data-lucide="chevron-down" width="14" height="14" class="text-dark"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end gf-border-2 gf-shadow-sm p-2" style="border-radius: 12px; min-width: 210px;">
-              <li>
-                <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/dashboard">
-                  <i data-lucide="layout-dashboard" width="16" height="16"></i> Bảng điều khiển
-                </a>
-              </li>
+              <c:if test="${currentUser.hasRole('ROLE_ADMIN')}">
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/admin/dashboard">
+                    <i data-lucide="shield-check" width="14" height="14"></i> Quản Trị Viên
+                  </a>
+                </li>
+              </c:if>
+              <c:if test="${currentUser.hasRole('ROLE_PUBLISHER')}">
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/publisher/dashboard">
+                    <i data-lucide="layout-dashboard" width="14" height="14"></i> Nhà Phát Hành
+                  </a>
+                </li>
+              </c:if>
               <li>
                 <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/library">
-                  <i data-lucide="library" width="16" height="16"></i> Thư viện game
+                  <i data-lucide="library" width="14" height="14"></i> Thư viện game
                 </a>
               </li>
               <li>
                 <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/transactions">
-                  <i data-lucide="history" width="16" height="16"></i> Lịch sử giao dịch
+                  <i data-lucide="history" width="14" height="14"></i> Lịch sử giao dịch
                 </a>
               </li>
               <li class="dropdown-divider my-2" style="border-top: 2px solid #000;"></li>
@@ -124,11 +138,11 @@
               </li>
               <li class="dropdown-divider my-2" style="border-top: 2px solid #000;"></li>
               <li>
-<a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2 text-danger"
-   href="${pageContext.request.contextPath}/logout"
-   onclick="localStorage.removeItem('gameforge_favorite_games_bootstrap_jsp');localStorage.removeItem('gameforge_cart_games_bootstrap_jsp');localStorage.removeItem('gameforge_cart_user_id');">
-  <i data-lucide="log-out" width="16" height="16"></i> Đăng xuất
-</a>
+                <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2 text-danger"
+                   href="${pageContext.request.contextPath}/logout"
+                   onclick="localStorage.removeItem('gameforge_favorite_games_bootstrap_jsp');localStorage.removeItem('gameforge_cart_games_bootstrap_jsp');localStorage.removeItem('gameforge_cart_user_id');">
+                  <i data-lucide="log-out" width="14" height="14"></i> Đăng xuất
+                </a>
               </li>
             </ul>
           </div>
@@ -193,15 +207,18 @@
                  data-favorite="${isFavorite ? 'true' : 'false'}"
                  data-acquired="${item.acquiredAt}"
                  data-item-id="${item.id}"
-                 data-game-id="${item.game.id}">
+                 data-game-id="${item.game.id}"
+                 data-status="${item.status}">
               <article class="gf-game-card gf-press">
                 <div class="game-cover-container">
                   <c:choose>
-                    <c:when test="${not empty item.game.mediaList}">
-                      <img src="${item.game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(item.game.title)}" loading="lazy">
+                    <c:when test="${not empty item.game.mediaList && not fn:startsWith(item.game.mediaList[0].mediaUrl, 'http')}">
+                      <img src="${pageContext.request.contextPath}${item.game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(item.game.title)}" loading="lazy" style="width:100%; height:140px; object-fit:cover;">
                     </c:when>
                     <c:otherwise>
-                      <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg" alt="Cover" loading="lazy">
+                      <div class="d-flex align-items-center justify-content-center fw-bold text-center w-100 bg-light text-dark gf-muted" style="height:140px; font-size: 12px;">
+                        Chưa có hình ảnh
+                      </div>
                     </c:otherwise>
                   </c:choose>
                   
@@ -216,11 +233,22 @@
                 
                 <div class="p-4 d-flex flex-column flex-grow-1">
                   <div class="d-flex align-items-center justify-content-between mb-3">
-                    <span class="badge border border-2 border-black fw-bold py-1 px-2 text-dark" 
-                          id="statusBadge-${item.id}" 
-                          style="background: #e9ecef; border-radius: 999px; font-size: 11px;">
-                      Chưa cài đặt
-                    </span>
+                    <c:choose>
+                      <c:when test="${item.status == 'REFUNDED'}">
+                        <span class="badge border border-2 border-black fw-bold py-1 px-2 text-white bg-danger" 
+                              id="statusBadge-${item.id}" 
+                              style="border-radius: 999px; font-size: 11px;">
+                          Đã hoàn tiền (Game bị xóa)
+                        </span>
+                      </c:when>
+                      <c:otherwise>
+                        <span class="badge border border-2 border-black fw-bold py-1 px-2 text-dark" 
+                              id="statusBadge-${item.id}" 
+                              style="background: #e9ecef; border-radius: 999px; font-size: 11px;">
+                          Chưa cài đặt
+                        </span>
+                      </c:otherwise>
+                    </c:choose>
                     <span class="small text-secondary gf-muted" style="font-size: 12px;">
                       Mua: <fmt:parseDate value="${item.acquiredAt}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedAcquiredDate" type="both" /><fmt:formatDate value="${parsedAcquiredDate}" pattern="dd/MM/yyyy" />
                     </span>
@@ -240,9 +268,18 @@
                   </div>
  
                   <div class="d-flex gap-2 align-items-center" id="actionContainer-${item.id}">
-                    <button type="button" onclick="startDownloadSimulation('${item.id}', '${fn:escapeXml(item.game.title)}')" class="btn w-100 gf-border gf-shadow-sm gf-press fw-bold py-2" style="background: var(--gf-blue); border-radius: 10px;">
-                      <i data-lucide="download" width="16" height="16" class="me-1"></i> Tải về
-                    </button>
+                    <c:choose>
+                      <c:when test="${item.status == 'REFUNDED'}">
+                        <button type="button" disabled class="btn w-100 gf-border gf-shadow-sm fw-bold py-2 bg-secondary text-white opacity-50" style="border-radius: 10px; cursor: not-allowed;">
+                          <i data-lucide="slash" width="16" height="16" class="me-1"></i> Không khả dụng
+                        </button>
+                      </c:when>
+                      <c:otherwise>
+                        <button type="button" onclick="startDownloadSimulation('${item.id}', '${fn:escapeXml(item.game.title)}')" class="btn w-100 gf-border gf-shadow-sm gf-press fw-bold py-2" style="background: var(--gf-blue); border-radius: 10px;">
+                          <i data-lucide="download" width="16" height="16" class="me-1"></i> Tải về
+                        </button>
+                      </c:otherwise>
+                    </c:choose>
                   </div>
                 </div>
               </article>
@@ -330,8 +367,19 @@
                 <input type="password" name="password" placeholder="••••••••" class="form-control gf-border-2 fw-semibold px-3 py-2" style="border-radius: 8px; font-size: 14px;" maxlength="128">
               </div>
               <div class="mb-4">
-                <label class="form-label fw-bold text-dark" style="font-size: 13px;">Đường dẫn ảnh đại diện (URL)</label>
-                <input type="text" name="avatar" value="${fn:escapeXml(currentUser.avatar)}" placeholder="https://api.dicebear.com/..." class="form-control gf-border-2 fw-semibold px-3 py-2" style="border-radius: 8px; font-size: 14px;" maxlength="500">
+                <input type="hidden" name="avatar" value="${fn:escapeXml(currentUser.avatar)}">
+                
+                <label class="form-label fw-bold text-dark" style="font-size: 13px; display: block;">Chọn ảnh đại diện có sẵn:</label>
+                <div class="d-flex flex-wrap gap-2 p-2 bg-light gf-border rounded-3 mb-2" style="max-height: 150px; overflow-y: auto;">
+                  <c:forEach var="seed" items="${fn:split('Aiden,Buster,Coco,Duke,Ella,Felix,Ginger,Harley,Izzy,Jax,Kiki,Loki,Milo,Nala,Oscar,Penny,Rusty,Shadow', ',')}">
+                    <c:set var="avatarUrl" value="https://api.dicebear.com/7.x/pixel-art/svg?seed=${seed}" />
+                    <img src="${avatarUrl}" 
+                         alt="${seed}" 
+                         class="preset-avatar-option gf-border-2 gf-press cursor-pointer rounded-circle" 
+                         style="width: 40px; height: 40px; object-fit: cover; background: #fff; cursor: pointer; border-color: ${currentUser.avatar == avatarUrl ? 'var(--gf-green)' : '#000'};"
+                         onclick="selectPresetAvatar('${avatarUrl}', this)">
+                  </c:forEach>
+                </div>
               </div>
               
               <button type="submit" class="btn w-100 gf-border gf-shadow-sm gf-press fw-bold py-2.5" style="background: var(--gf-green); border-radius: 10px;">

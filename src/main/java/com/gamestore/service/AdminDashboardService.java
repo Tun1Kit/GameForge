@@ -55,8 +55,15 @@ public class AdminDashboardService {
         stats.setTotalWalletBalance(totalBalance != null ? totalBalance : BigDecimal.ZERO);
 
         // Orders today
-        stats.setOrdersToday(count(
-                "SELECT COUNT(o.id) FROM Order o WHERE CAST(o.createdAt AS DATE) = CAST(GETDATE() AS DATE) AND o.status = 'PAID'"));
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalDateTime start = today.atStartOfDay();
+        java.time.LocalDateTime end = today.plusDays(1).atStartOfDay();
+        Long ordersToday = sessionFactory.getCurrentSession()
+                .createQuery("SELECT COUNT(o.id) FROM Order o WHERE o.createdAt >= :start AND o.createdAt < :end AND o.status = 'PAID'", Long.class)
+                .setParameter("start", start)
+                .setParameter("end", end)
+                .uniqueResult();
+        stats.setOrdersToday(ordersToday != null ? ordersToday : 0L);
 
         return stats;
     }

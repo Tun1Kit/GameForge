@@ -24,6 +24,17 @@ document.addEventListener("DOMContentLoaded", function() {
   gridCols.forEach(col => {
     const itemId = col.getAttribute("data-item-id");
     const gameId = col.getAttribute("data-game-id");
+    const status = col.getAttribute("data-status");
+
+    if (status === "REFUNDED") {
+      const statusBadge = document.getElementById(`statusBadge-${itemId}`);
+      if (statusBadge) {
+        statusBadge.innerText = "Đã hoàn tiền (Game bị xóa)";
+        statusBadge.style.backgroundColor = "var(--gf-pink)";
+        statusBadge.style.color = "#fff";
+      }
+      return; // Bỏ qua logic cài đặt của localstorage
+    }
 
     // 1.1 Khởi tạo trạng thái cài đặt
     const isInstalled = installedIds.includes(itemId);
@@ -330,5 +341,20 @@ document.addEventListener("DOMContentLoaded", function() {
       console.error("Profile update error:", err);
       alert("Đã xảy ra lỗi kết nối khi lưu thông tin.");
     });
+  };
+
+  window.selectPresetAvatar = function(url, imgEl) {
+    const avatarInput = document.querySelector("#profileUpdateForm [name='avatar']");
+    if (avatarInput) {
+      avatarInput.value = url;
+    }
+    const previewImg = document.getElementById("avatarImagePreview");
+    if (previewImg) {
+      previewImg.src = url;
+    }
+    document.querySelectorAll(".preset-avatar-option").forEach(img => {
+      img.style.borderColor = "#000";
+    });
+    imgEl.style.borderColor = "var(--gf-green)";
   };
 });

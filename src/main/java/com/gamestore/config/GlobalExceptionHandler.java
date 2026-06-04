@@ -29,13 +29,31 @@ public class GlobalExceptionHandler {
         Map<String, Object> response = new HashMap<>();
         response.put("success", false);
 
-        if (ex instanceof org.springframework.dao.DataIntegrityViolationException) {
-            response.put("message", "Lỗi dữ liệu: thông tin không hợp lệ hoặc trùng lặp.");
-        } else if (ex instanceof org.hibernate.exception.ConstraintViolationException) {
-            response.put("message", "Lỗi ràng buộc database.");
-        } else {
-            response.put("message", "Lỗi máy chủ: " + ex.getMessage());
+        Throwable cause = ex;
+        String constraintName = null;
+        String sqlMessage = null;
+        
+        while (cause != null) {
+            if (cause instanceof org.hibernate.exception.ConstraintViolationException) {
+                org.hibernate.exception.ConstraintViolationException cve = (org.hibernate.exception.ConstraintViolationException) cause;
+                constraintName = cve.getConstraintName();
+                if (cve.getSQLException() != null) {
+                    sqlMessage = cve.getSQLException().getMessage();
+                }
+            } else if (cause instanceof java.sql.SQLException) {
+                sqlMessage = cause.getMessage();
+            }
+            cause = cause.getCause();
         }
+
+        String msg = "Lỗi máy chủ: " + ex.getMessage();
+        if (sqlMessage != null) {
+            msg += " | SQL Error: " + sqlMessage;
+        }
+        if (constraintName != null) {
+            msg += " | Constraint: " + constraintName;
+        }
+        response.put("message", msg);
 
         StringWriter sw = new StringWriter();
         ex.printStackTrace(new PrintWriter(sw));

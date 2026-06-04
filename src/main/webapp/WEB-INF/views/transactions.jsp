@@ -51,50 +51,64 @@
   <div class="gf-decor-pill" style="top: 72%; right: 4%; background: #94FFB4; transform: rotate(-25deg);"></div>
 
   <!-- NAVBAR -->
-  <nav class="gf-navbar">
-    <div class="container-xl py-3">
+  <nav class="gf-navbar" style="background:#fff;border-bottom:3px solid #000;">
+    <div class="container-xl py-2">
       <div class="d-flex align-items-center justify-content-between gap-3">
         <a href="${pageContext.request.contextPath}/" class="d-flex align-items-center gap-2 text-decoration-none text-reset flex-shrink-0">
           <div class="gf-logo-box gf-press">
             <i data-lucide="gamepad-2" width="20" height="20"></i>
           </div>
-          <span class="fs-5 fw-black fw-bold">GAME<span style="color:var(--gf-green)">FORGE</span></span>
+          <span class="fs-5 fw-black fw-bold text-dark">GAME<span style="color:var(--gf-green)">FORGE</span></span>
         </a>
 
-        <div class="d-flex align-items-center gap-2 gap-sm-3">
-          <a href="${pageContext.request.contextPath}/dashboard" class="btn gf-border-2 gf-shadow-sm gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3">
-            <i data-lucide="layout-dashboard" width="16" height="16"></i> Bảng điều khiển
-          </a>
+        <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-end flex-wrap">
+          <c:if test="${currentUser.hasRole('ROLE_ADMIN')}">
+            <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn btn-sm gf-border-2 gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 px-3" style="height:38px;border-color:#000;line-height:1;flex-shrink:0;">
+              <i data-lucide="shield-check" width="14" height="14"></i> Quản Trị Viên
+            </a>
+          </c:if>
+          <c:if test="${currentUser.hasRole('ROLE_PUBLISHER')}">
+            <a href="${pageContext.request.contextPath}/publisher/dashboard" class="btn btn-sm gf-border-2 gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 px-3" style="height:38px;border-color:#000;line-height:1;flex-shrink:0;">
+              <i data-lucide="layout-dashboard" width="14" height="14"></i> Nhà Phát Hành
+            </a>
+          </c:if>
           
-          <a href="${pageContext.request.contextPath}/library" class="btn gf-border-2 gf-shadow-sm gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 py-2 px-3">
-            <i data-lucide="library" width="16" height="16"></i> Thư viện game
+          <a href="${pageContext.request.contextPath}/" class="btn btn-sm gf-border-2 gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 px-3" style="height:38px;border-color:#000;line-height:1;flex-shrink:0;">
+            <i data-lucide="arrow-left" width="14" height="14"></i> Cửa hàng
           </a>
 
           <!-- DROPDOWN USER -->
-          <div class="dropdown">
-            <button class="btn dropdown-toggle d-flex align-items-center gap-2 gf-press"
-                    data-bs-toggle="dropdown" type="button"
-                    style="background: #18181b; border: 3px solid #000; border-radius: 999px; height: 42px; padding: 4px 16px 4px 6px; color: #fff; box-shadow: 3px 3px 0 0 #000;">
+          <div class="dropdown" style="flex-shrink: 0;">
+            <button class="btn btn-sm gf-border-2 gf-press bg-white text-dark fw-bold rounded-3 d-flex align-items-center gap-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" style="height:38px;border-color:#000;padding:4px 12px 4px 6px;flex-shrink:0;line-height:1;">
               <img src="${not empty currentUser.avatar ? currentUser.avatar : 'https://api.dicebear.com/7.x/pixel-art/svg?seed=Vinh'}" 
                    alt="Avatar" 
-                   style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 2px solid #fff;">
-              <span class="d-none d-sm-inline fw-black text-white" style="font-size:13px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${fn:escapeXml(currentUser.fullName)}</span>
-              <i data-lucide="chevron-down" width="16" height="16" class="text-white"></i>
+                   style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1.5px solid #000;">
+              <span class="d-none d-sm-inline fw-black text-dark" style="font-size:12px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${fn:escapeXml(currentUser.fullName)}</span>
+              <i data-lucide="chevron-down" width="14" height="14" class="text-dark"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end gf-border-2 gf-shadow-sm p-2" style="border-radius: 12px; min-width: 210px;">
-              <li>
-                <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/dashboard">
-                  <i data-lucide="layout-dashboard" width="16" height="16"></i> Bảng điều khiển
-                </a>
-              </li>
+              <c:if test="${currentUser.hasRole('ROLE_ADMIN')}">
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/admin/dashboard">
+                    <i data-lucide="shield-check" width="14" height="14"></i> Quản Trị Viên
+                  </a>
+                </li>
+              </c:if>
+              <c:if test="${currentUser.hasRole('ROLE_PUBLISHER')}">
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/publisher/dashboard">
+                    <i data-lucide="layout-dashboard" width="14" height="14"></i> Nhà Phát Hành
+                  </a>
+                </li>
+              </c:if>
               <li>
                 <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/library">
-                  <i data-lucide="library" width="16" height="16"></i> Thư viện game
+                  <i data-lucide="library" width="14" height="14"></i> Thư viện game
                 </a>
               </li>
               <li>
                 <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2" href="${pageContext.request.contextPath}/transactions">
-                  <i data-lucide="history" width="16" height="16"></i> Lịch sử giao dịch
+                  <i data-lucide="history" width="14" height="14"></i> Lịch sử giao dịch
                 </a>
               </li>
               <li class="dropdown-divider my-2" style="border-top: 2px solid #000;"></li>
@@ -116,11 +130,10 @@
                 <a class="dropdown-item d-flex align-items-center gap-2 fw-bold py-2 text-danger"
                    href="${pageContext.request.contextPath}/logout"
                    onclick="localStorage.removeItem('gameforge_favorite_games_bootstrap_jsp');localStorage.removeItem('gameforge_cart_games_bootstrap_jsp');localStorage.removeItem('gameforge_cart_user_id');">
-                  <i data-lucide="log-out" width="16" height="16"></i> Đăng xuất
+                  <i data-lucide="log-out" width="14" height="14"></i> Đăng xuất
                 </a>
               </li>
             </ul>
-          </div>
         </div>
       </div>
     </div>

@@ -5,9 +5,11 @@ import com.gamestore.dao.PublisherProfileDAO;
 import com.gamestore.dao.RoleDAO;
 import com.gamestore.dao.UserDAO;
 import com.gamestore.entity.KycRequest;
+import com.gamestore.entity.Notification;
 import com.gamestore.entity.PublisherProfile;
 import com.gamestore.entity.Role;
 import com.gamestore.entity.User;
+import com.gamestore.dao.NotificationDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +32,9 @@ public class KycService {
 
     @Autowired
     private PublisherProfileDAO publisherProfileDAO;
+
+    @Autowired
+    private NotificationDAO notificationDAO;
 
     public KycRequest getLatestRequestByUser(Long userId) {
         return kycRequestDAO.findLatestByUserId(userId);
@@ -55,6 +60,15 @@ public class KycService {
         request.setStatus("PENDING");
 
         kycRequestDAO.save(request);
+
+        // Notify Admins
+        Notification notif = new Notification();
+        notif.setTitle("Yêu cầu KYC mới");
+        notif.setContent("Người dùng @" + user.getUsername() + " (" + user.getFullName() + ") đã nộp hồ sơ KYC.");
+        notif.setType("KYC");
+        notif.setTargetUrl("/admin/kyc");
+        notif.setUser(null); // Admin wide
+        notificationDAO.save(notif);
     }
 
     public void approveRequest(Long requestId) {
@@ -83,6 +97,15 @@ public class KycService {
         request.setStatus("APPROVED");
         request.setProcessedAt(LocalDateTime.now());
         kycRequestDAO.update(request);
+
+        // Notify User
+        Notification notif = new Notification();
+        notif.setTitle("Hồ sơ KYC được phê duyệt");
+        notif.setContent("Chúc mừng! Hồ sơ KYC của bạn đã được phê duyệt thành công. Bạn hiện là Nhà phát hành.");
+        notif.setType("KYC");
+        notif.setTargetUrl("/publisher/dashboard");
+        notif.setUser(user);
+        notificationDAO.save(notif);
     }
 
     public void rejectRequest(Long requestId) {
@@ -93,5 +116,14 @@ public class KycService {
         request.setStatus("REJECTED");
         request.setProcessedAt(LocalDateTime.now());
         kycRequestDAO.update(request);
+
+        // Notify User
+        Notification notif = new Notification();
+        notif.setTitle("Hồ sơ KYC bị từ chối");
+        notif.setContent("Hồ sơ KYC của bạn đã bị từ chối. Vui lòng kiểm tra lại thông tin và gửi lại yêu cầu mới.");
+        notif.setType("KYC");
+        notif.setTargetUrl("/kyc");
+        notif.setUser(request.getUser());
+        notificationDAO.save(notif);
     }
 }

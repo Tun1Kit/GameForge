@@ -27,6 +27,7 @@ public class Game {
     private String developer;
 
     @Column(name = "releaseDate")
+    @org.springframework.format.annotation.DateTimeFormat(pattern = "yyyy-MM-dd")
     private java.time.LocalDate releaseDate;
 
     @Column(name = "minimumRequirements", columnDefinition = "NVARCHAR(MAX)")
@@ -46,6 +47,12 @@ public class Game {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "publisher_id")
     private PublisherProfile publisher;
+
+    @Column(name = "approvedAt")
+    private java.time.LocalDateTime approvedAt;
+
+    @Column(name = "approvedBy")
+    private String approvedBy;
 
     // Sửa lại: Dùng List<GameMedia> và thêm FetchType.EAGER để load ảnh nhanh
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
@@ -103,4 +110,10 @@ public class Game {
 
     public PublisherProfile getPublisher() { return publisher; }
     public void setPublisher(PublisherProfile publisher) { this.publisher = publisher; }
+
+    public java.time.LocalDateTime getApprovedAt() { return approvedAt; }
+    public void setApprovedAt(java.time.LocalDateTime approvedAt) { this.approvedAt = approvedAt; }
+
+    public String getApprovedBy() { return approvedBy; }
+    public void setApprovedBy(String approvedBy) { this.approvedBy = approvedBy; }
 }
