@@ -16,6 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.gamestore.dao.KycRequestDAO;
+import com.gamestore.dao.PublisherProfileDAO;
+import com.gamestore.entity.KycRequest;
+import com.gamestore.entity.PublisherProfile;
 
 import javax.servlet.http.HttpSession;
 import java.io.File;
@@ -27,6 +31,9 @@ import java.util.*;
 @Transactional
 public class PublisherController {
 
+    private static final int PAGE_SIZE = 10;
+    private static final BigDecimal MIN_PAYOUT_AMOUNT = new BigDecimal("10000");
+
     @Autowired
     private PayoutService payoutService;
 
@@ -35,9 +42,15 @@ public class PublisherController {
 
     @Autowired
     private UserContextService userContextService;
+    @Autowired
+    private KycRequestDAO kycRequestDAO;
 
     @Autowired
     private PublisherProfileDAO publisherProfileDAO;
+    @GetMapping("/publisher")
+    public String publisherHome() {
+        return "redirect:/publisher/dashboard";
+    }
 
     @Autowired
     private GameDAO gameDAO;
@@ -57,47 +70,122 @@ public class PublisherController {
     @GetMapping("/publisher/dashboard")
     public String dashboard(HttpSession session, Model model) {
         User currentUser = userContextService.getCurrentUser(session);
+
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+
         model.addAttribute("currentUser", currentUser);
+
         return "publisher/dashboard";
     }
-
-    @GetMapping("/publisher/payouts")
-    public String payouts(HttpSession session, Model model) {
+    @GetMapping("/publisher/kyc")
+    @Transactional(readOnly = true)
+    public String publisherKyc(HttpSession session, Model model) {
         User currentUser = userContextService.getCurrentUser(session);
-        if (currentUser == null) return "redirect:/login";
+
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+
+        KycRequest latestKyc = kycRequestDAO.findLatestByUserId(currentUser.getId());
+        PublisherProfile publisherProfile = publisherProfileDAO.findByUserId(currentUser.getId());
+
+        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("latestKyc", latestKyc);
+        model.addAttribute("publisherProfile", publisherProfile);
+
+        return "publisher/kyc";
+    }
+    @GetMapping("/publisher/payouts")
+    public String payouts(@RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+                          HttpSession session,
+                          Model model) {
+
+        User currentUser = userContextService.getCurrentUser(session);
+
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+
+        loadPayoutPageData(currentUser, page, model);
+
+        return "publisher/payouts";
+    }
+
+    /*
+     * Hỗ trợ cả 2 URL:
+     * - /publisher/payouts/request: URL đúng nên dùng trong form
+     * - /publisher/payouts: giữ lại để tránh lỗi "POST not supported" nếu JSP/JS cũ vẫn gọi URL này
+     */
+    @PostMapping({"/publisher/payouts/request", "/publisher/payouts"})
+    public String createPayoutRequest(@RequestParam(value = "amount", required = false) BigDecimal amount,
+                                      @RequestParam(value = "bankAccountInfo", required = false) String bankAccountInfo,
+                                      HttpSession session) {
+
+        User currentUser = userContextService.getCurrentUser(session);
+
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
 
         try {
-            Wallet wallet = walletService.getOrCreateWallet(currentUser);
-            List<PayoutRequest> requests = payoutService.getRequestsByPublisherUser(currentUser.getId());
-            model.addAttribute("wallet", wallet);
-            model.addAttribute("requests", requests);
-            return "publisher/payouts";
+            if (amount == null) {
+                throw new IllegalArgumentException("Vui lòng nhập số tiền muốn rút.");
+            }
+
+            if (amount.compareTo(MIN_PAYOUT_AMOUNT) < 0) {
+                throw new IllegalArgumentException("Số tiền rút tối thiểu là 10.000đ.");
+            }
+
+            if (bankAccountInfo == null || bankAccountInfo.trim().isEmpty()) {
+                throw new IllegalArgumentException("Vui lòng nhập thông tin tài khoản ngân hàng.");
+            }
+
+            payoutService.createPayoutRequest(currentUser, amount, bankAccountInfo.trim());
+
+            session.setAttribute("payoutSuccess", "Gửi yêu cầu rút tiền thành công. Vui lòng chờ Admin duyệt.");
+
+            return "redirect:/publisher/payouts";
+
         } catch (IllegalArgumentException e) {
-            model.addAttribute("error", e.getMessage());
-            return "publisher/payouts";
+            session.setAttribute("payoutError", e.getMessage());
+            return "redirect:/publisher/payouts";
+        } catch (Exception e) {
+            session.setAttribute("payoutError", "Có lỗi xảy ra khi gửi yêu cầu rút tiền: " + e.getMessage());
+            return "redirect:/publisher/payouts";
         }
     }
 
-    @PostMapping("/publisher/payouts/request")
-    public String createPayoutRequest(@RequestParam("amount") BigDecimal amount,
-                                       @RequestParam("bankAccountInfo") String bankAccountInfo,
-                                       HttpSession session,
-                                       Model model) {
+    private void loadPayoutPageData(User currentUser, Integer page, Model model) {
+        Wallet wallet = walletService.getOrCreateWallet(currentUser);
+        List<PayoutRequest> requests = payoutService.getRequestsByPublisherUser(currentUser.getId());
 
-        User currentUser = userContextService.getCurrentUser(session);
-        if (currentUser == null) return "redirect:/login";
-
-        try {
-            payoutService.createPayoutRequest(currentUser, amount, bankAccountInfo);
-            return "redirect:/publisher/payouts?success=requested";
-        } catch (IllegalArgumentException e) {
-            Wallet wallet = walletService.getOrCreateWallet(currentUser);
-            List<PayoutRequest> requests = payoutService.getRequestsByPublisherUser(currentUser.getId());
-            model.addAttribute("wallet", wallet);
-            model.addAttribute("requests", requests);
-            model.addAttribute("error", e.getMessage());
-            return "publisher/payouts";
+        if (requests == null) {
+            requests = new ArrayList<>();
         }
+
+        BigDecimal walletBalance = BigDecimal.ZERO;
+
+        if (wallet != null && wallet.getBalance() != null) {
+            walletBalance = wallet.getBalance();
+        }
+
+        BigDecimal pendingAmount = calculatePendingAmount(requests);
+        BigDecimal availableAmount = walletBalance.subtract(pendingAmount);
+
+        if (availableAmount.compareTo(BigDecimal.ZERO) < 0) {
+            availableAmount = BigDecimal.ZERO;
+        }
+
+        Map<String, Object> pageResult = buildPageResult(requests, page, PAGE_SIZE);
+
+        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("wallet", wallet);
+        model.addAttribute("requests", requests);
+        model.addAttribute("pendingAmount", pendingAmount);
+        model.addAttribute("availableAmount", availableAmount);
+        model.addAttribute("pageResult", pageResult);
     }
 
     // ==========================================
@@ -622,5 +710,69 @@ public class PublisherController {
                 .executeUpdate();
         return "redirect:/publisher/notifications";
     }
-}
 
+    private BigDecimal calculatePendingAmount(List<PayoutRequest> requests) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        if (requests == null) {
+            return total;
+        }
+
+        for (PayoutRequest request : requests) {
+            if (request == null) {
+                continue;
+            }
+
+            String status = request.getStatus();
+
+            if (status != null && "PENDING".equalsIgnoreCase(status.trim())) {
+                BigDecimal amount = request.getAmount();
+
+                if (amount != null) {
+                    total = total.add(amount);
+                }
+            }
+        }
+
+        return total;
+    }
+
+    private Map<String, Object> buildPageResult(List<PayoutRequest> requests, Integer page, int pageSize) {
+        Map<String, Object> pageResult = new HashMap<>();
+
+        if (requests == null) {
+            requests = new ArrayList<>();
+        }
+
+        if (page == null || page < 1) {
+            page = 1;
+        }
+
+        int totalElements = requests.size();
+        int totalPages = (int) Math.ceil((double) totalElements / pageSize);
+
+        if (totalPages == 0) {
+            totalPages = 1;
+        }
+
+        if (page > totalPages) {
+            page = totalPages;
+        }
+
+        int fromIndex = (page - 1) * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, totalElements);
+
+        List<PayoutRequest> content = new ArrayList<>();
+
+        if (fromIndex < toIndex) {
+            content = requests.subList(fromIndex, toIndex);
+        }
+
+        pageResult.put("content", content);
+        pageResult.put("totalElements", totalElements);
+        pageResult.put("totalPages", totalPages);
+        pageResult.put("currentPage", page);
+
+        return pageResult;
+    }
+}

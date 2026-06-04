@@ -58,23 +58,46 @@
 	<!-- RBAC Interceptor -->
 	<bean id="authInterceptor" class="com.gamestore.interceptor.AuthInterceptor" />
 
-	<mvc:interceptors>
-		<mvc:interceptor>
-			<mvc:mapping path="/admin/**" />
-			<mvc:mapping path="/publisher/**" />
-			<mvc:mapping path="/wallet/**" />
-			<mvc:mapping path="/wallet" />
-			<mvc:mapping path="/kyc/**" />
-			<mvc:mapping path="/kyc" />
-			<mvc:mapping path="/cart/**" />
-			<mvc:mapping path="/checkout/**" />
-			<mvc:mapping path="/library/**" />
-			<mvc:mapping path="/orders" />
-			<mvc:mapping path="/orders/**" />
-			<mvc:mapping path="/wishlist" />
-			<ref bean="authInterceptor" />
-		</mvc:interceptor>
-	</mvc:interceptors>
+<mvc:interceptors>
+    <mvc:interceptor>
+        <mvc:mapping path="/admin/**" />
+
+        <mvc:mapping path="/publisher" />
+        <mvc:mapping path="/publisher/**" />
+
+        <mvc:mapping path="/dashboard" />
+        <mvc:mapping path="/dashboard/**" />
+
+        <mvc:mapping path="/wallet" />
+        <mvc:mapping path="/wallet/**" />
+
+        <mvc:mapping path="/kyc" />
+        <mvc:mapping path="/kyc/**" />
+
+        <mvc:mapping path="/cart" />
+        <mvc:mapping path="/cart/**" />
+
+        <mvc:mapping path="/checkout" />
+        <mvc:mapping path="/checkout/**" />
+
+        <mvc:mapping path="/library" />
+        <mvc:mapping path="/library/**" />
+
+        <mvc:mapping path="/orders" />
+        <mvc:mapping path="/orders/**" />
+
+        <mvc:mapping path="/wishlist" />
+        <mvc:mapping path="/wishlist/**" />
+
+        <mvc:mapping path="/recharge" />
+        <mvc:mapping path="/recharge/**" />
+
+        <mvc:mapping path="/transactions" />
+        <mvc:mapping path="/transactions/**" />
+
+        <ref bean="authInterceptor" />
+    </mvc:interceptor>
+</mvc:interceptors>
 
 	<!-- File upload cho KYC -->
 	<bean id="multipartResolver"

@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Service
 @Transactional(readOnly = true)
@@ -54,16 +56,7 @@ public class AdminDashboardService {
                 "SELECT COALESCE(SUM(w.balance), 0) FROM Wallet w", BigDecimal.class);
         stats.setTotalWalletBalance(totalBalance != null ? totalBalance : BigDecimal.ZERO);
 
-        // Orders today
-        java.time.LocalDate today = java.time.LocalDate.now();
-        java.time.LocalDateTime start = today.atStartOfDay();
-        java.time.LocalDateTime end = today.plusDays(1).atStartOfDay();
-        Long ordersToday = sessionFactory.getCurrentSession()
-                .createQuery("SELECT COUNT(o.id) FROM Order o WHERE o.createdAt >= :start AND o.createdAt < :end AND o.status = 'PAID'", Long.class)
-                .setParameter("start", start)
-                .setParameter("end", end)
-                .uniqueResult();
-        stats.setOrdersToday(ordersToday != null ? ordersToday : 0L);
+        stats.setOrdersToday(countOrdersToday());
 
         return stats;
     }
@@ -79,5 +72,25 @@ public class AdminDashboardService {
         return sessionFactory.getCurrentSession()
                 .createQuery(hql, type)
                 .uniqueResult();
+    }
+
+    private Long countOrdersToday() {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime startOfTomorrow = startOfDay.plusDays(1);
+
+        Long result = sessionFactory.getCurrentSession()
+                .createQuery(
+                        "SELECT COUNT(o.id) " +
+                        "FROM Order o " +
+                        "WHERE o.createdAt >= :startOfDay " +
+                        "AND o.createdAt < :startOfTomorrow " +
+                        "AND o.status = :status",
+                        Long.class)
+                .setParameter("startOfDay", startOfDay)
+                .setParameter("startOfTomorrow", startOfTomorrow)
+                .setParameter("status", "PAID")
+                .uniqueResult();
+
+        return result == null ? 0L : result;
     }
 }

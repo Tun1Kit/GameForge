@@ -18,7 +18,13 @@ public class UserDAO extends BaseDAO<User> {
     public User findByEmail(String email) {
         try {
             return sessionFactory.getCurrentSession()
-                    .createQuery("FROM User WHERE email = :email AND status = 'ACTIVE'", User.class)
+                    .createQuery(
+                            "SELECT DISTINCT u " +
+                            "FROM User u " +
+                            "LEFT JOIN FETCH u.roles " +
+                            "WHERE u.email = :email " +
+                            "AND u.status = 'ACTIVE'",
+                            User.class)
                     .setParameter("email", email)
                     .uniqueResult();
         } catch (Exception e) {
@@ -31,7 +37,13 @@ public class UserDAO extends BaseDAO<User> {
     public User findByUsername(String username) {
         try {
             return sessionFactory.getCurrentSession()
-                    .createQuery("FROM User WHERE username = :username AND status = 'ACTIVE'", User.class)
+                    .createQuery(
+                            "SELECT DISTINCT u " +
+                            "FROM User u " +
+                            "LEFT JOIN FETCH u.roles " +
+                            "WHERE u.username = :username " +
+                            "AND u.status = 'ACTIVE'",
+                            User.class)
                     .setParameter("username", username)
                     .uniqueResult();
         } catch (Exception e) {
@@ -40,12 +52,28 @@ public class UserDAO extends BaseDAO<User> {
     }
 
     @Transactional(readOnly = true)
+    public User findById(Long id) {
+        return sessionFactory.getCurrentSession()
+                .createQuery(
+                        "SELECT DISTINCT u " +
+                        "FROM User u " +
+                        "LEFT JOIN FETCH u.roles " +
+                        "WHERE u.id = :id",
+                        User.class)
+                .setParameter("id", id)
+                .uniqueResult();
+    }
+
+    @Transactional(readOnly = true)
     public boolean existsByUsername(String username) {
         try {
             Long count = sessionFactory.getCurrentSession()
-                    .createQuery("SELECT COUNT(u) FROM User u WHERE username = :username", Long.class)
+                    .createQuery(
+                            "SELECT COUNT(u) FROM User u WHERE u.username = :username",
+                            Long.class)
                     .setParameter("username", username)
                     .uniqueResult();
+
             return count != null && count > 0;
         } catch (Exception e) {
             return false;
@@ -55,13 +83,19 @@ public class UserDAO extends BaseDAO<User> {
     @Transactional(readOnly = true)
     public List<User> findAllUsers() {
         return sessionFactory.getCurrentSession()
-                .createQuery("FROM User u ORDER BY u.createdAt DESC", User.class)
+                .createQuery(
+                        "SELECT DISTINCT u " +
+                        "FROM User u " +
+                        "LEFT JOIN FETCH u.roles " +
+                        "ORDER BY u.createdAt DESC",
+                        User.class)
                 .list();
     }
 
     @Transactional
     public void changeStatus(Long userId, String status) {
         User user = findById(userId);
+
         if (user != null) {
             user.setStatus(status);
             update(user);

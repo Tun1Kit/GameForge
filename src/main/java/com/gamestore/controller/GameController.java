@@ -39,13 +39,25 @@ public class GameController {
 
     @RequestMapping(value = {"/", "/home"}, method = RequestMethod.GET)
     public String index(ModelMap model, HttpSession session) {
+        User currentUser = userContextService.getCurrentUser(session);
+
+        if (currentUser != null) {
+            if (currentUser.hasRole("ROLE_ADMIN")) {
+                return "redirect:/admin/dashboard";
+            }
+
+            if (currentUser.hasRole("ROLE_PUBLISHER")) {
+                return "redirect:/publisher/dashboard";
+            }
+        }
+
         List<Game> listGames = sessionFactory.getCurrentSession()
                 .createQuery("from Game where status = 'ACTIVE'", Game.class)
                 .list();
-        model.addAttribute("games", listGames);
 
-        User currentUser = userContextService.getCurrentUser(session);
+        model.addAttribute("games", listGames);
         model.addAttribute("currentUser", currentUser);
+
         if (currentUser != null) {
             BigDecimal walletBalance = walletService.getBalance(currentUser);
             model.addAttribute("walletBalance", walletBalance);
@@ -59,7 +71,6 @@ public class GameController {
 
         return "index";
     }
-
     @RequestMapping(value = "/api/admin/generate-keys", method = RequestMethod.GET, produces = "text/plain;charset=UTF-8")
     @org.springframework.web.bind.annotation.ResponseBody
     public String generateKeys() {

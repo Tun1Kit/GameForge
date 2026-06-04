@@ -35,8 +35,17 @@ public class DashboardController {
     @GetMapping("/dashboard")
     public String showDashboard(HttpSession session, Model model) {
         User currentUser = userContextService.getCurrentUser(session);
+
         if (currentUser == null) {
             return "redirect:/login";
+        }
+
+        if (currentUser.hasRole("ROLE_ADMIN")) {
+            return "redirect:/admin/dashboard";
+        }
+
+        if (currentUser.hasRole("ROLE_PUBLISHER")) {
+            return "redirect:/publisher/dashboard";
         }
 
         BigDecimal walletBalance = walletService.getBalance(currentUser);

@@ -36,28 +36,59 @@ public class KycService {
     @Autowired
     private NotificationDAO notificationDAO;
 
+    @Transactional(readOnly = true)
     public KycRequest getLatestRequestByUser(Long userId) {
         return kycRequestDAO.findLatestByUserId(userId);
     }
 
+    @Transactional(readOnly = true)
     public List<KycRequest> getAllRequests() {
         return kycRequestDAO.findAllOrderByNewest();
     }
 
-    public void submitRequest(User user, String taxId, String documentUrl) {
-        KycRequest latest = kycRequestDAO.findLatestByUserId(user.getId());
-        if (latest != null && "PENDING".equals(latest.getStatus())) {
-            throw new IllegalArgumentException("Bạn đã có một yêu cầu KYC đang chờ duyệt.");
+    @Transactional(readOnly = true)
+    public List<KycRequest> getPendingRequests() {
+        return kycRequestDAO.findPendingRequests();
+    }
+
+    @Transactional(readOnly = true)
+    public List<KycRequest> getRequestsByStatus(String status) {
+        if (status == null || status.trim().isEmpty()) {
+            return kycRequestDAO.findAllOrderByNewest();
         }
-        if (user.hasRole("ROLE_PUBLISHER")) {
-            throw new IllegalArgumentException("Tài khoản của bạn đã là Publisher.");
+
+        return kycRequestDAO.findByStatusOrderByNewest(status.trim());
+    }
+
+    public void submitRequest(User user, String taxId, String documentUrl) {
+        if (user == null || user.getId() == null) {
+            throw new IllegalArgumentException("Không tìm thấy người dùng hiện tại.");
+        }
+
+        if (taxId == null || taxId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng nhập số giấy tờ.");
+        }
+
+        if (documentUrl == null || documentUrl.trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng upload giấy tờ KYC.");
+        }
+
+        KycRequest latestRequest = getLatestRequestByUser(user.getId());
+
+        if (latestRequest != null && "PENDING".equalsIgnoreCase(latestRequest.getStatus())) {
+            throw new IllegalStateException("Bạn đã có một yêu cầu KYC đang chờ duyệt.");
+        }
+
+        if (latestRequest != null && "APPROVED".equalsIgnoreCase(latestRequest.getStatus())) {
+            throw new IllegalStateException("Tài khoản của bạn đã được duyệt KYC.");
         }
 
         KycRequest request = new KycRequest();
         request.setUser(user);
-        request.setTaxId(taxId);
+        request.setTaxId(taxId.trim());
         request.setDocumentUrl(documentUrl);
         request.setStatus("PENDING");
+        request.setSubmittedAt(LocalDateTime.now());
 
         kycRequestDAO.save(request);
 
@@ -73,12 +104,26 @@ public class KycService {
 
     public void approveRequest(Long requestId) {
         KycRequest request = kycRequestDAO.findById(requestId);
-        if (request == null) throw new IllegalArgumentException("Không tìm thấy yêu cầu KYC.");
-        if (!"PENDING".equals(request.getStatus())) throw new IllegalArgumentException("Yêu cầu này đã được xử lý.");
+
+        if (request == null) {
+            throw new IllegalArgumentException("Không tìm thấy yêu cầu KYC.");
+        }
+
+        if (!"PENDING".equalsIgnoreCase(request.getStatus())) {
+            throw new IllegalArgumentException("Yêu cầu này đã được xử lý.");
+        }
 
         User user = userDAO.findById(request.getUser().getId());
+
+        if (user == null) {
+            throw new IllegalArgumentException("Không tìm thấy tài khoản gửi KYC.");
+        }
+
         Role publisherRole = roleDAO.findByCode("ROLE_PUBLISHER");
-        if (publisherRole == null) throw new IllegalArgumentException("Database chưa có ROLE_PUBLISHER.");
+
+        if (publisherRole == null) {
+            throw new IllegalArgumentException("Database chưa có ROLE_PUBLISHER.");
+        }
 
         if (!user.hasRole("ROLE_PUBLISHER")) {
             user.getRoles().add(publisherRole);
@@ -86,6 +131,7 @@ public class KycService {
         }
 
         PublisherProfile profile = publisherProfileDAO.findByUserId(user.getId());
+
         if (profile == null) {
             profile = new PublisherProfile();
             profile.setUser(user);
@@ -96,6 +142,7 @@ public class KycService {
 
         request.setStatus("APPROVED");
         request.setProcessedAt(LocalDateTime.now());
+
         kycRequestDAO.update(request);
 
         // Notify User
@@ -110,11 +157,18 @@ public class KycService {
 
     public void rejectRequest(Long requestId) {
         KycRequest request = kycRequestDAO.findById(requestId);
-        if (request == null) throw new IllegalArgumentException("Không tìm thấy yêu cầu KYC.");
-        if (!"PENDING".equals(request.getStatus())) throw new IllegalArgumentException("Yêu cầu này đã được xử lý.");
+
+        if (request == null) {
+            throw new IllegalArgumentException("Không tìm thấy yêu cầu KYC.");
+        }
+
+        if (!"PENDING".equalsIgnoreCase(request.getStatus())) {
+            throw new IllegalArgumentException("Yêu cầu này đã được xử lý.");
+        }
 
         request.setStatus("REJECTED");
         request.setProcessedAt(LocalDateTime.now());
+
         kycRequestDAO.update(request);
 
         // Notify User
