@@ -75,6 +75,13 @@ public class CartApiController {
             return;
         }
 
+        if (game.getPublisher() != null && game.getPublisher().getUser() != null) {
+            if (game.getPublisher().getUser().getId().equals(currentUser.getId())) {
+                out.print("ERROR=Nhà phát hành không thể mua game của chính mình.");
+                return;
+            }
+        }
+
         CartItem item = new CartItem();
         item.setUser(currentUser);
         item.setGame(game);

@@ -290,11 +290,14 @@
                         <div class="gf-game-banner">
                           <a href="${pageContext.request.contextPath}/game/${game.slug}" class="d-block h-100">
                             <c:choose>
+                              <c:when test="${not empty game.mediaList && not fn:startsWith(game.mediaList[0].mediaUrl, 'http')}">
+                                <img src="${pageContext.request.contextPath}${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
+                              </c:when>
                               <c:when test="${not empty game.mediaList}">
-                                <img src="${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy">
+                                <img src="${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
                               </c:when>
                               <c:otherwise>
-                                <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg" alt="Cover" loading="lazy">
+                                <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg" alt="Cover" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
                               </c:otherwise>
                             </c:choose>
                           </a>
@@ -445,11 +448,14 @@
                         <div class="gf-game-banner">
                           <a href="${pageContext.request.contextPath}/game/${game.slug}" class="d-block h-100">
                             <c:choose>
+                              <c:when test="${not empty game.mediaList && not fn:startsWith(game.mediaList[0].mediaUrl, 'http')}">
+                                <img src="${pageContext.request.contextPath}${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
+                              </c:when>
                               <c:when test="${not empty game.mediaList}">
-                                <img src="${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy">
+                                <img src="${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
                               </c:when>
                               <c:otherwise>
-                                <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg" alt="Cover" loading="lazy">
+                                <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg" alt="Cover" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
                               </c:otherwise>
                             </c:choose>
                           </a>
@@ -597,11 +603,14 @@
                     <div class="gf-game-banner">
                       <a href="${pageContext.request.contextPath}/game/${game.slug}" class="d-block h-100">
                         <c:choose>
+                          <c:when test="${not empty game.mediaList && not fn:startsWith(game.mediaList[0].mediaUrl, 'http')}">
+                            <img src="${pageContext.request.contextPath}${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
+                          </c:when>
                           <c:when test="${not empty game.mediaList}">
-                            <img src="${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy">
+                            <img src="${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
                           </c:when>
                           <c:otherwise>
-                            <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg" alt="Cover" loading="lazy">
+                            <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg" alt="Cover" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
                           </c:otherwise>
                         </c:choose>
                       </a>
@@ -740,11 +749,14 @@
                   <div class="gf-game-banner">
                     <a href="${pageContext.request.contextPath}/game/${game.slug}" class="d-block h-100">
                       <c:choose>
+                        <c:when test="${not empty game.mediaList && not fn:startsWith(game.mediaList[0].mediaUrl, 'http')}">
+                          <img src="${pageContext.request.contextPath}${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
+                        </c:when>
                         <c:when test="${not empty game.mediaList}">
-                          <img src="${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy">
+                          <img src="${game.mediaList[0].mediaUrl}" alt="${fn:escapeXml(game.title)}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
                         </c:when>
                         <c:otherwise>
-                          <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg" alt="Cover" loading="lazy">
+                          <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg" alt="Cover" loading="lazy" style="width: 100%; height: 180px; object-fit: cover;">
                         </c:otherwise>
                       </c:choose>
                     </a>

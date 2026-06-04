@@ -29,7 +29,7 @@
   <nav class="gf-navbar" style="background:#fff;border-bottom:3px solid #000;">
     <div class="container-xl py-2">
       <div class="d-flex align-items-center justify-content-between gap-3">
-        <a href="${pageContext.request.contextPath}/publisher/dashboard" class="d-flex align-items-center gap-2 text-decoration-none flex-shrink-0">
+        <a href="${pageContext.request.contextPath}/" class="d-flex align-items-center gap-2 text-decoration-none flex-shrink-0">
           <div class="gf-logo-box gf-press" style="background:var(--gf-green);">
             <i data-lucide="gamepad-2" width="20" height="20"></i>
           </div>
